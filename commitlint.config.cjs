@@ -22,6 +22,7 @@ module.exports = {
         'permission',
         'i18n',
         'theme',
+        'devops',
       ],
     ],
   },
