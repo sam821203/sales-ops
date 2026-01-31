@@ -1,3 +1,6 @@
+@import './styles/satoshi.css';
+@import './styles/salesops.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

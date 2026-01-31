@@ -7,6 +7,26 @@ Currently, two official plugins are available:
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
+## Commit message conventions
+
+We use **Conventional Commits** and enforce rules via **commitlint**.
+
+- **Format**: `type(scope): description`
+- **Scope**: must reflect the React architecture module and match the allowed scopes in `commitlint.config.cjs`
+- **Description**: start with a verb; keep it short and clear
+
+### Commit message prompt (copy/paste)
+
+```text
+Based on the current git diff, generate a commit message that follows these rules:
+
+- Format: type(scope): description
+- Type must be one of: feat, fix, refactor, perf, style, test, docs, chore, build
+- Scope must be one of: ui, layout, page, component, hook, api, state, router, auth, permission, i18n, theme
+- Description must start with a verb; keep it short and clear
+- Output only a single-line commit message (no code block, no quotes, no extra text)
+```
+
 ## React Compiler
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
