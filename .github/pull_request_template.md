@@ -19,6 +19,7 @@ Select one (aligns with `commitlint.config.cjs` scopes):
 - [ ] permission
 - [ ] i18n
 - [ ] theme
+- [ ] devops
 
 ## Screenshots / Recording (if UI changes)
 - Before:
@@ -38,5 +39,5 @@ Select one (aligns with `commitlint.config.cjs` scopes):
 - [ ] No secrets or credentials are included
 
 ## Related
-- Issue / ticket:
+- Fixes #<issue-number>
 - Follow-ups:
