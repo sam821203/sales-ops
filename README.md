@@ -21,8 +21,8 @@ We use **Conventional Commits** and enforce rules via **commitlint**.
 Based on the current git diff, generate a commit message that follows these rules:
 
 - Format: type(scope): description
-- Type must be one of: feat, fix, refactor, perf, style, test, docs, chore, build
-- Scope must be one of: ui, layout, page, component, hook, api, state, router, auth, permission, i18n, theme
+- Type must be one of: feat, fix, refactor, perf, style, test, docs, chore, build, ci
+- Scope must be one of: ui, layout, page, component, hook, api, state, router, auth, permission, i18n, theme, devops
 - Description must start with a verb; keep it short and clear
 - Output only a single-line commit message (no code block, no quotes, no extra text)
 ```
