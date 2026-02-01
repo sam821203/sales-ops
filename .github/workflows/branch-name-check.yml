@@ -1,0 +1,40 @@
+name: Branch name check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  branch-name-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch name
+        shell: bash
+        run: |
+          set -euo pipefail
+          BRANCH_NAME="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME:-}}"
+          echo "Branch: ${BRANCH_NAME}"
+
+          # Allowed:
+          # - feature/*, bugfix/*, hotfix/*, release/*, chore/*, docs/*, refactor/*, test/*
+          # - dependabot/*, renovate/*
+          # - main, master, develop
+          #
+          # Examples:
+          # - feature/add-login
+          # - bugfix/fix-null-pointer
+          # - chore/update-deps
+          #
+          # Pattern uses lowercase letters/digits separated by - or /.
+          PATTERN='^(main|master|develop|dependabot\/.+|renovate\/.+|(feature|bugfix|hotfix|release|chore|docs|refactor|test)\/[a-z0-9]+([-/][a-z0-9]+)*)$'
+
+          if [[ -z "${BRANCH_NAME}" ]]; then
+            echo "Unable to determine branch name."
+            exit 1
+          fi
+
+          if [[ ! "${BRANCH_NAME}" =~ ${PATTERN} ]]; then
+            echo "Invalid branch name: ${BRANCH_NAME}"
+            echo "Branch name must match: ${PATTERN}"
+            exit 1
+          fi
