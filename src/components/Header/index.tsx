@@ -1,4 +1,3 @@
-import { Input } from 'antd';
 import { Link } from '@tanstack/react-router';
 import DropdownMessage from './DropdownMessage';
 import DropdownNotification from './DropdownNotification';
@@ -66,9 +65,13 @@ export default function Header(props: {
 
         <div className="hidden sm:block">
           <div className="relative">
-            <span className="pointer-events-none absolute left-0 top-1/2 -translate-y-1/2">
+            <button
+              type="button"
+              className="absolute left-3 top-1/2 -translate-y-1/2 focus:outline-none"
+              aria-label="Search"
+            >
               <svg
-                className="fill-body dark:fill-bodydark"
+                className="fill-body hover:fill-primary dark:fill-bodydark dark:hover:fill-primary"
                 width="20"
                 height="20"
                 viewBox="0 0 20 20"
@@ -88,12 +91,12 @@ export default function Header(props: {
                   fill=""
                 />
               </svg>
-            </span>
+            </button>
 
-            <Input
+            <input
+              type="text"
               placeholder="Type to search..."
-              className="w-full !bg-transparent !pl-9 !pr-4 !text-black !shadow-none focus:!shadow-none dark:!text-white xl:!w-125"
-              bordered={false}
+              className="w-full rounded-md border border-stroke bg-transparent py-2 pl-10 pr-4 text-black placeholder:text-body outline-none focus:border-primary dark:border-strokedark dark:text-white dark:placeholder:text-bodydark dark:focus:border-primary xl:w-125"
             />
           </div>
         </div>
