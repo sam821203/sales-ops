@@ -1,21 +1,21 @@
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
-import App from './App';
-import { ECommercePage } from './views/ECommercePage';
-import { DashboardAnalyticsPage } from './views/DashboardAnalyticsPage';
-import { DashboardCrmPage } from './views/DashboardCrmPage';
-import { DashboardSalesPage } from './views/DashboardSalesPage';
-import { DashboardReportsPage } from './views/DashboardReportsPage';
-import { CalendarPage } from './views/CalendarPage';
-import { ProfilePage } from './views/ProfilePage';
-import { SettingsPage } from './views/SettingsPage';
-import { TablesPage } from './views/TablesPage';
-import { ChartPage } from './views/ChartPage';
-import { AlertsPage } from './views/AlertsPage';
-import { ButtonsPage } from './views/ButtonsPage';
-import { FormElementsPage } from './views/FormElementsPage';
-import { FormLayoutPage } from './views/FormLayoutPage';
-import { SignInPage } from './views/SignInPage';
-import { SignUpPage } from './views/SignUpPage';
+import App from '@/App';
+import { ECommercePage } from '@/views/ECommercePage';
+import { DashboardAnalyticsPage } from '@/views/DashboardAnalyticsPage';
+import { DashboardCrmPage } from '@/views/DashboardCrmPage';
+import { DashboardSalesPage } from '@/views/DashboardSalesPage';
+import { DashboardReportsPage } from '@/views/DashboardReportsPage';
+import { CalendarPage } from '@/views/CalendarPage';
+import { ProfilePage } from '@/views/ProfilePage';
+import { SettingsPage } from '@/views/SettingsPage';
+import { TablesPage } from '@/views/TablesPage';
+import { ChartPage } from '@/views/ChartPage';
+import { AlertsPage } from '@/views/AlertsPage';
+import { ButtonsPage } from '@/views/ButtonsPage';
+import { FormElementsPage } from '@/views/FormElementsPage';
+import { FormLayoutPage } from '@/views/FormLayoutPage';
+import { SignInPage } from '@/views/SignInPage';
+import { SignUpPage } from '@/views/SignUpPage';
 
 const rootRoute = createRootRoute({
   component: App,
