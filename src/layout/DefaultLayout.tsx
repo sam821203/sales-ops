@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet } from '@tanstack/react-router';
-import Header from '../components/Header';
-import Sidebar from '../components/Sidebar';
+import Header from '@/components/Header';
+import Sidebar from '@/components/Sidebar';
 
 export function DefaultLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);

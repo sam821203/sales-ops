@@ -6,8 +6,8 @@ import { RouterProvider } from '@tanstack/react-router';
 import { ConfigProvider, App as AntApp } from 'antd';
 import 'antd/dist/reset.css';
 import './index.css';
-import { store } from './store';
-import { router } from './router';
+import { store } from '@/store';
+import { router } from '@/router';
 
 const queryClient = new QueryClient();
 
