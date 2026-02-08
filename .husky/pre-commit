@@ -1,1 +1,7 @@
+#!/usr/bin/env sh
+set -eu
+
+# Run local quality gates before allowing a commit.
+npm run lint:staged
 npm test
+npm run build
