@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Husky
+.husky/_/
+
+# Reference assets (keep local only)
+public/example/free-react-tailwind-admin-dashboard-1.3/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
