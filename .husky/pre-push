@@ -1,0 +1,59 @@
+#!/usr/bin/env sh
+set -eu
+
+# Keep branch naming consistent with:
+# .github/workflows/branch-name-check.yml
+PATTERN='^(main|master|develop|dependabot/.+|renovate/.+|(feature|bugfix|hotfix|release|chore|docs|refactor|test)/[a-z0-9]+([-/][a-z0-9]+)*)$'
+
+invalid=0
+seen=0
+
+validate_branch() {
+  branch="$1"
+
+  if [ -z "$branch" ]; then
+    echo "Unable to determine branch name." >&2
+    return 1
+  fi
+
+  if printf '%s' "$branch" | grep -Eq "$PATTERN"; then
+    return 0
+  fi
+
+  echo "Invalid branch name: $branch" >&2
+  echo "Branch name must match: $PATTERN" >&2
+  return 1
+}
+
+# `pre-push` receives refs on stdin:
+# <local ref> <local sha1> <remote ref> <remote sha1>
+while read -r local_ref local_sha remote_ref remote_sha; do
+  seen=1
+
+  case "$local_ref" in
+    refs/heads/*)
+      branch="${local_ref#refs/heads/}"
+      ;;
+    *)
+      # tags/other refs: skip
+      continue
+      ;;
+  esac
+
+  if ! validate_branch "$branch"; then
+    invalid=1
+  fi
+done
+
+# Fallback: if stdin is empty, validate current branch.
+if [ "$seen" -eq 0 ]; then
+  current_branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+  if ! validate_branch "$current_branch"; then
+    invalid=1
+  fi
+fi
+
+if [ "$invalid" -ne 0 ]; then
+  echo "Push aborted." >&2
+  exit 1
+fi
