@@ -1,0 +1,58 @@
+#!/usr/bin/env sh
+set -eu
+
+# Auto-create a PR after pushing a branch, using a title
+# derived from the branch name (e.g. chore/foo-bar -> "chore: foo bar").
+
+branch=""
+seen=0
+
+# `post-push` receives refs on stdin:
+# <local ref> <local sha1> <remote ref> <remote sha1>
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$local_ref" in
+    refs/heads/*)
+      seen=1
+      branch="${local_ref#refs/heads/}"
+      ;;
+    *)
+      # tags/other refs: skip
+      ;;
+  esac
+done
+
+# Fallback: if stdin is empty, use current branch.
+if [ "$seen" -eq 0 ]; then
+  branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+fi
+
+[ -z "$branch" ] && exit 0
+
+# Skip protected or bot branches.
+case "$branch" in
+  main|master|develop|dependabot/*|renovate/*)
+    exit 0
+    ;;
+esac
+
+if ! command -v gh >/dev/null 2>&1; then
+  echo "gh not found; skip PR creation." >&2
+  exit 0
+fi
+
+# If a PR already exists for this head, do nothing.
+if gh pr view --head "$branch" >/dev/null 2>&1; then
+  exit 0
+fi
+
+type="${branch%%/*}"
+rest="${branch#*/}"
+
+if [ "$type" = "$branch" ] || [ -z "$rest" ]; then
+  title="$branch"
+else
+  rest="$(printf '%s' "$rest" | tr '/-' '  ' | tr -s ' ')"
+  title="$(printf '%s: %s' "$type" "$rest")"
+fi
+
+gh pr create --title "$title" --fill >/dev/null 2>&1 || gh pr create --title "$title"
