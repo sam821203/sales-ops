@@ -1,3 +1,5 @@
+import Card from '../components/common/Card';
+
 export function ECommercePage() {
   return (
     <div className="space-y-6">
@@ -10,13 +12,14 @@ export function ECommercePage() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {['Leads', 'Opportunities', 'Accounts', 'Revenue'].map((label) => (
-          <div
-            key={label}
-            className="rounded-sm border border-stroke bg-white px-7.5 py-6 shadow-default dark:border-strokedark dark:bg-boxdark"
-          >
-            <p className="text-sm font-medium text-body dark:text-bodydark">{label}</p>
-            <p className="mt-1 text-title-md font-semibold text-black dark:text-white">—</p>
-          </div>
+          <Card key={label}>
+            <p className="text-sm font-medium text-body dark:text-bodydark">
+              {label}
+            </p>
+            <p className="mt-1 text-title-md font-semibold text-black dark:text-white">
+              —
+            </p>
+          </Card>
         ))}
       </div>
     </div>
