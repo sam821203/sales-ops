@@ -1,18 +1,56 @@
-# React + TypeScript + Vite
+# SalesOps
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Commerce Control Plane (營運/後台) — monorepo with frontend and backend.
 
-Currently, two official plugins are available:
+## Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```
+SalesOps/
+├── apps/
+│   ├── web/     # Frontend (Vite + React + TypeScript)
+│   └── api/     # Backend (Hono + Prisma + SQLite)
+├── .github/     # CI (branch name, commitlint, etc.)
+├── .husky/      # Git hooks (pre-commit, pre-push, commit-msg)
+└── package.json # Workspace root
+```
+
+## Quick start
+
+```bash
+# Install dependencies (root + all workspaces)
+npm install
+
+# Run frontend (dev)
+npm run dev
+# or
+npm run dev:web
+
+# Run backend (dev) — in another terminal
+npm run dev:api
+```
+
+- **Web**: http://localhost:5173 (or Vite’s port)
+- **API**: http://localhost:3000/api
+
+## Scripts (root)
+
+| Script        | Description                    |
+|---------------|--------------------------------|
+| `npm run dev` | Start web app (default)        |
+| `npm run dev:web` | Start web dev server       |
+| `npm run dev:api` | Start API dev server       |
+| `npm run build`   | Build all apps             |
+| `npm run lint`    | Lint all apps              |
+| `npm run test`    | Test all apps              |
+
+See `apps/web` and `apps/api` for app-specific scripts (e.g. `db:migrate`, `db:studio`).
 
 ## Commit message conventions
 
 We use **Conventional Commits** and enforce rules via **commitlint**.
 
 - **Format**: `type(scope): description`
-- **Scope**: must reflect the React architecture module and match the allowed scopes in `commitlint.config.cjs`
+- **Scope**: must reflect the module (e.g. ui, api, auth)
 - **Description**: start with a verb; keep it short and clear
 
 ### Commit message prompt (copy/paste)
@@ -27,67 +65,7 @@ Based on the current git diff, generate a commit message that follows these rule
 - Output only a single-line commit message (no code block, no quotes, no extra text)
 ```
 
-## React Compiler
+## Demo / deployment
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **Frontend**: Deploy `apps/web` (e.g. Vercel/Netlify). For demos with live data, point `VITE_API_URL` to your deployed API or ngrok URL.
+- **Backend**: Deploy `apps/api` to a long-lived host (e.g. Railway, Render) when you need a public API for the shared frontend link.
