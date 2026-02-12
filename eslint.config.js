@@ -4,37 +4,44 @@ import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
+/**
+ * Root ESLint for monorepo. Applies to apps/web and apps/api.
+ */
 export default tseslint.config(
   {
     ignores: [
-      'dist/**',
-      'node_modules/**',
-      'public/mockServiceWorker.js',
-      'generators/**',
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/prisma/migrations/**',
+      'apps/web/public/example/**',
     ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  // apps/web (React)
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['apps/web/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
+      globals: { ...globals.browser, ...globals.node },
     },
-    plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-    },
+    plugins: { 'react-hooks': reactHooks, 'react-refresh': reactRefresh },
     rules: {
       ...reactHooks.configs.recommended.rules,
-
-      // Keep hooks strict; keep refresh rule off to avoid warnings when
-      // running with --max-warnings=0 (used by lint-staged).
       'react-refresh/only-export-components': 'off',
+    },
+  },
+  // apps/api (Node)
+  {
+    files: ['apps/api/**/*.ts'],
+    languageOptions: {
+      ecmaVersion: 'latest',
+      sourceType: 'module',
+      globals: { ...globals.node },
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
 );

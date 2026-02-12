@@ -8,6 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+package-lock.json
 dist
 dist-ssr
 *.local
@@ -17,7 +18,13 @@ dist-ssr
 .husky/_/
 
 # Reference assets (keep local only)
-public/example/free-react-tailwind-admin-dashboard-main/
+apps/web/public/example/
+
+# API env and local DB
+.env
+apps/api/.env
+apps/api/prisma/**/*.db
+apps/api/prisma/**/*.db-journal
 
 # Editor directories and files
 .vscode/*

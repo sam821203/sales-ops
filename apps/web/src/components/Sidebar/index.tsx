@@ -133,7 +133,8 @@ export default function Sidebar(props: {
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
-                        sidebarExpanded ? handleClick() : setSidebarExpanded(true);
+                        if (sidebarExpanded) handleClick();
+                        else setSidebarExpanded(true);
                       }}
                     >
                       <DashboardOutlined className="text-[18px]" />
@@ -264,7 +265,8 @@ export default function Sidebar(props: {
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
-                        sidebarExpanded ? handleClick() : setSidebarExpanded(true);
+                        if (sidebarExpanded) handleClick();
+                        else setSidebarExpanded(true);
                       }}
                     >
                       <FormOutlined className="text-[18px]" />
@@ -358,7 +360,8 @@ export default function Sidebar(props: {
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
-                        sidebarExpanded ? handleClick() : setSidebarExpanded(true);
+                        if (sidebarExpanded) handleClick();
+                        else setSidebarExpanded(true);
                       }}
                     >
                       <AppstoreOutlined className="text-[18px]" />
@@ -420,7 +423,8 @@ export default function Sidebar(props: {
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
-                        sidebarExpanded ? handleClick() : setSidebarExpanded(true);
+                        if (sidebarExpanded) handleClick();
+                        else setSidebarExpanded(true);
                       }}
                     >
                       <LockOutlined className="text-[18px]" />
