@@ -16,6 +16,13 @@ export default tseslint.config(
       'apps/web/public/example/**',
     ],
   },
+  {
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   // apps/web (React)
@@ -34,11 +41,15 @@ export default tseslint.config(
   },
   // apps/api (Node)
   {
-    files: ['apps/api/**/*.ts'],
+    files: ['apps/api/src/**/*.ts'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: { ...globals.node },
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
