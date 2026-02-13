@@ -9,17 +9,16 @@ export default function Header(props: {
   setSidebarOpen: (open: boolean) => void;
 }) {
   return (
-    <header className="sticky top-0 z-999 flex w-full bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">
-      <div className="flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
+    <header className="sticky top-0 z-999 flex w-full border-b border-gray-200 bg-white/95 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/95">
+      <div className="flex w-full flex-grow items-center justify-between gap-3 px-3 py-3 sm:px-5 lg:px-6 xl:px-8">
         <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
-          {/* <!-- Hamburger Toggle BTN --> */}
           <button
             aria-controls="sidebar"
             onClick={(e) => {
               e.stopPropagation();
               props.setSidebarOpen(!props.sidebarOpen);
             }}
-            className="z-99999 block rounded-sm border border-stroke bg-white p-1.5 shadow-sm dark:border-strokedark dark:bg-boxdark lg:hidden"
+            className="z-99999 block h-10 w-10 rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-300 dark:hover:bg-white/10 lg:hidden"
           >
             <span className="relative block h-5.5 w-5.5 cursor-pointer">
               <span className="du-block absolute right-0 h-full w-full">
@@ -53,13 +52,9 @@ export default function Header(props: {
               </span>
             </span>
           </button>
-          {/* <!-- Hamburger Toggle BTN --> */}
 
           <Link className="block flex-shrink-0 lg:hidden" to="/">
-            <img
-              src="/logo-salesops-icon.svg"
-              alt="SalesOps"
-            />
+            <img src="/logo-salesops-icon.svg" alt="SalesOps" />
           </Link>
         </div>
 
@@ -96,13 +91,13 @@ export default function Header(props: {
             <input
               type="text"
               placeholder="Type to search..."
-              className="w-full rounded-md border border-stroke bg-transparent py-2 pl-10 pr-4 text-black placeholder:text-body outline-none focus:border-primary dark:border-strokedark dark:text-white dark:placeholder:text-bodydark dark:focus:border-primary xl:w-125"
+              className="h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-10 pr-4 text-sm text-gray-800 placeholder:text-gray-400 outline-none transition-colors focus:border-brand-300 dark:border-gray-800 dark:bg-white/[0.02] dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-800 xl:w-[420px]"
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-3 2xsm:gap-7">
-          <ul className="flex items-center gap-2 2xsm:gap-4">
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <ul className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-2 py-1 dark:border-gray-800 dark:bg-white/[0.03]">
             <DarkModeSwitcher />
             <DropdownNotification />
             <DropdownMessage />

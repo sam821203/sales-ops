@@ -13,7 +13,7 @@ export default function DropdownUser() {
     <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
       <button
         type="button"
-        className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-gray-2 dark:hover:bg-meta-4"
+        className="flex items-center gap-2.5 rounded-lg border border-transparent px-2.5 py-1.5 transition-colors hover:border-gray-200 hover:bg-gray-100 dark:hover:border-gray-700 dark:hover:bg-white/10"
       >
         <Avatar size={32} style={{ backgroundColor: '#3C50E0' }}>
           U

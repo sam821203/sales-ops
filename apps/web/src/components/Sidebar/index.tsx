@@ -40,7 +40,7 @@ function GroupLinks(props: {
     >
       <div className="overflow-hidden">
         <ul
-          className={`mb-5.5 mt-4 flex flex-col gap-2.5 pl-6 transition-all duration-200 ease-in-out ${
+          className={`mb-6 mt-2 flex flex-col gap-1.5 pl-5 transition-all duration-200 ease-in-out ${
             props.open ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
           }`}
         >
@@ -48,8 +48,9 @@ function GroupLinks(props: {
             <li key={link.to}>
               <Link
                 to={link.to}
-                className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-body duration-300 ease-in-out hover:text-black dark:text-bodydark2 dark:hover:text-white ${
-                  props.pathname === link.to && '!text-black dark:!text-white'
+                className={`group relative flex items-center rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white ${
+                  props.pathname === link.to &&
+                  'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
                 }`}
               >
                 {link.label}
@@ -110,15 +111,15 @@ export default function Sidebar(props: {
   return (
     <aside
       ref={sidebar}
-      className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden border-r border-stroke bg-white duration-300 ease-linear dark:border-strokedark dark:bg-boxdark lg:static lg:translate-x-0 ${
+      className={`absolute left-0 top-0 z-9999 flex h-screen w-[290px] flex-col overflow-y-hidden border-r border-gray-200 bg-white/95 backdrop-blur-sm duration-300 ease-linear dark:border-gray-800 dark:bg-gray-900/95 lg:static lg:translate-x-0 ${
         props.sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
-      <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
+      <div className="flex items-center justify-between gap-2 border-b border-gray-200 px-5 py-5 dark:border-gray-800">
         <Link to="/">
           <div className="flex items-center gap-3">
             <img src="/logo.svg" alt="SalesOps" className="h-8 w-8" />
-            <span className="text-2xl font-semibold tracking-wide text-black dark:text-white">
+            <span className="text-xl font-semibold tracking-wide text-gray-900 dark:text-white">
               Sales<span className="text-primary">Ops</span>
             </span>
           </div>
@@ -147,25 +148,25 @@ export default function Sidebar(props: {
         </button>
       </div>
 
-      <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
-        <nav className="mt-5 px-4 py-4 lg:mt-9 lg:px-6">
+      <div className="no-scrollbar flex flex-col overflow-y-auto px-4 py-4 duration-300 ease-linear lg:px-5">
+        <nav className="mt-1">
           <div>
-            <h3 className="mb-4 ml-4 text-sm font-semibold text-body dark:text-bodydark2">
+            <h3 className="mb-3 ml-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
               MENU
             </h3>
 
-            <ul className="mb-6 flex flex-col gap-1.5">
+            <ul className="mb-6 flex flex-col gap-1">
               <li>
                 <Link
                   to="/dashboard/ecommerce"
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
+                  className={`group relative flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 duration-200 ease-in-out hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white ${
                     (pathname === '/' ||
                       pathname === '/dashboard' ||
                       pathname.startsWith('/dashboard/')) &&
-                    'bg-gray dark:bg-meta-4'
+                    'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
                   }`}
                 >
-                  <DashboardOutlined className="text-[18px]" />
+                  <DashboardOutlined className="text-base" />
                   Dashboard
                 </Link>
               </li>
@@ -177,9 +178,9 @@ export default function Sidebar(props: {
                   <>
                     <a
                       href="#"
-                      className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
+                      className={`group relative flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 duration-200 ease-in-out hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white ${
                         ecommercePaths.some((path) => pathname === path) &&
-                        'bg-gray dark:bg-meta-4'
+                        'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
@@ -187,10 +188,10 @@ export default function Sidebar(props: {
                         else setSidebarExpanded(true);
                       }}
                     >
-                      <ShoppingCartOutlined className="text-[18px]" />
+                      <ShoppingCartOutlined className="text-base" />
                       E-commerce
                       <DownOutlined
-                        className={`absolute right-4 top-1/2 -translate-y-1/2 text-[14px] transition-transform duration-200 ease-in-out ${
+                        className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs transition-transform duration-200 ease-in-out ${
                           open ? 'rotate-180' : ''
                         }`}
                       />
@@ -218,9 +219,9 @@ export default function Sidebar(props: {
                   <>
                     <a
                       href="#"
-                      className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
+                      className={`group relative flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 duration-200 ease-in-out hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white ${
                         financePaths.some((path) => pathname === path) &&
-                        'bg-gray dark:bg-meta-4'
+                        'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
@@ -228,10 +229,10 @@ export default function Sidebar(props: {
                         else setSidebarExpanded(true);
                       }}
                     >
-                      <DollarOutlined className="text-[18px]" />
+                      <DollarOutlined className="text-base" />
                       Finance
                       <DownOutlined
-                        className={`absolute right-4 top-1/2 -translate-y-1/2 text-[14px] transition-transform duration-200 ease-in-out ${
+                        className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs transition-transform duration-200 ease-in-out ${
                           open ? 'rotate-180' : ''
                         }`}
                       />
@@ -252,11 +253,12 @@ export default function Sidebar(props: {
               <li>
                 <Link
                   to="/audit-log"
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
-                    pathname === '/audit-log' && 'bg-gray dark:bg-meta-4'
+                  className={`group relative flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 duration-200 ease-in-out hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white ${
+                    pathname === '/audit-log' &&
+                    'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
                   }`}
                 >
-                  <FileSearchOutlined className="text-[18px]" />
+                  <FileSearchOutlined className="text-base" />
                   Audit Log
                 </Link>
               </li>
