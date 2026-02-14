@@ -10,16 +10,20 @@ import {
 import SidebarLinkGroup from './SidebarLinkGroup';
 
 const ecommercePaths = [
-  '/products',
-  '/price-history',
-  '/inventory-adjustment',
-  '/orders',
-  '/order-status-history',
-  '/promotions',
-  '/promotion-status',
+  '/ecommerce/products',
+  '/ecommerce/price-history',
+  '/ecommerce/inventory-adjustment',
+  '/ecommerce/orders',
+  '/ecommerce/order-status-history',
+  '/ecommerce/promotions',
+  '/ecommerce/promotion-status',
 ];
 
-const financePaths = ['/payment-transactions', '/vendor-commission', '/refunds'];
+const financePaths = [
+  '/finance/payment-transactions',
+  '/finance/vendor-commission',
+  '/finance/refunds',
+];
 
 type GroupLink = {
   to: string;
@@ -217,13 +221,13 @@ export default function Sidebar(props: {
                         open={open}
                         pathname={pathname}
                         links={[
-                          { to: '/products', label: 'Products' },
-                          { to: '/price-history', label: 'Price History' },
-                          { to: '/inventory-adjustment', label: 'Inventory' },
-                          { to: '/orders', label: 'Orders' },
-                          { to: '/order-status-history', label: 'Order History' },
-                          { to: '/promotions', label: 'Promotions' },
-                          { to: '/promotion-status', label: 'Promo Status' },
+                          { to: '/ecommerce/products', label: 'Products' },
+                          { to: '/ecommerce/price-history', label: 'Price History' },
+                          { to: '/ecommerce/inventory-adjustment', label: 'Inventory' },
+                          { to: '/ecommerce/orders', label: 'Orders' },
+                          { to: '/ecommerce/order-status-history', label: 'Order History' },
+                          { to: '/ecommerce/promotions', label: 'Promotions' },
+                          { to: '/ecommerce/promotion-status', label: 'Promo Status' },
                         ]}
                       />
                     </>
@@ -268,9 +272,9 @@ export default function Sidebar(props: {
                         open={open}
                         pathname={pathname}
                         links={[
-                          { to: '/payment-transactions', label: 'Payments' },
-                          { to: '/vendor-commission', label: 'Commissions' },
-                          { to: '/refunds', label: 'Refunds' },
+                          { to: '/finance/payment-transactions', label: 'Payments' },
+                          { to: '/finance/vendor-commission', label: 'Commissions' },
+                          { to: '/finance/refunds', label: 'Refunds' },
                         ]}
                       />
                     </>

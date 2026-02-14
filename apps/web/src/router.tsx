@@ -146,63 +146,73 @@ const signUpRoute = createRoute({
   component: SignUpPage,
 });
 
-const productsRoute = createRoute({
+const ecommerceRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/products',
+  path: '/ecommerce',
+});
+
+const productsRoute = createRoute({
+  getParentRoute: () => ecommerceRoute,
+  path: 'products',
   component: ProductsPage,
 });
 
 const priceHistoryRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/price-history',
+  getParentRoute: () => ecommerceRoute,
+  path: 'price-history',
   component: PriceHistoryPage,
 });
 
 const inventoryAdjustmentRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/inventory-adjustment',
+  getParentRoute: () => ecommerceRoute,
+  path: 'inventory-adjustment',
   component: InventoryAdjustmentPage,
 });
 
 const ordersRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/orders',
+  getParentRoute: () => ecommerceRoute,
+  path: 'orders',
   component: OrdersPage,
 });
 
 const orderStatusHistoryRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/order-status-history',
+  getParentRoute: () => ecommerceRoute,
+  path: 'order-status-history',
   component: OrderStatusHistoryPage,
 });
 
 const promotionsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/promotions',
+  getParentRoute: () => ecommerceRoute,
+  path: 'promotions',
   component: PromotionsPage,
 });
 
 const promotionStatusRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/promotion-status',
+  getParentRoute: () => ecommerceRoute,
+  path: 'promotion-status',
   component: PromotionStatusPage,
 });
 
-const paymentTransactionsRoute = createRoute({
+const financeRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/payment-transactions',
+  path: '/finance',
+});
+
+const paymentTransactionsRoute = createRoute({
+  getParentRoute: () => financeRoute,
+  path: 'payment-transactions',
   component: PaymentTransactionsPage,
 });
 
 const vendorCommissionRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/vendor-commission',
+  getParentRoute: () => financeRoute,
+  path: 'vendor-commission',
   component: VendorCommissionPage,
 });
 
 const refundsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/refunds',
+  getParentRoute: () => financeRoute,
+  path: 'refunds',
   component: RefundsPage,
 });
 
@@ -231,16 +241,16 @@ const routeTree = rootRoute.addChildren([
   formLayoutRoute,
   signInRoute,
   signUpRoute,
-  productsRoute,
-  priceHistoryRoute,
-  inventoryAdjustmentRoute,
-  ordersRoute,
-  orderStatusHistoryRoute,
-  promotionsRoute,
-  promotionStatusRoute,
-  paymentTransactionsRoute,
-  vendorCommissionRoute,
-  refundsRoute,
+  ecommerceRoute.addChildren([
+    productsRoute,
+    priceHistoryRoute,
+    inventoryAdjustmentRoute,
+    ordersRoute,
+    orderStatusHistoryRoute,
+    promotionsRoute,
+    promotionStatusRoute,
+  ]),
+  financeRoute.addChildren([paymentTransactionsRoute, vendorCommissionRoute, refundsRoute]),
   auditLogRoute,
 ]);
 
