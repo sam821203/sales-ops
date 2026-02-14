@@ -11,7 +11,6 @@ import SidebarLinkGroup from './SidebarLinkGroup';
 
 const ecommercePaths = [
   '/products',
-  '/product-management',
   '/price-history',
   '/inventory-adjustment',
   '/orders',
@@ -219,7 +218,6 @@ export default function Sidebar(props: {
                         pathname={pathname}
                         links={[
                           { to: '/products', label: 'Products' },
-                          { to: '/product-management', label: 'Product Mgmt' },
                           { to: '/price-history', label: 'Price History' },
                           { to: '/inventory-adjustment', label: 'Inventory' },
                           { to: '/orders', label: 'Orders' },

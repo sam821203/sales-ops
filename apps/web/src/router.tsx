@@ -152,12 +152,6 @@ const productsRoute = createRoute({
   component: ProductsPage,
 });
 
-const productManagementRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/product-management',
-  component: ProductsPage,
-});
-
 const priceHistoryRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/price-history',
@@ -238,7 +232,6 @@ const routeTree = rootRoute.addChildren([
   signInRoute,
   signUpRoute,
   productsRoute,
-  productManagementRoute,
   priceHistoryRoute,
   inventoryAdjustmentRoute,
   ordersRoute,
