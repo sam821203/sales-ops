@@ -124,7 +124,7 @@ export default function Sidebar(props: {
         <Link to="/">
           <div className="flex items-center gap-3">
             <img src="/logo.svg" alt="SalesOps" className="h-8 w-8" />
-            <span className="text-xl font-semibold tracking-wide text-gray-900 dark:text-white">
+            <span className="text-xl font-medium tracking-wide text-gray-900 dark:text-white">
               Sales<span className="text-primary">Ops</span>
             </span>
           </div>
@@ -156,7 +156,7 @@ export default function Sidebar(props: {
       <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
         <nav className="mb-6">
           <div>
-            <h3 className="mb-3 flex text-xs font-semibold uppercase  tracking-wide text-gray-400 dark:text-gray-500">
+            <h3 className="mb-3 flex text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
               MENU
             </h3>
 
@@ -177,7 +177,7 @@ export default function Sidebar(props: {
                   >
                     <DashboardOutlined />
                   </span>
-                  Dashboard
+                  <span className="font-medium">Dashboard</span>
                 </Link>
               </li>
 
@@ -205,7 +205,7 @@ export default function Sidebar(props: {
                         >
                           <ShoppingCartOutlined />
                         </span>
-                        E-commerce
+                        <span className="font-medium">E-commerce</span>
                         <DownOutlined
                           className={`ml-auto h-5 w-5 text-xs transition-transform duration-200 ease-in-out ${
                             open
@@ -257,7 +257,7 @@ export default function Sidebar(props: {
                         >
                           <DollarOutlined />
                         </span>
-                        Finance
+                        <span className="font-medium">Finance</span>
                         <DownOutlined
                           className={`ml-auto h-5 w-5 text-xs transition-transform duration-200 ease-in-out ${
                             open
@@ -298,7 +298,7 @@ export default function Sidebar(props: {
                   >
                     <FileSearchOutlined />
                   </span>
-                  Audit Log
+                  <span className="font-medium">Audit Log</span>
                 </Link>
               </li>
             </ul>
