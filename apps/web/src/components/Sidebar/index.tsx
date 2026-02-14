@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import {
+  CaretDownFilled,
   DashboardOutlined,
   DollarOutlined,
-  DownOutlined,
   FileSearchOutlined,
   ShoppingCartOutlined,
 } from '@ant-design/icons';
@@ -80,10 +80,14 @@ export default function Sidebar(props: {
   const trigger = useRef<HTMLButtonElement | null>(null);
   const sidebar = useRef<HTMLElement | null>(null);
 
-  const storedSidebarExpanded = localStorage.getItem('sidebar-expanded');
-  const [sidebarExpanded, setSidebarExpanded] = useState(
-    storedSidebarExpanded === null ? false : storedSidebarExpanded === 'true',
-  );
+  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return window.localStorage.getItem('sidebar-expanded') === 'true';
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     const clickHandler = (e: MouseEvent) => {
@@ -188,13 +192,12 @@ export default function Sidebar(props: {
                 <SidebarLinkGroup activeCondition={isEcommerceActive}>
                   {(handleClick, open) => (
                     <>
-                      <a
-                        href="#"
+                      <button
+                        type="button"
                         className={`menu-item group ${
                           isEcommerceActive ? 'menu-item-active' : 'menu-item-inactive'
                         }`}
-                        onClick={(e) => {
-                          e.preventDefault();
+                        onClick={() => {
                           if (sidebarExpanded) handleClick();
                           else setSidebarExpanded(true);
                         }}
@@ -209,14 +212,14 @@ export default function Sidebar(props: {
                           <ShoppingCartOutlined />
                         </span>
                         <span className="font-medium">E-commerce</span>
-                        <DownOutlined
-                          className={`ml-auto h-5 w-5 text-xs transition-transform duration-200 ease-in-out ${
+                        <CaretDownFilled
+                          className={`ml-auto text-sm transition-transform duration-200 ${
                             open
                               ? 'rotate-180 text-brand-500 dark:text-brand-400'
                               : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
                           }`}
                         />
-                      </a>
+                      </button>
                       <GroupLinks
                         open={open}
                         pathname={pathname}
@@ -239,13 +242,12 @@ export default function Sidebar(props: {
                 <SidebarLinkGroup activeCondition={isFinanceActive}>
                   {(handleClick, open) => (
                     <>
-                      <a
-                        href="#"
+                      <button
+                        type="button"
                         className={`menu-item group ${
                           isFinanceActive ? 'menu-item-active' : 'menu-item-inactive'
                         }`}
-                        onClick={(e) => {
-                          e.preventDefault();
+                        onClick={() => {
                           if (sidebarExpanded) handleClick();
                           else setSidebarExpanded(true);
                         }}
@@ -260,14 +262,14 @@ export default function Sidebar(props: {
                           <DollarOutlined />
                         </span>
                         <span className="font-medium">Finance</span>
-                        <DownOutlined
-                          className={`ml-auto h-5 w-5 text-xs transition-transform duration-200 ease-in-out ${
+                        <CaretDownFilled
+                          className={`ml-auto text-sm transition-transform duration-200 ${
                             open
                               ? 'rotate-180 text-brand-500 dark:text-brand-400'
                               : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
                           }`}
                         />
-                      </a>
+                      </button>
                       <GroupLinks
                         open={open}
                         pathname={pathname}
