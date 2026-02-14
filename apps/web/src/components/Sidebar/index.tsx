@@ -48,9 +48,10 @@ function GroupLinks(props: {
             <li key={link.to}>
               <Link
                 to={link.to}
-                className={`group relative flex items-center rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-white ${
-                  props.pathname === link.to &&
-                  'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
+                className={`menu-dropdown-item ${
+                  props.pathname === link.to
+                    ? 'menu-dropdown-item-active'
+                    : 'menu-dropdown-item-inactive'
                 }`}
               >
                 {link.label}
@@ -68,6 +69,10 @@ export default function Sidebar(props: {
   setSidebarOpen: (open: boolean) => void;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isDashboardActive =
+    pathname === '/' || pathname === '/dashboard' || pathname.startsWith('/dashboard/');
+  const isEcommerceActive = ecommercePaths.some((path) => pathname === path);
+  const isFinanceActive = financePaths.some((path) => pathname === path);
 
   const trigger = useRef<HTMLButtonElement | null>(null);
   const sidebar = useRef<HTMLElement | null>(null);
@@ -115,7 +120,7 @@ export default function Sidebar(props: {
         props.sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
-      <div className="flex items-center justify-between gap-2 border-b border-gray-200 px-5 py-5 dark:border-gray-800">
+      <div className="flex items-center justify-between gap-2 px-5 py-5">
         <Link to="/">
           <div className="flex items-center gap-3">
             <img src="/logo.svg" alt="SalesOps" className="h-8 w-8" />
@@ -159,28 +164,30 @@ export default function Sidebar(props: {
               <li>
                 <Link
                   to="/dashboard/ecommerce"
-                  className={`group relative flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 duration-200 ease-in-out hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white ${
-                    (pathname === '/' ||
-                      pathname === '/dashboard' ||
-                      pathname.startsWith('/dashboard/')) &&
-                    'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
+                  className={`menu-item group ${
+                    isDashboardActive ? 'menu-item-active' : 'menu-item-inactive'
                   }`}
                 >
-                  <DashboardOutlined className="text-base" />
+                  <span
+                    className={`menu-item-icon-size ${
+                      isDashboardActive
+                        ? 'menu-item-icon-active'
+                        : 'menu-item-icon-inactive'
+                    }`}
+                  >
+                    <DashboardOutlined />
+                  </span>
                   Dashboard
                 </Link>
               </li>
 
-              <SidebarLinkGroup
-                activeCondition={ecommercePaths.some((path) => pathname === path)}
-              >
+              <SidebarLinkGroup activeCondition={isEcommerceActive}>
                 {(handleClick, open) => (
                   <>
                     <a
                       href="#"
-                      className={`group relative flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 duration-200 ease-in-out hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white ${
-                        ecommercePaths.some((path) => pathname === path) &&
-                        'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
+                      className={`menu-item group ${
+                        isEcommerceActive ? 'menu-item-active' : 'menu-item-inactive'
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
@@ -188,11 +195,21 @@ export default function Sidebar(props: {
                         else setSidebarExpanded(true);
                       }}
                     >
-                      <ShoppingCartOutlined className="text-base" />
+                      <span
+                        className={`menu-item-icon-size ${
+                          isEcommerceActive
+                            ? 'menu-item-icon-active'
+                            : 'menu-item-icon-inactive'
+                        }`}
+                      >
+                        <ShoppingCartOutlined />
+                      </span>
                       E-commerce
                       <DownOutlined
                         className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs transition-transform duration-200 ease-in-out ${
-                          open ? 'rotate-180' : ''
+                          open
+                            ? 'rotate-180 text-brand-500 dark:text-brand-400'
+                            : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
                         }`}
                       />
                     </a>
@@ -214,14 +231,13 @@ export default function Sidebar(props: {
                 )}
               </SidebarLinkGroup>
 
-              <SidebarLinkGroup activeCondition={financePaths.some((path) => pathname === path)}>
+              <SidebarLinkGroup activeCondition={isFinanceActive}>
                 {(handleClick, open) => (
                   <>
                     <a
                       href="#"
-                      className={`group relative flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 duration-200 ease-in-out hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white ${
-                        financePaths.some((path) => pathname === path) &&
-                        'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
+                      className={`menu-item group ${
+                        isFinanceActive ? 'menu-item-active' : 'menu-item-inactive'
                       }`}
                       onClick={(e) => {
                         e.preventDefault();
@@ -229,11 +245,21 @@ export default function Sidebar(props: {
                         else setSidebarExpanded(true);
                       }}
                     >
-                      <DollarOutlined className="text-base" />
+                      <span
+                        className={`menu-item-icon-size ${
+                          isFinanceActive
+                            ? 'menu-item-icon-active'
+                            : 'menu-item-icon-inactive'
+                        }`}
+                      >
+                        <DollarOutlined />
+                      </span>
                       Finance
                       <DownOutlined
                         className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs transition-transform duration-200 ease-in-out ${
-                          open ? 'rotate-180' : ''
+                          open
+                            ? 'rotate-180 text-brand-500 dark:text-brand-400'
+                            : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
                         }`}
                       />
                     </a>
@@ -253,12 +279,21 @@ export default function Sidebar(props: {
               <li>
                 <Link
                   to="/audit-log"
-                  className={`group relative flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 duration-200 ease-in-out hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-white/10 dark:hover:text-white ${
-                    pathname === '/audit-log' &&
-                    'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300'
+                  className={`menu-item group ${
+                    pathname === '/audit-log'
+                      ? 'menu-item-active'
+                      : 'menu-item-inactive'
                   }`}
                 >
-                  <FileSearchOutlined className="text-base" />
+                  <span
+                    className={`menu-item-icon-size ${
+                      pathname === '/audit-log'
+                        ? 'menu-item-icon-active'
+                        : 'menu-item-icon-inactive'
+                    }`}
+                  >
+                    <FileSearchOutlined />
+                  </span>
                   Audit Log
                 </Link>
               </li>
