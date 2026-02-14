@@ -54,7 +54,7 @@ export default function Header(props: {
           </button>
 
           <Link className="block flex-shrink-0 lg:hidden" to="/">
-            <img src="/logo-salesops-icon.svg" alt="SalesOps" />
+            <img src="/logo.svg" alt="SalesOps" />
           </Link>
         </div>
 

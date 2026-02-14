@@ -40,7 +40,7 @@ function GroupLinks(props: {
     >
       <div className="overflow-hidden">
         <ul
-          className={`mb-6 mt-2 flex flex-col gap-1.5 pl-5 transition-all duration-200 ease-in-out ${
+          className={`ml-9 mt-2 flex flex-col gap-1 transition-all duration-200 ease-in-out ${
             props.open ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
           }`}
         >
@@ -116,11 +116,11 @@ export default function Sidebar(props: {
   return (
     <aside
       ref={sidebar}
-      className={`absolute left-0 top-0 z-9999 flex h-screen w-[290px] flex-col overflow-y-hidden border-r border-gray-200 bg-white/95 backdrop-blur-sm duration-300 ease-linear dark:border-gray-800 dark:bg-gray-900/95 lg:static lg:translate-x-0 ${
+      className={`absolute left-0 top-0 z-9999 flex h-screen w-[290px] flex-col overflow-y-hidden border-r border-gray-200 bg-white/95 px-5 backdrop-blur-sm duration-300 ease-linear dark:border-gray-800 dark:bg-gray-900/95 lg:static lg:translate-x-0 ${
         props.sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
-      <div className="flex items-center justify-between gap-2 px-5 py-5">
+      <div className="flex items-center justify-between py-5">
         <Link to="/">
           <div className="flex items-center gap-3">
             <img src="/logo.svg" alt="SalesOps" className="h-8 w-8" />
@@ -153,10 +153,10 @@ export default function Sidebar(props: {
         </button>
       </div>
 
-      <div className="no-scrollbar flex flex-col overflow-y-auto px-4 py-4 duration-300 ease-linear lg:px-5">
-        <nav className="mt-1">
+      <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
+        <nav className="mb-6">
           <div>
-            <h3 className="mb-3 ml-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+            <h3 className="mb-3 flex text-xs font-semibold uppercase  tracking-wide text-gray-400 dark:text-gray-500">
               MENU
             </h3>
 
@@ -181,100 +181,104 @@ export default function Sidebar(props: {
                 </Link>
               </li>
 
-              <SidebarLinkGroup activeCondition={isEcommerceActive}>
-                {(handleClick, open) => (
-                  <>
-                    <a
-                      href="#"
-                      className={`menu-item group ${
-                        isEcommerceActive ? 'menu-item-active' : 'menu-item-inactive'
-                      }`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (sidebarExpanded) handleClick();
-                        else setSidebarExpanded(true);
-                      }}
-                    >
-                      <span
-                        className={`menu-item-icon-size ${
-                          isEcommerceActive
-                            ? 'menu-item-icon-active'
-                            : 'menu-item-icon-inactive'
+              <li>
+                <SidebarLinkGroup activeCondition={isEcommerceActive}>
+                  {(handleClick, open) => (
+                    <>
+                      <a
+                        href="#"
+                        className={`menu-item group ${
+                          isEcommerceActive ? 'menu-item-active' : 'menu-item-inactive'
                         }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (sidebarExpanded) handleClick();
+                          else setSidebarExpanded(true);
+                        }}
                       >
-                        <ShoppingCartOutlined />
-                      </span>
-                      E-commerce
-                      <DownOutlined
-                        className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs transition-transform duration-200 ease-in-out ${
-                          open
-                            ? 'rotate-180 text-brand-500 dark:text-brand-400'
-                            : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
-                        }`}
+                        <span
+                          className={`menu-item-icon-size ${
+                            isEcommerceActive
+                              ? 'menu-item-icon-active'
+                              : 'menu-item-icon-inactive'
+                          }`}
+                        >
+                          <ShoppingCartOutlined />
+                        </span>
+                        E-commerce
+                        <DownOutlined
+                          className={`ml-auto h-5 w-5 text-xs transition-transform duration-200 ease-in-out ${
+                            open
+                              ? 'rotate-180 text-brand-500 dark:text-brand-400'
+                              : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
+                          }`}
+                        />
+                      </a>
+                      <GroupLinks
+                        open={open}
+                        pathname={pathname}
+                        links={[
+                          { to: '/products', label: 'Products' },
+                          { to: '/product-management', label: 'Product Mgmt' },
+                          { to: '/price-history', label: 'Price History' },
+                          { to: '/inventory-adjustment', label: 'Inventory' },
+                          { to: '/orders', label: 'Orders' },
+                          { to: '/order-status-history', label: 'Order History' },
+                          { to: '/promotions', label: 'Promotions' },
+                          { to: '/promotion-status', label: 'Promo Status' },
+                        ]}
                       />
-                    </a>
-                    <GroupLinks
-                      open={open}
-                      pathname={pathname}
-                      links={[
-                        { to: '/products', label: 'Products' },
-                        { to: '/product-management', label: 'Product Mgmt' },
-                        { to: '/price-history', label: 'Price History' },
-                        { to: '/inventory-adjustment', label: 'Inventory' },
-                        { to: '/orders', label: 'Orders' },
-                        { to: '/order-status-history', label: 'Order History' },
-                        { to: '/promotions', label: 'Promotions' },
-                        { to: '/promotion-status', label: 'Promo Status' },
-                      ]}
-                    />
-                  </>
-                )}
-              </SidebarLinkGroup>
+                    </>
+                  )}
+                </SidebarLinkGroup>
+              </li>
 
-              <SidebarLinkGroup activeCondition={isFinanceActive}>
-                {(handleClick, open) => (
-                  <>
-                    <a
-                      href="#"
-                      className={`menu-item group ${
-                        isFinanceActive ? 'menu-item-active' : 'menu-item-inactive'
-                      }`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (sidebarExpanded) handleClick();
-                        else setSidebarExpanded(true);
-                      }}
-                    >
-                      <span
-                        className={`menu-item-icon-size ${
-                          isFinanceActive
-                            ? 'menu-item-icon-active'
-                            : 'menu-item-icon-inactive'
+              <li>
+                <SidebarLinkGroup activeCondition={isFinanceActive}>
+                  {(handleClick, open) => (
+                    <>
+                      <a
+                        href="#"
+                        className={`menu-item group ${
+                          isFinanceActive ? 'menu-item-active' : 'menu-item-inactive'
                         }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (sidebarExpanded) handleClick();
+                          else setSidebarExpanded(true);
+                        }}
                       >
-                        <DollarOutlined />
-                      </span>
-                      Finance
-                      <DownOutlined
-                        className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs transition-transform duration-200 ease-in-out ${
-                          open
-                            ? 'rotate-180 text-brand-500 dark:text-brand-400'
-                            : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
-                        }`}
+                        <span
+                          className={`menu-item-icon-size ${
+                            isFinanceActive
+                              ? 'menu-item-icon-active'
+                              : 'menu-item-icon-inactive'
+                          }`}
+                        >
+                          <DollarOutlined />
+                        </span>
+                        Finance
+                        <DownOutlined
+                          className={`ml-auto h-5 w-5 text-xs transition-transform duration-200 ease-in-out ${
+                            open
+                              ? 'rotate-180 text-brand-500 dark:text-brand-400'
+                              : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
+                          }`}
+                        />
+                      </a>
+                      <GroupLinks
+                        open={open}
+                        pathname={pathname}
+                        links={[
+                          { to: '/payment-transactions', label: 'Payments' },
+                          { to: '/vendor-commission', label: 'Commissions' },
+                          { to: '/refunds', label: 'Refunds' },
+                        ]}
                       />
-                    </a>
-                    <GroupLinks
-                      open={open}
-                      pathname={pathname}
-                      links={[
-                        { to: '/payment-transactions', label: 'Payments' },
-                        { to: '/vendor-commission', label: 'Commissions' },
-                        { to: '/refunds', label: 'Refunds' },
-                      ]}
-                    />
-                  </>
-                )}
-              </SidebarLinkGroup>
+                    </>
+                  )}
+                </SidebarLinkGroup>
+              </li>
 
               <li>
                 <Link
