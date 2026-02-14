@@ -13,6 +13,13 @@ export default tseslint.config(
       'public/example/**',
     ],
   },
+  {
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
