@@ -15,7 +15,13 @@ createRoot(document.getElementById('root') as HTMLElement).render(
   <StrictMode>
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <ConfigProvider>
+        <ConfigProvider
+          theme={{
+            token: {
+              fontFamily: 'Outfit, sans-serif',
+            },
+          }}
+        >
           <AntApp>
             <RouterProvider router={router} />
           </AntApp>

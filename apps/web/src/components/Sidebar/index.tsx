@@ -1,24 +1,81 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import {
-  AppstoreOutlined,
-  BarChartOutlined,
-  CalendarOutlined,
   DashboardOutlined,
+  DollarOutlined,
   DownOutlined,
-  FormOutlined,
-  LockOutlined,
-  SettingOutlined,
-  TableOutlined,
-  UserOutlined,
+  FileSearchOutlined,
+  ShoppingCartOutlined,
 } from '@ant-design/icons';
 import SidebarLinkGroup from './SidebarLinkGroup';
+
+const ecommercePaths = [
+  '/ecommerce/products',
+  '/ecommerce/price-history',
+  '/ecommerce/inventory-adjustment',
+  '/ecommerce/orders',
+  '/ecommerce/order-status-history',
+  '/ecommerce/promotions',
+  '/ecommerce/promotion-status',
+];
+
+const financePaths = [
+  '/finance/payment-transactions',
+  '/finance/vendor-commission',
+  '/finance/refunds',
+];
+
+type GroupLink = {
+  to: string;
+  label: string;
+};
+
+function GroupLinks(props: {
+  open: boolean;
+  pathname: string;
+  links: GroupLink[];
+}) {
+  return (
+    <div
+      className={`grid overflow-hidden transition-[grid-template-rows] duration-200 ease-in-out ${
+        props.open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+      }`}
+    >
+      <div className="overflow-hidden">
+        <ul
+          className={`ml-9 mt-2 flex flex-col gap-1 transition-all duration-200 ease-in-out ${
+            props.open ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
+          }`}
+        >
+          {props.links.map((link) => (
+            <li key={link.to}>
+              <Link
+                to={link.to}
+                className={`menu-dropdown-item ${
+                  props.pathname === link.to
+                    ? 'menu-dropdown-item-active'
+                    : 'menu-dropdown-item-inactive'
+                }`}
+              >
+                {link.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
 
 export default function Sidebar(props: {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isDashboardActive =
+    pathname === '/' || pathname === '/dashboard' || pathname.startsWith('/dashboard/');
+  const isEcommerceActive = ecommercePaths.some((path) => pathname === path);
+  const isFinanceActive = financePaths.some((path) => pathname === path);
 
   const trigger = useRef<HTMLButtonElement | null>(null);
   const sidebar = useRef<HTMLElement | null>(null);
@@ -28,7 +85,6 @@ export default function Sidebar(props: {
     storedSidebarExpanded === null ? false : storedSidebarExpanded === 'true',
   );
 
-  // close on click outside
   useEffect(() => {
     const clickHandler = (e: MouseEvent) => {
       const target = e.target as Node | null;
@@ -45,7 +101,6 @@ export default function Sidebar(props: {
     return () => document.removeEventListener('click', clickHandler);
   }, [props]);
 
-  // close if the esc key is pressed
   useEffect(() => {
     const keyHandler = (e: KeyboardEvent) => {
       if (!props.sidebarOpen || e.key !== 'Escape') return;
@@ -64,16 +119,15 @@ export default function Sidebar(props: {
   return (
     <aside
       ref={sidebar}
-      className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden border-r border-stroke bg-white duration-300 ease-linear dark:border-strokedark dark:bg-boxdark lg:static lg:translate-x-0 ${
+      className={`absolute left-0 top-0 z-9999 flex h-screen w-[290px] flex-col overflow-y-hidden border-r border-gray-200 bg-white/95 px-5 backdrop-blur-sm duration-300 ease-linear dark:border-gray-800 dark:bg-gray-900/95 lg:static lg:translate-x-0 ${
         props.sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
-      {/* <!-- SIDEBAR HEADER --> */}
-      <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5">
+      <div className="flex items-center justify-between py-5">
         <Link to="/">
           <div className="flex items-center gap-3">
             <img src="/logo.svg" alt="SalesOps" className="h-8 w-8" />
-            <span className="text-2xl font-semibold tracking-wide text-black dark:text-white">
+            <span className="text-xl font-medium tracking-wide text-gray-900 dark:text-white">
               Sales<span className="text-primary">Ops</span>
             </span>
           </div>
@@ -101,383 +155,158 @@ export default function Sidebar(props: {
           </svg>
         </button>
       </div>
-      {/* <!-- SIDEBAR HEADER --> */}
 
       <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
-        {/* <!-- Sidebar Menu --> */}
-        <nav className="mt-5 px-4 py-4 lg:mt-9 lg:px-6">
-          {/* <!-- Menu Group --> */}
+        <nav className="mb-6">
           <div>
-            <h3 className="mb-4 ml-4 text-sm font-semibold text-body dark:text-bodydark2">
+            <h3 className="mb-3 flex text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
               MENU
             </h3>
 
-            <ul className="mb-6 flex flex-col gap-1.5">
-              {/* <!-- Menu Item Dashboard --> */}
-              <SidebarLinkGroup
-                activeCondition={
-                  pathname === '/' ||
-                  pathname === '/dashboard' ||
-                  pathname.startsWith('/dashboard/')
-                }
-              >
-                {(handleClick, open) => (
-                  <>
-                    <a
-                      href="#"
-                      className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
-                        (pathname === '/' ||
-                          pathname === '/dashboard' ||
-                          pathname.startsWith('/dashboard/')) &&
-                        'bg-gray dark:bg-meta-4'
-                      }`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (sidebarExpanded) handleClick();
-                        else setSidebarExpanded(true);
-                      }}
-                    >
-                      <DashboardOutlined className="text-[18px]" />
-                      Dashboard
-                      <DownOutlined
-                        className={`absolute right-4 top-1/2 -translate-y-1/2 text-[14px] transition-transform duration-200 ease-in-out ${
-                          open ? 'rotate-180' : ''
+            <ul className="mb-6 flex flex-col gap-1">
+              <li>
+                <Link
+                  to="/dashboard/ecommerce"
+                  className={`menu-item group ${
+                    isDashboardActive ? 'menu-item-active' : 'menu-item-inactive'
+                  }`}
+                >
+                  <span
+                    className={`menu-item-icon-size ${
+                      isDashboardActive
+                        ? 'menu-item-icon-active'
+                        : 'menu-item-icon-inactive'
+                    }`}
+                  >
+                    <DashboardOutlined />
+                  </span>
+                  <span className="font-medium">Dashboard</span>
+                </Link>
+              </li>
+
+              <li>
+                <SidebarLinkGroup activeCondition={isEcommerceActive}>
+                  {(handleClick, open) => (
+                    <>
+                      <a
+                        href="#"
+                        className={`menu-item group ${
+                          isEcommerceActive ? 'menu-item-active' : 'menu-item-inactive'
                         }`}
-                      />
-                    </a>
-                    <div
-                      className={`grid overflow-hidden transition-[grid-template-rows] duration-200 ease-in-out ${
-                        open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                      }`}
-                    >
-                      <div className="overflow-hidden">
-                        <ul
-                          className={`mb-5.5 mt-4 flex flex-col gap-2.5 pl-6 transition-all duration-200 ease-in-out ${
-                            open ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (sidebarExpanded) handleClick();
+                          else setSidebarExpanded(true);
+                        }}
+                      >
+                        <span
+                          className={`menu-item-icon-size ${
+                            isEcommerceActive
+                              ? 'menu-item-icon-active'
+                              : 'menu-item-icon-inactive'
                           }`}
                         >
-                          <li>
-                            <Link
-                              to="/dashboard/ecommerce"
-                              className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-body duration-300 ease-in-out hover:text-black dark:text-bodydark2 dark:hover:text-white ${
-                                (pathname === '/dashboard/ecommerce' || pathname === '/') &&
-                                '!text-black dark:!text-white'
-                              }`}
-                            >
-                              eCommerce
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              to="/dashboard/analytics"
-                              className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-body duration-300 ease-in-out hover:text-black dark:text-bodydark2 dark:hover:text-white ${
-                                pathname === '/dashboard/analytics' && '!text-black dark:!text-white'
-                              }`}
-                            >
-                              Analytics
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              to="/dashboard/crm"
-                              className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-body duration-300 ease-in-out hover:text-black dark:text-bodydark2 dark:hover:text-white ${
-                                pathname === '/dashboard/crm' && '!text-black dark:!text-white'
-                              }`}
-                            >
-                              CRM
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              to="/dashboard/sales"
-                              className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-body duration-300 ease-in-out hover:text-black dark:text-bodydark2 dark:hover:text-white ${
-                                pathname === '/dashboard/sales' && '!text-black dark:!text-white'
-                              }`}
-                            >
-                              Sales
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              to="/dashboard/reports"
-                              className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-body duration-300 ease-in-out hover:text-black dark:text-bodydark2 dark:hover:text-white ${
-                                pathname === '/dashboard/reports' && '!text-black dark:!text-white'
-                              }`}
-                            >
-                              Reports
-                            </Link>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </SidebarLinkGroup>
-              {/* <!-- Menu Item Dashboard --> */}
-
-              <li>
-                <Link
-                  to="/calendar"
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
-                    pathname.includes('calendar') && 'bg-gray dark:bg-meta-4'
-                  }`}
-                >
-                  <CalendarOutlined className="text-[18px]" />
-                  Calendar
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  to="/profile"
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
-                    pathname.includes('profile') && 'bg-gray dark:bg-meta-4'
-                  }`}
-                >
-                  <UserOutlined className="text-[18px]" />
-                  Profile
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  to="/settings"
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
-                    pathname.includes('settings') && 'bg-gray dark:bg-meta-4'
-                  }`}
-                >
-                  <SettingOutlined className="text-[18px]" />
-                  Settings
-                </Link>
-              </li>
-
-              {/* <!-- Menu Item Forms --> */}
-              <SidebarLinkGroup
-                activeCondition={pathname === '/forms' || pathname.includes('forms')}
-              >
-                {(handleClick, open) => (
-                  <>
-                    <a
-                      href="#"
-                      className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
-                        (pathname === '/forms' || pathname.includes('forms')) &&
-                        'bg-gray dark:bg-meta-4'
-                      }`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (sidebarExpanded) handleClick();
-                        else setSidebarExpanded(true);
-                      }}
-                    >
-                      <FormOutlined className="text-[18px]" />
-                      Forms
-                      <DownOutlined
-                        className={`absolute right-4 top-1/2 -translate-y-1/2 text-[14px] transition-transform duration-200 ease-in-out ${
-                          open ? 'rotate-180' : ''
-                        }`}
+                          <ShoppingCartOutlined />
+                        </span>
+                        <span className="font-medium">E-commerce</span>
+                        <DownOutlined
+                          className={`ml-auto h-5 w-5 text-xs transition-transform duration-200 ease-in-out ${
+                            open
+                              ? 'rotate-180 text-brand-500 dark:text-brand-400'
+                              : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
+                          }`}
+                        />
+                      </a>
+                      <GroupLinks
+                        open={open}
+                        pathname={pathname}
+                        links={[
+                          { to: '/ecommerce/products', label: 'Products' },
+                          { to: '/ecommerce/price-history', label: 'Price History' },
+                          { to: '/ecommerce/inventory-adjustment', label: 'Inventory' },
+                          { to: '/ecommerce/orders', label: 'Orders' },
+                          { to: '/ecommerce/order-status-history', label: 'Order History' },
+                          { to: '/ecommerce/promotions', label: 'Promotions' },
+                          { to: '/ecommerce/promotion-status', label: 'Promo Status' },
+                        ]}
                       />
-                    </a>
-                    <div
-                      className={`grid overflow-hidden transition-[grid-template-rows] duration-200 ease-in-out ${
-                        open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                      }`}
-                    >
-                      <div className="overflow-hidden">
-                        <ul
-                          className={`mb-5.5 mt-4 flex flex-col gap-2.5 pl-6 transition-all duration-200 ease-in-out ${
-                            open ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
+                    </>
+                  )}
+                </SidebarLinkGroup>
+              </li>
+
+              <li>
+                <SidebarLinkGroup activeCondition={isFinanceActive}>
+                  {(handleClick, open) => (
+                    <>
+                      <a
+                        href="#"
+                        className={`menu-item group ${
+                          isFinanceActive ? 'menu-item-active' : 'menu-item-inactive'
+                        }`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (sidebarExpanded) handleClick();
+                          else setSidebarExpanded(true);
+                        }}
+                      >
+                        <span
+                          className={`menu-item-icon-size ${
+                            isFinanceActive
+                              ? 'menu-item-icon-active'
+                              : 'menu-item-icon-inactive'
                           }`}
                         >
-                        <li>
-                          <Link
-                            to="/forms/form-elements"
-                            className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-body duration-300 ease-in-out hover:text-black dark:text-bodydark2 dark:hover:text-white ${
-                              pathname.includes('form-elements') && '!text-black dark:!text-white'
-                            }`}
-                          >
-                            Form Elements
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            to="/forms/form-layout"
-                            className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-body duration-300 ease-in-out hover:text-black dark:text-bodydark2 dark:hover:text-white ${
-                              pathname.includes('form-layout') && '!text-black dark:!text-white'
-                            }`}
-                          >
-                            Form Layout
-                          </Link>
-                        </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </SidebarLinkGroup>
-              {/* <!-- Menu Item Forms --> */}
+                          <DollarOutlined />
+                        </span>
+                        <span className="font-medium">Finance</span>
+                        <DownOutlined
+                          className={`ml-auto h-5 w-5 text-xs transition-transform duration-200 ease-in-out ${
+                            open
+                              ? 'rotate-180 text-brand-500 dark:text-brand-400'
+                              : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
+                          }`}
+                        />
+                      </a>
+                      <GroupLinks
+                        open={open}
+                        pathname={pathname}
+                        links={[
+                          { to: '/finance/payment-transactions', label: 'Payments' },
+                          { to: '/finance/vendor-commission', label: 'Commissions' },
+                          { to: '/finance/refunds', label: 'Refunds' },
+                        ]}
+                      />
+                    </>
+                  )}
+                </SidebarLinkGroup>
+              </li>
 
               <li>
                 <Link
-                  to="/tables"
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
-                    pathname.includes('tables') && 'bg-gray dark:bg-meta-4'
+                  to="/audit-log"
+                  className={`menu-item group ${
+                    pathname === '/audit-log'
+                      ? 'menu-item-active'
+                      : 'menu-item-inactive'
                   }`}
                 >
-                  <TableOutlined className="text-[18px]" />
-                  Tables
+                  <span
+                    className={`menu-item-icon-size ${
+                      pathname === '/audit-log'
+                        ? 'menu-item-icon-active'
+                        : 'menu-item-icon-inactive'
+                    }`}
+                  >
+                    <FileSearchOutlined />
+                  </span>
+                  <span className="font-medium">Audit Log</span>
                 </Link>
               </li>
             </ul>
           </div>
-
-          {/* <!-- Others Group --> */}
-          <div>
-            <h3 className="mb-4 ml-4 text-sm font-semibold text-body dark:text-bodydark2">
-              OTHERS
-            </h3>
-
-            <ul className="mb-6 flex flex-col gap-1.5">
-              <li>
-                <Link
-                  to="/chart"
-                  className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
-                    pathname.includes('chart') && 'bg-gray dark:bg-meta-4'
-                  }`}
-                >
-                  <BarChartOutlined className="text-[18px]" />
-                  Chart
-                </Link>
-              </li>
-
-              <SidebarLinkGroup activeCondition={pathname === '/ui' || pathname.includes('ui')}>
-                {(handleClick, open) => (
-                  <>
-                    <a
-                      href="#"
-                      className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
-                        (pathname === '/ui' || pathname.includes('ui')) &&
-                        'bg-gray dark:bg-meta-4'
-                      }`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (sidebarExpanded) handleClick();
-                        else setSidebarExpanded(true);
-                      }}
-                    >
-                      <AppstoreOutlined className="text-[18px]" />
-                      UI Elements
-                      <DownOutlined
-                        className={`absolute right-4 top-1/2 -translate-y-1/2 text-[14px] transition-transform duration-200 ease-in-out ${
-                          open ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </a>
-                    <div
-                      className={`grid overflow-hidden transition-[grid-template-rows] duration-200 ease-in-out ${
-                        open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                      }`}
-                    >
-                      <div className="overflow-hidden">
-                        <ul
-                          className={`mb-5.5 mt-4 flex flex-col gap-2.5 pl-6 transition-all duration-200 ease-in-out ${
-                            open ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
-                          }`}
-                        >
-                        <li>
-                          <Link
-                            to="/ui/alerts"
-                            className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-body duration-300 ease-in-out hover:text-black dark:text-bodydark2 dark:hover:text-white ${
-                              pathname.includes('/ui/alerts') && '!text-black dark:!text-white'
-                            }`}
-                          >
-                            Alerts
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            to="/ui/buttons"
-                            className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-body duration-300 ease-in-out hover:text-black dark:text-bodydark2 dark:hover:text-white ${
-                              pathname.includes('/ui/buttons') && '!text-black dark:!text-white'
-                            }`}
-                          >
-                            Buttons
-                          </Link>
-                        </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </SidebarLinkGroup>
-
-              <SidebarLinkGroup
-                activeCondition={pathname === '/auth' || pathname.includes('auth')}
-              >
-                {(handleClick, open) => (
-                  <>
-                    <a
-                      href="#"
-                      className={`group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-body duration-300 ease-in-out hover:bg-gray dark:text-bodydark1 dark:hover:bg-meta-4 ${
-                        (pathname === '/auth' || pathname.includes('auth')) &&
-                        'bg-gray dark:bg-meta-4'
-                      }`}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (sidebarExpanded) handleClick();
-                        else setSidebarExpanded(true);
-                      }}
-                    >
-                      <LockOutlined className="text-[18px]" />
-                      Authentication
-                      <DownOutlined
-                        className={`absolute right-4 top-1/2 -translate-y-1/2 text-[14px] transition-transform duration-200 ease-in-out ${
-                          open ? 'rotate-180' : ''
-                        }`}
-                      />
-                    </a>
-                    <div
-                      className={`grid overflow-hidden transition-[grid-template-rows] duration-200 ease-in-out ${
-                        open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                      }`}
-                    >
-                      <div className="overflow-hidden">
-                        <ul
-                          className={`mb-5.5 mt-4 flex flex-col gap-2.5 pl-6 transition-all duration-200 ease-in-out ${
-                            open ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
-                          }`}
-                        >
-                        <li>
-                          <Link
-                            to="/auth/signin"
-                            className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-body duration-300 ease-in-out hover:text-black dark:text-bodydark2 dark:hover:text-white ${
-                              pathname.includes('/auth/signin') && '!text-black dark:!text-white'
-                            }`}
-                          >
-                            Sign In
-                          </Link>
-                        </li>
-                        <li>
-                          <Link
-                            to="/auth/signup"
-                            className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-body duration-300 ease-in-out hover:text-black dark:text-bodydark2 dark:hover:text-white ${
-                              pathname.includes('/auth/signup') && '!text-black dark:!text-white'
-                            }`}
-                          >
-                            Sign Up
-                          </Link>
-                        </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </SidebarLinkGroup>
-            </ul>
-          </div>
-          {/* <!-- Others Group --> */}
         </nav>
       </div>
     </aside>
   );
 }
-

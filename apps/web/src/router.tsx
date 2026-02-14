@@ -16,6 +16,17 @@ import { FormElementsPage } from '@/views/FormElementsPage';
 import { FormLayoutPage } from '@/views/FormLayoutPage';
 import { SignInPage } from '@/views/SignInPage';
 import { SignUpPage } from '@/views/SignUpPage';
+import { ProductsPage } from '@/views/ProductsPage';
+import { PriceHistoryPage } from '@/views/PriceHistoryPage';
+import { InventoryAdjustmentPage } from '@/views/InventoryAdjustmentPage';
+import { OrdersPage } from '@/views/OrdersPage';
+import { OrderStatusHistoryPage } from '@/views/OrderStatusHistoryPage';
+import { PromotionsPage } from '@/views/PromotionsPage';
+import { PromotionStatusPage } from '@/views/PromotionStatusPage';
+import { PaymentTransactionsPage } from '@/views/PaymentTransactionsPage';
+import { VendorCommissionPage } from '@/views/VendorCommissionPage';
+import { RefundsPage } from '@/views/RefundsPage';
+import { AuditLogPage } from '@/views/AuditLogPage';
 
 const rootRoute = createRootRoute({
   component: App,
@@ -135,6 +146,82 @@ const signUpRoute = createRoute({
   component: SignUpPage,
 });
 
+const ecommerceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/ecommerce',
+});
+
+const productsRoute = createRoute({
+  getParentRoute: () => ecommerceRoute,
+  path: 'products',
+  component: ProductsPage,
+});
+
+const priceHistoryRoute = createRoute({
+  getParentRoute: () => ecommerceRoute,
+  path: 'price-history',
+  component: PriceHistoryPage,
+});
+
+const inventoryAdjustmentRoute = createRoute({
+  getParentRoute: () => ecommerceRoute,
+  path: 'inventory-adjustment',
+  component: InventoryAdjustmentPage,
+});
+
+const ordersRoute = createRoute({
+  getParentRoute: () => ecommerceRoute,
+  path: 'orders',
+  component: OrdersPage,
+});
+
+const orderStatusHistoryRoute = createRoute({
+  getParentRoute: () => ecommerceRoute,
+  path: 'order-status-history',
+  component: OrderStatusHistoryPage,
+});
+
+const promotionsRoute = createRoute({
+  getParentRoute: () => ecommerceRoute,
+  path: 'promotions',
+  component: PromotionsPage,
+});
+
+const promotionStatusRoute = createRoute({
+  getParentRoute: () => ecommerceRoute,
+  path: 'promotion-status',
+  component: PromotionStatusPage,
+});
+
+const financeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/finance',
+});
+
+const paymentTransactionsRoute = createRoute({
+  getParentRoute: () => financeRoute,
+  path: 'payment-transactions',
+  component: PaymentTransactionsPage,
+});
+
+const vendorCommissionRoute = createRoute({
+  getParentRoute: () => financeRoute,
+  path: 'vendor-commission',
+  component: VendorCommissionPage,
+});
+
+const refundsRoute = createRoute({
+  getParentRoute: () => financeRoute,
+  path: 'refunds',
+  component: RefundsPage,
+});
+
+const auditLogRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/audit-log',
+  component: AuditLogPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   dashboardIndexRoute,
@@ -154,6 +241,17 @@ const routeTree = rootRoute.addChildren([
   formLayoutRoute,
   signInRoute,
   signUpRoute,
+  ecommerceRoute.addChildren([
+    productsRoute,
+    priceHistoryRoute,
+    inventoryAdjustmentRoute,
+    ordersRoute,
+    orderStatusHistoryRoute,
+    promotionsRoute,
+    promotionStatusRoute,
+  ]),
+  financeRoute.addChildren([paymentTransactionsRoute, vendorCommissionRoute, refundsRoute]),
+  auditLogRoute,
 ]);
 
 export const router = createRouter({ routeTree });

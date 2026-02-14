@@ -8,7 +8,7 @@ export default function DropdownMessage() {
       <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
         <button
           type="button"
-          className="relative flex h-8.5 w-8.5 items-center justify-center rounded-full border border-stroke bg-white text-body hover:text-primary dark:border-strokedark dark:bg-boxdark dark:text-bodydark"
+          className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-brand-600 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-brand-400"
         >
           <Badge size="small" count={0} offset={[2, -2]}>
             <svg
