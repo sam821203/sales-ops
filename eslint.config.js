@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
@@ -7,7 +8,7 @@ import tseslint from 'typescript-eslint';
 /**
  * Root ESLint for monorepo. Applies to apps/web and apps/api.
  */
-export default tseslint.config(
+export default defineConfig(
   {
     ignores: [
       '**/node_modules/**',
