@@ -1,4 +1,7 @@
 import Card from '../components/common/Card';
+import type { OrderProcessingStatus } from '@salesops/shared';
+
+const defaultOrderStatus: OrderProcessingStatus = 'Created';
 
 export function ECommercePage() {
   return (
@@ -7,7 +10,9 @@ export function ECommercePage() {
         <h1 className="text-title-md2 font-semibold text-black dark:text-white">
           eCommerce
         </h1>
-        <p className="text-body dark:text-bodydark">Dashboard child route.</p>
+        <p className="text-body dark:text-bodydark">
+          Dashboard child route. Current order status: {defaultOrderStatus}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

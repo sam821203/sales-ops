@@ -1,0 +1,19 @@
+{
+  "name": "@salesops/shared",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  }
+}

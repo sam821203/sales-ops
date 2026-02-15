@@ -4,13 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ],
   "scripts": {
     "dev": "npm run dev --workspace=@salesops/web",
     "dev:web": "npm run dev --workspace=@salesops/web",
     "dev:api": "npm run dev --workspace=@salesops/api",
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run build --workspace=@salesops/shared && npm run build --workspaces --if-present",
     "build:web": "npm run build --workspace=@salesops/web",
     "build:api": "npm run build --workspace=@salesops/api",
     "lint": "npm run lint --workspaces --if-present",
