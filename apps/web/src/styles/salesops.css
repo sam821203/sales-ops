@@ -2,7 +2,7 @@
 
 @layer base {
   body {
-    @apply font-normal text-base text-body bg-whiten relative z-1;
+    @apply font-normal text-base text-body bg-gray-50 relative z-1;
   }
 
   .ant-app {
@@ -75,6 +75,22 @@
 }
 .tableCheckbox:checked ~ div {
   @apply bg-primary border-primary;
+}
+
+.products-search-input.ant-input-affix-wrapper {
+  @apply !h-11 !rounded-lg !border-gray-300 !bg-transparent !px-4 !py-2.5 !text-sm !text-gray-800 !shadow-1 dark:!border-gray-700 dark:!bg-gray-900 dark:!text-white/90;
+}
+
+.products-search-input.ant-input-affix-wrapper:focus-within {
+  @apply !border-brand-300 !ring-2 !ring-brand-500/10 dark:!border-brand-800;
+}
+
+.products-search-input.ant-input-affix-wrapper .ant-input {
+  @apply !text-sm !text-gray-800 dark:!text-white/90;
+}
+
+.products-search-input.ant-input-affix-wrapper .ant-input::placeholder {
+  @apply !text-gray-400 dark:!text-white/30;
 }
 
 .apexcharts-legend-text {
