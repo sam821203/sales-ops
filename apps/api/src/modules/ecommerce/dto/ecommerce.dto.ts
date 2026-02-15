@@ -1,6 +1,6 @@
 import {
   discountTypeValues,
-  orderStatusValues,
+  orderProcessingStatusValues,
   paymentMethodValues,
   paymentStatusValues,
   paymentTransactionStatusValues,
@@ -47,7 +47,7 @@ export const createOrderItemSchema = z.object({
 export const createOrderSchema = z.object({
   items: z.array(createOrderItemSchema).min(1),
   totalAmount: z.number().nonnegative(),
-  status: z.enum(orderStatusValues).default('Created'),
+  status: z.enum(orderProcessingStatusValues).default('Created'),
 });
 
 export const createPaymentSchema = z.object({

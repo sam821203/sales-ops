@@ -6,6 +6,9 @@ export type DiscountType = (typeof discountTypeValues)[number];
 
 export const orderStatusValues = ['Created', 'Paying', 'Paid', 'Failed', 'Shipped', 'Delivered', 'Cancelled'] as const;
 export type OrderStatus = (typeof orderStatusValues)[number];
+export const orderProcessingStatusValues = ['Created', 'Paying', 'Paid', 'Failed'] as const satisfies readonly OrderStatus[];
+export type OrderProcessingStatus = (typeof orderProcessingStatusValues)[number];
+export type OrderHistoryStatus = OrderStatus;
 
 export const paymentStatusValues = ['Pending', 'Completed', 'Failed'] as const;
 export type PaymentStatus = (typeof paymentStatusValues)[number];
@@ -58,7 +61,7 @@ export type Order = {
   id: number;
   items: OrderItem[];
   totalAmount: number;
-  status: Extract<OrderStatus, 'Created' | 'Paying' | 'Paid' | 'Failed'>;
+  status: OrderProcessingStatus;
 };
 
 export type OrderItem = {
@@ -96,7 +99,7 @@ export type InventoryAdjustment = {
 export type OrderStatusHistory = {
   id: number;
   orderId: number;
-  status: Extract<OrderStatus, 'Created' | 'Paying' | 'Paid' | 'Shipped' | 'Delivered' | 'Cancelled'>;
+  status: OrderHistoryStatus;
   updatedAt: Date;
   updatedBy: number;
 };

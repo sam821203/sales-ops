@@ -1,7 +1,7 @@
 import Card from '../components/common/Card';
-import type { OrderStatus } from '@salesops/shared';
+import type { OrderProcessingStatus } from '@salesops/shared';
 
-const defaultOrderStatus: OrderStatus = 'Created';
+const defaultOrderStatus: OrderProcessingStatus = 'Created';
 
 export function ECommercePage() {
   return (
