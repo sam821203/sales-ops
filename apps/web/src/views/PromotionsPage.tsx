@@ -1,4 +1,4 @@
-import Card from '@/components/common/Card';
+import { Card } from '@/components/common/card';
 
 export function PromotionsPage() {
   return (
