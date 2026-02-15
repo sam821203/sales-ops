@@ -1,4 +1,4 @@
-import Card from '../components/common/Card';
+import { Card } from '@/components/common/Card';
 import type { OrderProcessingStatus } from '@salesops/shared';
 
 const defaultOrderStatus: OrderProcessingStatus = 'Created';

@@ -11,7 +11,8 @@ import {
 } from '@ant-design/icons';
 import { Button, Input, Select, Table, Tag } from 'antd';
 import type { TableColumnsType } from 'antd';
-import Card from '@/components/common/Card';
+import { Card } from '@/components/common/Card';
+import { PageBreadcrumb } from '@/components/common/breadcrumb';
 import {
   DEFAULT_TABLE_PAGE_SIZE,
   DEFAULT_TABLE_PAGE_SIZE_OPTIONS,
@@ -111,9 +112,7 @@ export function ProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-gray-800 dark:text-white/90">Products</h1>
-      </div>
+      <PageBreadcrumb pageTitle="Products" />
 
       <Card
         title="Products"

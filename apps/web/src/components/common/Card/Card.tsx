@@ -1,17 +1,4 @@
-import type { ReactNode } from 'react';
-
-type CardProps = {
-  title?: string;
-  description?: string;
-  actions?: ReactNode;
-  children: ReactNode;
-  className?: string;
-  headerClassName?: string;
-  bodyClassName?: string;
-  disableBodyPadding?: boolean;
-  footer?: ReactNode;
-  footerClassName?: string;
-};
+import type { CardProps } from './types';
 
 const classNames = (...classes: Array<string | undefined | false>) =>
   classes.filter(Boolean).join(' ');
