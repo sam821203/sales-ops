@@ -8,6 +8,7 @@ type CardProps = {
   className?: string;
   headerClassName?: string;
   bodyClassName?: string;
+  disableBodyPadding?: boolean;
   footer?: ReactNode;
   footerClassName?: string;
 };
@@ -23,6 +24,7 @@ export default function Card({
   className,
   headerClassName,
   bodyClassName,
+  disableBodyPadding,
   footer,
   footerClassName,
 }: CardProps) {
@@ -58,7 +60,9 @@ export default function Card({
         </div>
       )}
 
-      <div className={classNames('p-5 md:p-6', bodyClassName)}>{children}</div>
+      <div className={classNames(disableBodyPadding ? undefined : 'p-5 md:p-6', bodyClassName)}>
+        {children}
+      </div>
 
       {footer && (
         <div
