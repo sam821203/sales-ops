@@ -20,3 +20,263 @@ model User {
 
   @@index([email])
 }
+
+enum ProductStatus {
+  Draft
+  Active
+  Inactive
+}
+
+enum PromotionDiscountType {
+  Percentage
+  FixedAmount
+  BuyXGetY
+}
+
+enum OrderStatus {
+  Created
+  Paying
+  Paid
+  Failed
+  Shipped
+  Delivered
+  Cancelled
+}
+
+enum PaymentStatus {
+  Pending
+  Completed
+  Failed
+}
+
+enum InventoryAdjustmentType {
+  Increase
+  Decrease
+}
+
+enum PaymentMethod {
+  CreditCard
+  PayPal
+  BankTransfer
+  Cash
+}
+
+enum PaymentTransactionStatus {
+  Pending
+  Completed
+  Failed
+  Refunded
+}
+
+enum PromotionStatusValue {
+  Active
+  Inactive
+  Expired
+}
+
+enum AuditEntityType {
+  Product
+  Order
+  Payment
+  Inventory
+  Promotion
+}
+
+enum RefundStatus {
+  Requested
+  Processing
+  Completed
+  Failed
+}
+
+model Product {
+  id           Int                   @id @default(autoincrement())
+  name         String
+  status       ProductStatus         @default(Draft)
+  skus         Sku[]
+  priceHistory ProductPriceHistory[]
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+}
+
+model Sku {
+  id                   Int                   @id @default(autoincrement())
+  productId            Int
+  product              Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  price                Float
+  stock                Int
+  attributes           Json
+  orderItems           OrderItem[]
+  inventoryAdjustments InventoryAdjustment[]
+  promotionSkus        PromotionSku[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+
+  @@index([productId])
+}
+
+model Promotion {
+  id        Int               @id @default(autoincrement())
+  name      String
+  startAt   DateTime
+  endAt     DateTime
+  discountType PromotionDiscountType
+  affectedSkus PromotionSku[]
+  statuses  PromotionStatus[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@index([startAt, endAt])
+}
+
+model PromotionSku {
+  id          Int       @id @default(autoincrement())
+  promotionId Int
+  skuId       Int
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  sku         Sku       @relation(fields: [skuId], references: [id], onDelete: Cascade)
+
+  @@unique([promotionId, skuId])
+  @@index([skuId])
+}
+
+model Order {
+  id                  Int                  @id @default(autoincrement())
+  totalAmount         Float
+  status              OrderStatus          @default(Created)
+  items               OrderItem[]
+  payments            Payment[]
+  statusHistory       OrderStatusHistory[]
+  paymentTransactions PaymentTransaction[]
+  vendorCommissions   VendorCommission[]
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  @@index([status])
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  skuId     Int
+  quantity  Int
+  price     Float
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sku       Sku      @relation(fields: [skuId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([skuId])
+}
+
+model Payment {
+  id        Int           @id @default(autoincrement())
+  orderId   Int
+  order     Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    PaymentStatus @default(Pending)
+  requestId String        @unique
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([orderId])
+}
+
+model ProductPriceHistory {
+  id            Int      @id @default(autoincrement())
+  productId     Int
+  product       Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  oldPrice      Float
+  newPrice      Float
+  effectiveDate DateTime
+  changedBy     Int
+  createdAt     DateTime @default(now())
+
+  @@index([productId, effectiveDate])
+}
+
+model InventoryAdjustment {
+  id             Int                     @id @default(autoincrement())
+  skuId          Int
+  sku            Sku                     @relation(fields: [skuId], references: [id], onDelete: Cascade)
+  adjustmentType InventoryAdjustmentType
+  quantity       Int
+  reason         String
+  adjustedBy     Int
+  createdAt      DateTime                @default(now())
+
+  @@index([skuId, createdAt])
+}
+
+model OrderStatusHistory {
+  id        Int         @id @default(autoincrement())
+  orderId   Int
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  updatedAt DateTime    @default(now())
+  updatedBy Int
+
+  @@index([orderId, updatedAt])
+}
+
+model PaymentTransaction {
+  id            Int                    @id @default(autoincrement())
+  orderId       Int
+  order         Order                  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  paymentMethod PaymentMethod
+  amount        Float
+  status        PaymentTransactionStatus @default(Pending)
+  transactionId String                 @unique
+  createdAt     DateTime               @default(now())
+  refundedAt    DateTime?
+  refunds       Refund[]
+
+  @@index([orderId, createdAt])
+}
+
+model PromotionStatus {
+  id          Int                  @id @default(autoincrement())
+  promotionId Int
+  promotion   Promotion            @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  status      PromotionStatusValue
+  updatedAt   DateTime             @default(now())
+  updatedBy   Int
+
+  @@index([promotionId, updatedAt])
+}
+
+model AuditLog {
+  id          Int             @id @default(autoincrement())
+  action      String
+  entityType  AuditEntityType
+  entityId    Int
+  performedBy Int
+  createdAt   DateTime        @default(now())
+
+  @@index([entityType, entityId, createdAt])
+}
+
+model VendorCommission {
+  id               Int      @id @default(autoincrement())
+  vendorId         Int
+  orderId          Int
+  order            Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  commissionRate   Float
+  commissionAmount Float
+  createdAt        DateTime @default(now())
+
+  @@index([vendorId, createdAt])
+  @@index([orderId])
+}
+
+model Refund {
+  id                   Int                  @id @default(autoincrement())
+  paymentTransactionId Int
+  paymentTransaction   PaymentTransaction   @relation(fields: [paymentTransactionId], references: [id], onDelete: Cascade)
+  amount               Float
+  reason               String
+  status               RefundStatus         @default(Requested)
+  processedAt          DateTime?
+  createdAt            DateTime             @default(now())
+
+  @@index([paymentTransactionId, createdAt])
+}
