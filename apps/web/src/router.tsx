@@ -16,7 +16,7 @@ import { FormElementsPage } from '@/views/FormElementsPage';
 import { FormLayoutPage } from '@/views/FormLayoutPage';
 import { SignInPage } from '@/views/SignInPage';
 import { SignUpPage } from '@/views/SignUpPage';
-import { ProductsPage } from '@/views/ProductsPage';
+import { ProductsPage } from '@/views/Products';
 import { PriceHistoryPage } from '@/views/PriceHistoryPage';
 import { InventoryAdjustmentPage } from '@/views/InventoryAdjustmentPage';
 import { OrdersPage } from '@/views/OrdersPage';

@@ -20,6 +20,14 @@ createRoot(document.getElementById('root') as HTMLElement).render(
             token: {
               fontFamily: 'Outfit, sans-serif',
             },
+            components: {
+              Table: {
+                cellPaddingBlock: 16,
+                cellPaddingInline: 24,
+                cellPaddingBlockMD: 16,
+                cellPaddingInlineMD: 24,
+              },
+            },
           }}
         >
           <AntApp>
