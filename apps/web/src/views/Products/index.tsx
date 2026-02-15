@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { SKU, ProductStatus } from '@salesops/shared';
 import type { StatusFilter, ProductRow } from './types';
 import {
@@ -31,23 +31,6 @@ export function ProductsPage() {
   const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
   const [expandedRowKeys, setExpandedRowKeys] = useState<readonly number[]>([]);
 
-  useEffect(() => {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/af3fa1af-28f7-415e-b642-9e674043e7e5', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        runId: 'pre-fix',
-        hypothesisId: 'H4',
-        location: 'ProductsPage.tsx:72',
-        message: 'ProductsPage rendered at runtime',
-        data: { defaultPageSize: DEFAULT_TABLE_PAGE_SIZE, selectedPageSize: pageSize },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, [pageSize]);
-
   const filteredProducts = useMemo(() => {
     return productMocks.filter((product) => {
       const matchSearch = product.name.toLowerCase().includes(search.toLowerCase());
@@ -63,8 +46,8 @@ export function ProductsPage() {
     .slice((safePage - 1) * pageSize, safePage * pageSize)
     .map((product): ProductRow => {
       const prices = product.skus.map((sku) => sku.price);
-      const minPrice = Math.min(...prices);
-      const maxPrice = Math.max(...prices);
+      const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+      const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
       const totalStock = product.skus.reduce((sum, sku) => sum + sku.stock, 0);
 
       return {
