@@ -1,6 +1,6 @@
 import type { SorterResult } from 'antd/es/table/interface';
 import { useCallback, useMemo, useState } from 'react';
-import type { SKU, ProductStatus } from '@salesops/shared';
+import type { SKU, ProductStatus, AttributeDefinition } from '@salesops/shared';
 import type { StatusFilter, ProductRow } from './types';
 import {
   DeleteOutlined,
@@ -34,6 +34,23 @@ const renderHeaderTitle = (label: string) => (
 
 const formatSkuId = (id: number) => `SKU${String(id).padStart(3, '0')}`;
 
+function getAttributesFromForm(
+  raw: Record<string, string>,
+  definitions: AttributeDefinition[]
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const def of definitions) {
+    const value = raw[def.key]?.trim() ?? '';
+    if (!value) continue;
+    if (def.type === 'enum') {
+      if (def.options.includes(value)) result[def.key] = value;
+    } else {
+      result[def.key] = value;
+    }
+  }
+  return result;
+}
+
 export function ProductsPage() {
   const [products, setProducts] = useState(() => productMocks);
   const [search, setSearch] = useState('');
@@ -50,7 +67,11 @@ export function ProductsPage() {
   const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>();
   const [addSkuModalOpen, setAddSkuModalOpen] = useState(false);
   const [addSkuProductId, setAddSkuProductId] = useState<number | null>(null);
-  const [addSkuForm] = Form.useForm<{ price: number; stock: number; attributes: { key: string; value: string }[] }>();
+  const [addSkuForm] = Form.useForm<{
+    price: number;
+    stock: number;
+    attributes: Record<string, string> | { key: string; value: string }[];
+  }>();
 
   const filteredProducts = useMemo(() => {
     const categoryFilterLower = categoryFilter.trim().toLowerCase();
@@ -102,11 +123,22 @@ export function ProductsPage() {
     message.success('SKU removed.');
   }, []);
 
-  const openAddSkuModal = useCallback((productId: number) => {
-    setAddSkuProductId(productId);
-    addSkuForm.resetFields();
-    setAddSkuModalOpen(true);
-  }, [addSkuForm]);
+  const openAddSkuModal = useCallback(
+    (productId: number) => {
+      setAddSkuProductId(productId);
+      addSkuForm.resetFields();
+      const product = products.find((p) => p.id === productId);
+      if (product?.attributeDefinitions?.length) {
+        addSkuForm.setFieldsValue({
+          attributes: Object.fromEntries(product.attributeDefinitions.map((d) => [d.key, ''])),
+        });
+      } else {
+        addSkuForm.setFieldsValue({ attributes: [] });
+      }
+      setAddSkuModalOpen(true);
+    },
+    [addSkuForm, products]
+  );
 
   const closeAddSkuModal = () => {
     setAddSkuModalOpen(false);
@@ -116,11 +148,19 @@ export function ProductsPage() {
 
   const submitAddSku = () => {
     if (addSkuProductId == null) return;
+    const product = products.find((p) => p.id === addSkuProductId);
     addSkuForm.validateFields().then((values) => {
-      const attributes: Record<string, string> = {};
-      (values.attributes ?? []).forEach(({ key, value }) => {
-        if (key?.trim()) attributes[key.trim()] = value?.trim() ?? '';
-      });
+      const attrsRaw = values.attributes;
+      const attributes: Record<string, string> =
+        product?.attributeDefinitions?.length && attrsRaw != null && !Array.isArray(attrsRaw)
+          ? getAttributesFromForm(attrsRaw as Record<string, string>, product.attributeDefinitions)
+          : (Array.isArray(attrsRaw) ? attrsRaw : []).reduce<Record<string, string>>(
+              (acc, item: { key?: string; value?: string }) => {
+                if (item?.key?.trim()) acc[item.key.trim()] = item?.value?.trim() ?? '';
+                return acc;
+              },
+              {}
+            );
       addSkuToProduct(addSkuProductId, {
         productId: addSkuProductId,
         price: values.price,
@@ -730,40 +770,69 @@ export function ProductsPage() {
           >
             <InputNumber min={0} precision={0} className="w-full" />
           </Form.Item>
-          <Form.Item label="Attributes" name="attributes">
-            <Form.List name="attributes">
-              {(fields, { add, remove }) => (
-                <>
-                  {fields.map(({ key, name, ...rest }) => (
-                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                      <Form.Item
-                        {...rest}
-                        name={[name, 'key']}
-                        rules={[{ required: false }]}
-                      >
-                        <Input placeholder="Key" />
+          {addSkuProductId != null && (() => {
+            const product = products.find((p) => p.id === addSkuProductId);
+            const defs = product?.attributeDefinitions;
+            if (defs?.length) {
+              return defs.map((def) => (
+                <Form.Item
+                  key={def.key}
+                  name={['attributes', def.key]}
+                  label={def.label}
+                  rules={
+                    def.type === 'enum' && def.options.length
+                      ? [
+                          {
+                            validator: (_: unknown, value: string) =>
+                              !value?.trim() || def.options.includes(value?.trim())
+                                ? Promise.resolve()
+                                : Promise.reject(new Error(`Must be one of: ${def.options.join(', ')}`)),
+                          },
+                        ]
+                      : undefined
+                  }
+                >
+                  {def.type === 'enum' ? (
+                    <Select
+                      allowClear
+                      placeholder={`Select ${def.label}`}
+                      options={def.options.map((opt) => ({ value: opt, label: opt }))}
+                    />
+                  ) : (
+                    <Input placeholder={def.label} allowClear />
+                  )}
+                </Form.Item>
+              ));
+            }
+            return (
+              <Form.Item label="Attributes" name="attributes">
+                <Form.List name="attributes">
+                  {(fields, { add, remove }) => (
+                    <>
+                      {fields.map(({ key, name, ...rest }) => (
+                        <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                          <Form.Item {...rest} name={[name, 'key']} rules={[{ required: false }]}>
+                            <Input placeholder="Key" />
+                          </Form.Item>
+                          <Form.Item {...rest} name={[name, 'value']} rules={[{ required: false }]}>
+                            <Input placeholder="Value" />
+                          </Form.Item>
+                          <Button type="text" onClick={() => remove(name)}>
+                            Remove
+                          </Button>
+                        </Space>
+                      ))}
+                      <Form.Item>
+                        <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                          Add attribute
+                        </Button>
                       </Form.Item>
-                      <Form.Item
-                        {...rest}
-                        name={[name, 'value']}
-                        rules={[{ required: false }]}
-                      >
-                        <Input placeholder="Value" />
-                      </Form.Item>
-                      <Button type="text" onClick={() => remove(name)}>
-                        Remove
-                      </Button>
-                    </Space>
-                  ))}
-                  <Form.Item>
-                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-                      Add attribute
-                    </Button>
-                  </Form.Item>
-                </>
-              )}
-            </Form.List>
-          </Form.Item>
+                    </>
+                  )}
+                </Form.List>
+              </Form.Item>
+            );
+          })()}
         </Form>
       </Modal>
     </div>

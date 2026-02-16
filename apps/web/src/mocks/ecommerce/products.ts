@@ -1,4 +1,9 @@
 import type { Product, Category, Brand } from '@salesops/shared';
+import { STANDARD_ATTRIBUTE_DEFINITIONS } from '@salesops/shared';
+
+function pickAttributeDefinitions(keys: string[]): Product['attributeDefinitions'] {
+  return keys.map((key) => STANDARD_ATTRIBUTE_DEFINITIONS.find((d) => d.key === key)).filter(Boolean) as Product['attributeDefinitions'];
+}
 
 export const categoryMocks: Category[] = [
   { id: 1, name: 'Audio' },
@@ -26,6 +31,7 @@ export const productMocks: Product[] = [
     imageUrl: 'https://placehold.co/64x64?text=P1',
     categoryId: 1,
     brandId: 1,
+    attributeDefinitions: pickAttributeDefinitions(['Color']),
     skus: [
       { id: 1, productId: 1, price: 79.99, stock: 120, attributes: { Color: 'Black' } },
       { id: 2, productId: 1, price: 79.99, stock: 85, attributes: { Color: 'White' } },
@@ -39,6 +45,7 @@ export const productMocks: Product[] = [
     imageUrl: 'https://placehold.co/64x64?text=P2',
     categoryId: 2,
     brandId: 2,
+    attributeDefinitions: pickAttributeDefinitions(['Length']),
     skus: [
       { id: 4, productId: 2, price: 12.99, stock: 500, attributes: { Length: '2m' } },
       { id: 5, productId: 2, price: 15.99, stock: 320, attributes: { Length: '3m' } },
@@ -51,6 +58,7 @@ export const productMocks: Product[] = [
     imageUrl: 'https://placehold.co/64x64?text=P3',
     categoryId: 3,
     brandId: 3,
+    attributeDefinitions: pickAttributeDefinitions(['Layout', 'Switch']),
     skus: [
       { id: 6, productId: 3, price: 129.0, stock: 0, attributes: { Layout: 'US', Switch: 'Brown' } },
       { id: 7, productId: 3, price: 129.0, stock: 0, attributes: { Layout: 'US', Switch: 'Red' } },
@@ -63,6 +71,7 @@ export const productMocks: Product[] = [
     imageUrl: 'https://placehold.co/64x64?text=P4',
     categoryId: 4,
     brandId: 4,
+    attributeDefinitions: pickAttributeDefinitions(['Color']),
     skus: [
       { id: 8, productId: 4, price: 45.99, stock: 8, attributes: { Color: 'Black' } },
       { id: 9, productId: 4, price: 45.99, stock: 15, attributes: { Color: 'Blue' } },
@@ -75,6 +84,7 @@ export const productMocks: Product[] = [
     imageUrl: 'https://placehold.co/64x64?text=P5',
     categoryId: 5,
     brandId: 5,
+    attributeDefinitions: pickAttributeDefinitions(['Color']),
     skus: [
       { id: 10, productId: 5, price: 34.5, stock: 0, attributes: { Color: 'Black' } },
     ],
@@ -86,6 +96,7 @@ export const productMocks: Product[] = [
     imageUrl: 'https://placehold.co/64x64?text=P6',
     categoryId: 6,
     brandId: 5,
+    attributeDefinitions: pickAttributeDefinitions(['Material']),
     skus: [
       { id: 11, productId: 6, price: 59.99, stock: 76, attributes: { Material: 'Aluminum' } },
       { id: 12, productId: 6, price: 49.99, stock: 93, attributes: { Material: 'Plastic' } },
@@ -98,6 +109,7 @@ export const productMocks: Product[] = [
     imageUrl: 'https://placehold.co/64x64?text=P7',
     categoryId: 7,
     brandId: 2,
+    attributeDefinitions: pickAttributeDefinitions(['Size']),
     skus: [
       { id: 13, productId: 7, price: 9.99, stock: 240, attributes: { Size: '6.1"' } },
       { id: 14, productId: 7, price: 11.99, stock: 180, attributes: { Size: '6.7"' } },
