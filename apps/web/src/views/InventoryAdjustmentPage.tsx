@@ -1,20 +1,16 @@
 import { Card } from '@/components/common/Card';
+import { PageBreadcrumb } from '@/components/common/breadcrumb';
 
 export function InventoryAdjustmentPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-title-md2 font-semibold text-black dark:text-white">
-          Inventory Adjustment
-        </h1>
-        <p className="text-body dark:text-bodydark">
-          Record stock changes and adjustment reasons.
-        </p>
-      </div>
-
-      <Card title="Inventory Adjustment" description="API integration pending.">
+    <div className="flex min-h-0 flex-1 flex-col gap-6">
+      <PageBreadcrumb pageTitle="Inventory Adjustment" />
+      <Card
+        title="Inventory Adjustment"
+        description="Adjust stock levels for your products."
+      >
         <p className="text-sm text-body dark:text-bodydark2">
-          This area will support stock in/out operations and audit traces.
+          Inventory adjustment content will be displayed here.
         </p>
       </Card>
     </div>

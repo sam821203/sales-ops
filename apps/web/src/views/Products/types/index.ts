@@ -7,4 +7,6 @@ export type ProductRow = Product & {
   totalStock: number;
   minPrice: number;
   maxPrice: number;
+  categoryName?: string;
+  brandName?: string;
 };
