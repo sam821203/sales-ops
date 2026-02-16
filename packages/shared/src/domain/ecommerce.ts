@@ -36,6 +36,7 @@ export type Product = {
   name: string;
   status: ProductStatus;
   skus: SKU[];
+  imageUrl?: string;
 };
 
 export type SKU = {

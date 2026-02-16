@@ -1,18 +1,23 @@
 import type { SorterResult } from 'antd/es/table/interface';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { SKU, ProductStatus } from '@salesops/shared';
 import type { StatusFilter, ProductRow } from './types';
 import {
+  DeleteOutlined,
   DownloadOutlined,
   DownOutlined,
+  EditOutlined,
+  EllipsisOutlined,
+  EyeOutlined,
   LeftOutlined,
   PlusOutlined,
   RightOutlined,
   SearchOutlined,
 } from '@ant-design/icons';
-import { Button, Input, Select, Table, Tag } from 'antd';
+import type { MenuProps } from 'antd';
+import { Avatar, Button, Dropdown, Form, Input, InputNumber, message, Modal, Select, Space, Table, Tag } from 'antd';
 import type { TableColumnsType } from 'antd';
-import { Card } from '@/components/common/Card';
+import { Card } from '@/components/common/Card/index.ts';
 import { PageBreadcrumb } from '@/components/common/breadcrumb';
 import {
   DEFAULT_TABLE_PAGE_SIZE,
@@ -23,10 +28,13 @@ import { formatPrice, formatPriceRange, formatKeyValuePairs } from '@/utils/form
 import { getProductStatusClass, getStockStatusClass } from '@/utils/statusClasses';
 
 const renderHeaderTitle = (label: string) => (
-  <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{label}</span>
+  <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{label}</span>
 );
 
+const formatSkuId = (id: number) => `SKU${String(id).padStart(3, '0')}`;
+
 export function ProductsPage() {
+  const [products, setProducts] = useState(() => productMocks);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
@@ -34,14 +42,82 @@ export function ProductsPage() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<readonly number[]>([]);
   const [sortField, setSortField] = useState<string | undefined>();
   const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>();
+  const [addSkuModalOpen, setAddSkuModalOpen] = useState(false);
+  const [addSkuProductId, setAddSkuProductId] = useState<number | null>(null);
+  const [addSkuForm] = Form.useForm<{ price: number; stock: number; attributes: { key: string; value: string }[] }>();
 
   const filteredProducts = useMemo(() => {
-    return productMocks.filter((product) => {
+    return products.filter((product) => {
       const matchSearch = product.name.toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === 'all' || product.status === statusFilter;
       return matchSearch && matchStatus;
     });
-  }, [search, statusFilter]);
+  }, [products, search, statusFilter]);
+
+  const nextSkuId = useMemo(() => {
+    const maxId = products.reduce(
+      (max, p) => Math.max(max, ...p.skus.map((s) => s.id)),
+      0
+    );
+    return maxId + 1;
+  }, [products]);
+
+  const addSkuToProduct = (productId: number, newSku: Omit<SKU, 'id'>) => {
+    const id = nextSkuId;
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId
+          ? { ...p, skus: [...p.skus, { ...newSku, id, productId }] }
+          : p
+      )
+    );
+    message.success('SKU added.');
+  };
+
+  const removeProduct = useCallback((productId: number) => {
+    setProducts((prev) => prev.filter((p) => p.id !== productId));
+    message.success('Product removed.');
+  }, []);
+
+  const removeSku = useCallback((productId: number, skuId: number) => {
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId
+          ? { ...p, skus: p.skus.filter((s) => s.id !== skuId) }
+          : p
+      )
+    );
+    message.success('SKU removed.');
+  }, []);
+
+  const openAddSkuModal = useCallback((productId: number) => {
+    setAddSkuProductId(productId);
+    addSkuForm.resetFields();
+    setAddSkuModalOpen(true);
+  }, [addSkuForm]);
+
+  const closeAddSkuModal = () => {
+    setAddSkuModalOpen(false);
+    setAddSkuProductId(null);
+    addSkuForm.resetFields();
+  };
+
+  const submitAddSku = () => {
+    if (addSkuProductId == null) return;
+    addSkuForm.validateFields().then((values) => {
+      const attributes: Record<string, string> = {};
+      (values.attributes ?? []).forEach(({ key, value }) => {
+        if (key?.trim()) attributes[key.trim()] = value?.trim() ?? '';
+      });
+      addSkuToProduct(addSkuProductId, {
+        productId: addSkuProductId,
+        price: values.price,
+        stock: values.stock,
+        attributes,
+      });
+      closeAddSkuModal();
+    });
+  };
 
   const sortedProducts = useMemo(() => {
     const products = filteredProducts.map((product): ProductRow => {
@@ -99,12 +175,22 @@ export function ProductsPage() {
       title: renderHeaderTitle('Product'),
       dataIndex: 'name',
       key: 'name',
-      width: 200,
+      width: 260,
       sorter: true,
       sortOrder: sortField === 'name' ? sortOrder : undefined,
       showSorterTooltip: false,
-      render: (name: string) => (
-        <span className="font-normal text-gray-800 dark:text-white/90">{name}</span>
+      render: (name: string, record: ProductRow) => (
+        <div className="flex items-center gap-3">
+          <Avatar
+            src={record.imageUrl}
+            shape="square"
+            size={40}
+            className="shrink-0"
+          >
+            {name?.charAt(0) ?? '?'}
+          </Avatar>
+          <span className="font-normal text-gray-800 dark:text-white/90">{name}</span>
+        </div>
       ),
     },
     {
@@ -150,13 +236,74 @@ export function ProductsPage() {
       sortOrder: sortField === 'minPrice' ? sortOrder : undefined,
       showSorterTooltip: false,
       render: (_value, record) => (
-        <span className="font-medium text-gray-800 dark:text-white/90">
+        <span className="text-gray-800 dark:text-white/90">
           {formatPriceRange(record.minPrice, record.maxPrice)}
         </span>
       ),
     },
+    {
+      title: '',
+      key: 'actions',
+      width: 56,
+      align: 'right',
+      fixed: 'right',
+      render: (_value, record) => {
+        const menuItems: MenuProps['items'] = [
+          {
+            key: 'add-sku',
+            icon: <PlusOutlined />,
+            label: 'Add SKU',
+            onClick: () => openAddSkuModal(record.id),
+          },
+          {
+            key: 'view',
+            icon: <EyeOutlined className="!text-blue-600" />,
+            label: 'View',
+            onClick: () => message.info(`View product ${record.id}`),
+          },
+          {
+            key: 'edit',
+            icon: <EditOutlined className="!text-amber-600" />,
+            label: 'Edit',
+            onClick: () => message.info(`Edit product ${record.id}`),
+          },
+          {
+            type: 'divider',
+          },
+          {
+            key: 'delete',
+            icon: <DeleteOutlined className="!text-red-600" />,
+            label: 'Delete',
+            danger: true,
+            onClick: () => {
+              Modal.confirm({
+                title: 'Remove product?',
+                content: 'This product and its SKUs will be removed.',
+                okText: 'Remove',
+                okType: 'danger',
+                cancelText: 'Cancel',
+                onOk: () => removeProduct(record.id),
+              });
+            },
+          },
+        ];
+        return (
+          <div onClick={(e) => e.stopPropagation()}>
+            <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
+              <button
+                type="button"
+                className="inline-flex items-center justify-center p-0 min-w-0 h-auto border-0 bg-transparent cursor-pointer text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                aria-label="Actions"
+              >
+                <EllipsisOutlined className="align-middle leading-none" style={{ fontSize: '1.5rem' }} />
+              </button>
+            </Dropdown>
+          </div>
+        );
+      },
+    },
   ],
-  [sortField, sortOrder]
+  [sortField, sortOrder, openAddSkuModal, removeProduct]
   );
 
   return (
@@ -285,7 +432,7 @@ export function ProductsPage() {
           onChange={handleTableChange}
           sortDirections={['ascend', 'descend']}
           pagination={false}
-          size="middle"
+          size="large"
           rowClassName={() => 'cursor-pointer'}
           locale={{ emptyText: 'No products match the current filters.' }}
           expandable={{
@@ -309,11 +456,12 @@ export function ProductsPage() {
             expandedRowRender: (record) => (
               <Table<SKU & { key: number }>
                 tableLayout="fixed"
-                className="[&_.ant-table-tbody>tr>td.ant-table-cell:nth-child(2)]:!pl-8"
-                size="middle"
+                className="[&_.ant-table-thead>tr>th.ant-table-cell:first-child]:!w-5 [&_.ant-table-tbody>tr>td.ant-table-cell:nth-child(2)]:!pl-8"
+                size="large"
                 pagination={false}
-                showHeader={false}
-                rowClassName={() => 'bg-gray-50 dark:bg-white/[0.02]'}
+                showHeader
+                scroll={{ x: 900 }}
+                rowClassName={() => ''}
                 rowKey="id"
                 dataSource={record.skus.map((sku) => ({ ...sku, key: sku.id }))}
                 columns={[
@@ -324,22 +472,32 @@ export function ProductsPage() {
                     render: () => null,
                   },
                   {
-                    title: 'Product',
-                    key: 'product',
-                    width: 200,
-                    render: (_value, sku) => (
-                      <span className="whitespace-nowrap text-body dark:text-bodydark2">
-                        {sku.id}
-                        {sku.attributes && Object.keys(sku.attributes).length > 0
-                          ? ` — ${formatKeyValuePairs(sku.attributes)}`
-                          : ''}
+                    title: renderHeaderTitle('SKU ID'),
+                    dataIndex: 'id',
+                    key: 'id',
+                    width: 100,
+                    render: (id: number) => (
+                      <span className="whitespace-nowrap text-gray-800 dark:text-white/90">
+                        {formatSkuId(id)}
                       </span>
                     ),
                   },
                   {
-                    title: 'Status',
+                    title: renderHeaderTitle('Attributes'),
+                    key: 'attributes',
+                    width: 200,
+                    render: (_value, sku) => (
+                      <span className="whitespace-nowrap text-body dark:text-bodydark2">
+                        {sku.attributes && Object.keys(sku.attributes).length > 0
+                          ? formatKeyValuePairs(sku.attributes)
+                          : '—'}
+                      </span>
+                    ),
+                  },
+                  {
+                    title: renderHeaderTitle('Status'),
                     key: 'stockTag',
-                    width: 150,
+                    width: 120,
                     render: (_value, sku) => (
                       <Tag bordered={false} className={getStockStatusClass(sku.stock)}>
                         {sku.stock === 0 ? 'Out of Stock' : sku.stock < 10 ? 'Low Stock' : 'In Stock'}
@@ -347,29 +505,77 @@ export function ProductsPage() {
                     ),
                   },
                   {
-                    title: 'SKUs',
-                    key: 'skusPlaceholder',
-                    width: 100,
-                    align: 'right',
-                    render: () => null,
-                  },
-                  {
-                    title: 'Total Stock',
+                    title: renderHeaderTitle('Stock'),
                     dataIndex: 'stock',
                     key: 'stock',
-                    width: 140,
+                    width: 100,
                     align: 'right',
                   },
                   {
-                    title: 'Price Range',
+                    title: renderHeaderTitle('Price'),
                     key: 'price',
-                    width: 180,
+                    width: 120,
                     align: 'right',
                     render: (_value, sku) => (
-                      <span className="font-medium text-gray-800 dark:text-white/90">
+                      <span className="text-gray-800 dark:text-white/90">
                         {formatPrice(sku.price)}
                       </span>
                     ),
+                  },
+                  {
+                    title: '',
+                    key: 'actions',
+                    width: 56,
+                    align: 'right',
+                    fixed: 'right',
+                    render: (_value, sku) => {
+                      const menuItems: MenuProps['items'] = [
+                        {
+                          key: 'view',
+                          icon: <EyeOutlined className="!text-blue-600" />,
+                          label: 'View',
+                          onClick: () =>
+                            message.info(`View ${formatSkuId(sku.id)} (product ${record.id})`),
+                        },
+                        {
+                          key: 'edit',
+                          icon: <EditOutlined className="!text-amber-600" />,
+                          label: 'Edit',
+                          onClick: () =>
+                            message.info(`Edit ${formatSkuId(sku.id)} (product ${record.id})`),
+                        },
+                        {
+                          type: 'divider',
+                        },
+                        {
+                          key: 'delete',
+                          icon: <DeleteOutlined className="!text-red-600" />,
+                          label: 'Delete',
+                          danger: true,
+                          onClick: () => {
+                            Modal.confirm({
+                              title: `Remove ${formatSkuId(sku.id)}?`,
+                              content: 'This SKU will be removed.',
+                              okText: 'Remove',
+                              okType: 'danger',
+                              cancelText: 'Cancel',
+                              onOk: () => removeSku(record.id, sku.id),
+                            });
+                          },
+                        },
+                      ];
+                      return (
+                        <Dropdown menu={{ items: menuItems }} trigger={['click']} placement="bottomRight">
+                          <button
+                            type="button"
+                            className="inline-flex items-center justify-center p-0 min-w-0 h-auto border-0 bg-transparent cursor-pointer text-gray-400 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                            aria-label="Actions"
+                          >
+                            <EllipsisOutlined className="align-middle leading-none" style={{ fontSize: '1.5rem' }} />
+                          </button>
+                        </Dropdown>
+                      );
+                    },
                   },
                 ]}
               />
@@ -378,6 +584,66 @@ export function ProductsPage() {
         />
         </div>
       </Card>
+
+      <Modal
+        title="Add SKU"
+        open={addSkuModalOpen}
+        onCancel={closeAddSkuModal}
+        onOk={submitAddSku}
+        okText="Add"
+        destroyOnClose
+      >
+        <Form form={addSkuForm} layout="vertical" className="mt-4">
+          <Form.Item
+            name="price"
+            label="Price"
+            rules={[{ required: true, message: 'Required' }]}
+          >
+            <InputNumber min={0} step={0.01} className="w-full" />
+          </Form.Item>
+          <Form.Item
+            name="stock"
+            label="Stock"
+            rules={[{ required: true, message: 'Required' }]}
+          >
+            <InputNumber min={0} precision={0} className="w-full" />
+          </Form.Item>
+          <Form.Item label="Attributes" name="attributes">
+            <Form.List name="attributes">
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map(({ key, name, ...rest }) => (
+                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                      <Form.Item
+                        {...rest}
+                        name={[name, 'key']}
+                        rules={[{ required: false }]}
+                      >
+                        <Input placeholder="Key" />
+                      </Form.Item>
+                      <Form.Item
+                        {...rest}
+                        name={[name, 'value']}
+                        rules={[{ required: false }]}
+                      >
+                        <Input placeholder="Value" />
+                      </Form.Item>
+                      <Button type="text" onClick={() => remove(name)}>
+                        Remove
+                      </Button>
+                    </Space>
+                  ))}
+                  <Form.Item>
+                    <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
+                      Add attribute
+                    </Button>
+                  </Form.Item>
+                </>
+              )}
+            </Form.List>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }
