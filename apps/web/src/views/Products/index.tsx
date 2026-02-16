@@ -168,7 +168,7 @@ export function ProductsPage() {
         attributes,
       });
       closeAddSkuModal();
-    });
+    }).catch(() => {});
   };
 
   const sortedProducts = useMemo(() => {
@@ -805,7 +805,7 @@ export function ProductsPage() {
               ));
             }
             return (
-              <Form.Item label="Attributes" name="attributes">
+              <Form.Item label="Attributes">
                 <Form.List name="attributes">
                   {(fields, { add, remove }) => (
                     <>
