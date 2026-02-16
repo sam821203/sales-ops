@@ -21,9 +21,11 @@ export function DefaultLayout() {
           {/* <!-- ===== Header End ===== --> */}
 
           {/* <!-- ===== Main Content Start ===== --> */}
-          <main>
-            <div className="mx-auto max-w-screen-2xl p-4 md:p-6">
-              <Outlet />
+          <main className="flex-1 min-h-0">
+            <div className="mx-auto flex h-full min-h-0 flex-col p-4 md:p-6">
+              <div className="flex min-h-0 flex-1 flex-col">
+                <Outlet />
+              </div>
             </div>
           </main>
           {/* <!-- ===== Main Content End ===== --> */}
