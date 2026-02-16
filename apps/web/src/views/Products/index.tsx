@@ -9,6 +9,7 @@ import {
   EditOutlined,
   EllipsisOutlined,
   EyeOutlined,
+  FilterOutlined,
   LeftOutlined,
   PlusOutlined,
   RightOutlined,
@@ -23,7 +24,7 @@ import {
   DEFAULT_TABLE_PAGE_SIZE,
   DEFAULT_TABLE_PAGE_SIZE_OPTIONS,
 } from '@/constants/pagination';
-import { productMocks } from '@/mocks/ecommerce/products';
+import { productMocks, categoryMocks, brandMocks } from '@/mocks/ecommerce/products';
 import { formatPrice, formatPriceRange, formatKeyValuePairs } from '@/utils/format';
 import { getProductStatusClass, getStockStatusClass } from '@/utils/statusClasses';
 
@@ -37,6 +38,11 @@ export function ProductsPage() {
   const [products, setProducts] = useState(() => productMocks);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [brandFilter, setBrandFilter] = useState('');
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+  const [pendingCategoryFilter, setPendingCategoryFilter] = useState('');
+  const [pendingBrandFilter, setPendingBrandFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
   const [expandedRowKeys, setExpandedRowKeys] = useState<readonly number[]>([]);
@@ -47,12 +53,18 @@ export function ProductsPage() {
   const [addSkuForm] = Form.useForm<{ price: number; stock: number; attributes: { key: string; value: string }[] }>();
 
   const filteredProducts = useMemo(() => {
+    const categoryFilterLower = categoryFilter.trim().toLowerCase();
+    const brandFilterLower = brandFilter.trim().toLowerCase();
     return products.filter((product) => {
       const matchSearch = product.name.toLowerCase().includes(search.toLowerCase());
       const matchStatus = statusFilter === 'all' || product.status === statusFilter;
-      return matchSearch && matchStatus;
+      const categoryName = product.categoryId != null ? categoryMocks.find((c) => c.id === product.categoryId)?.name ?? '' : '';
+      const brandName = product.brandId != null ? brandMocks.find((b) => b.id === product.brandId)?.name ?? '' : '';
+      const matchCategory = !categoryFilterLower || categoryName.toLowerCase().includes(categoryFilterLower);
+      const matchBrand = !brandFilterLower || brandName.toLowerCase().includes(brandFilterLower);
+      return matchSearch && matchStatus && matchCategory && matchBrand;
     });
-  }, [products, search, statusFilter]);
+  }, [products, search, statusFilter, categoryFilter, brandFilter]);
 
   const nextSkuId = useMemo(() => {
     const maxId = products.reduce(
@@ -120,12 +132,24 @@ export function ProductsPage() {
   };
 
   const sortedProducts = useMemo(() => {
+    const getCategoryName = (id: number | undefined) =>
+      categoryMocks.find((c) => c.id === id)?.name ?? '—';
+    const getBrandName = (id: number | undefined) =>
+      brandMocks.find((b) => b.id === id)?.name ?? '—';
     const products = filteredProducts.map((product): ProductRow => {
       const prices = product.skus.map((sku) => sku.price);
       const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
       const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
       const totalStock = product.skus.reduce((sum, sku) => sum + sku.stock, 0);
-      return { ...product, key: product.id, minPrice, maxPrice, totalStock };
+      return {
+        ...product,
+        key: product.id,
+        minPrice,
+        maxPrice,
+        totalStock,
+        categoryName: getCategoryName(product.categoryId),
+        brandName: getBrandName(product.brandId),
+      };
     });
     if (!sortField || !sortOrder) return products;
     return [...products].sort((a, b) => {
@@ -136,6 +160,12 @@ export function ProductsPage() {
           break;
         case 'status':
           comparison = (a.status ?? '').localeCompare(b.status ?? '');
+          break;
+        case 'category':
+          comparison = (a.categoryName ?? '').localeCompare(b.categoryName ?? '');
+          break;
+        case 'brand':
+          comparison = (a.brandName ?? '').localeCompare(b.brandName ?? '');
           break;
         case 'skuCount':
           comparison = a.skus.length - b.skus.length;
@@ -205,6 +235,30 @@ export function ProductsPage() {
         <Tag bordered={false} className={getProductStatusClass(status)}>
           {status}
         </Tag>
+      ),
+    },
+    {
+      title: renderHeaderTitle('Category'),
+      dataIndex: 'categoryName',
+      key: 'category',
+      width: 120,
+      sorter: true,
+      sortOrder: sortField === 'category' ? sortOrder : undefined,
+      showSorterTooltip: false,
+      render: (_value: string, record: ProductRow) => (
+        <span className="text-gray-800 dark:text-white/90">{record.categoryName ?? '—'}</span>
+      ),
+    },
+    {
+      title: renderHeaderTitle('Brand'),
+      dataIndex: 'brandName',
+      key: 'brand',
+      width: 120,
+      sorter: true,
+      sortOrder: sortField === 'brand' ? sortOrder : undefined,
+      showSorterTooltip: false,
+      render: (_value: string, record: ProductRow) => (
+        <span className="text-gray-800 dark:text-white/90">{record.brandName ?? '—'}</span>
       ),
     },
     {
@@ -408,21 +462,89 @@ export function ProductsPage() {
               className="products-search-input w-full"
             />
           </div>
-          <Select<StatusFilter>
-            value={statusFilter}
-            size="large"
-            onChange={(value) => {
-              setStatusFilter(value);
-              setPage(1);
+          <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+            <Select<StatusFilter>
+              value={statusFilter}
+              size="large"
+              onChange={(value) => {
+                setStatusFilter(value);
+                setPage(1);
+              }}
+              className="w-full sm:w-36"
+              options={[
+                { value: 'all', label: 'All Status' },
+                { value: 'Active', label: 'Active' },
+                { value: 'Draft', label: 'Draft' },
+                { value: 'Inactive', label: 'Inactive' },
+              ]}
+            />
+            <Dropdown
+            trigger={['click']}
+            open={filterDropdownOpen}
+            onOpenChange={(open) => {
+              setFilterDropdownOpen(open);
+              if (open) {
+                setPendingCategoryFilter(categoryFilter);
+                setPendingBrandFilter(brandFilter);
+              }
             }}
-            className="w-full sm:w-36"
-            options={[
-              { value: 'all', label: 'All Status' },
-              { value: 'Active', label: 'Active' },
-              { value: 'Draft', label: 'Draft' },
-              { value: 'Inactive', label: 'Inactive' },
-            ]}
-          />
+            dropdownRender={() => (
+              <div className="min-w-[220px] rounded-2xl border border-gray-200 bg-white p-4 shadow-[0px_12px_16px_-4px_rgba(16,24,40,0.08),0px_4px_6px_-2px_rgba(16,24,40,0.03)] dark:border-gray-800 dark:bg-gray-800">
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Category
+                    </label>
+                    <Input
+                      value={pendingCategoryFilter}
+                      onChange={(e) => setPendingCategoryFilter(e.target.value)}
+                      placeholder="All Categories"
+                      size="large"
+                      className="w-full"
+                      allowClear
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Brand
+                    </label>
+                    <Input
+                      value={pendingBrandFilter}
+                      onChange={(e) => setPendingBrandFilter(e.target.value)}
+                      placeholder="All Brands"
+                      size="large"
+                      className="w-full"
+                      allowClear
+                    />
+                  </div>
+                </div>
+                <div className="mt-4 border-t border-gray-200 pt-4 dark:border-gray-700">
+                  <Button
+                    type="primary"
+                    size="middle"
+                    onClick={() => {
+                      setCategoryFilter(pendingCategoryFilter);
+                      setBrandFilter(pendingBrandFilter);
+                      setPage(1);
+                      setFilterDropdownOpen(false);
+                    }}
+                    className="!h-11 !w-full !rounded-lg !border-0 !bg-brand-500 !px-5 !py-3.5 !text-sm !font-medium !text-white !shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)] hover:!bg-brand-600"
+                  >
+                    Apply
+                  </Button>
+                </div>
+              </div>
+            )}
+          >
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)] hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+            >
+              <FilterOutlined className="text-base" />
+              Filter
+            </button>
+          </Dropdown>
+          </div>
         </div>
         <div className="min-h-0 flex-1 overflow-auto">
           <Table<ProductRow>

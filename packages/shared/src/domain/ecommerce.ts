@@ -31,12 +31,24 @@ export type AuditEntityType = (typeof auditEntityTypeValues)[number];
 export const refundStatusValues = ['Requested', 'Processing', 'Completed', 'Failed'] as const;
 export type RefundStatus = (typeof refundStatusValues)[number];
 
+export type Category = {
+  id: number;
+  name: string;
+};
+
+export type Brand = {
+  id: number;
+  name: string;
+};
+
 export type Product = {
   id: number;
   name: string;
   status: ProductStatus;
   skus: SKU[];
   imageUrl?: string;
+  categoryId?: number;
+  brandId?: number;
 };
 
 export type SKU = {
