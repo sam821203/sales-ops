@@ -1,6 +1,13 @@
 import type { SorterResult } from 'antd/es/table/interface';
 import { useCallback, useMemo, useState } from 'react';
-import type { SKU, ProductStatus, AttributeDefinition } from '@salesops/shared';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type {
+  SKU,
+  ProductStatus,
+  AttributeDefinition,
+  CreateProductInput,
+  UpdateProductInput,
+} from '@salesops/shared';
 import type { StatusFilter, ProductRow } from './types';
 import {
   DeleteOutlined,
@@ -24,7 +31,14 @@ import {
   DEFAULT_TABLE_PAGE_SIZE,
   DEFAULT_TABLE_PAGE_SIZE_OPTIONS,
 } from '@/constants/pagination';
-import { productMocks, categoryMocks, brandMocks } from '@/mocks/ecommerce/products';
+import {
+  getProducts,
+  getProductById,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  productKeys,
+} from '@/api/products';
 import { formatPrice, formatPriceRange, formatKeyValuePairs } from '@/utils/format';
 import { getProductStatusClass, getStockStatusClass } from '@/utils/statusClasses';
 
@@ -52,7 +66,7 @@ function getAttributesFromForm(
 }
 
 export function ProductsPage() {
-  const [products, setProducts] = useState(() => productMocks);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -66,89 +80,115 @@ export function ProductsPage() {
   const [sortField, setSortField] = useState<string | undefined>();
   const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>();
   const [addSkuModalOpen, setAddSkuModalOpen] = useState(false);
-  const [addSkuProductId, setAddSkuProductId] = useState<number | null>(null);
+  const [addSkuProduct, setAddSkuProduct] = useState<ProductRow | null>(null);
+  const [viewModalProductId, setViewModalProductId] = useState<number | null>(null);
+  const [editModalProductId, setEditModalProductId] = useState<number | null>(null);
+  const [addProductModalOpen, setAddProductModalOpen] = useState(false);
   const [addSkuForm] = Form.useForm<{
     price: number;
     stock: number;
     attributes: Record<string, string> | { key: string; value: string }[];
   }>();
+  const [addProductForm] = Form.useForm<{ name: string; status: ProductStatus }>();
+  const [editProductForm] = Form.useForm<{ name: string; status: ProductStatus }>();
+
+  const listParams = useMemo(
+    () => ({
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+      status: statusFilter === 'all' ? undefined : statusFilter,
+    }),
+    [page, pageSize, statusFilter]
+  );
+  const {
+    data: listData = [],
+    isLoading: listLoading,
+    isError: listError,
+    error: listErrorDetail,
+  } = useQuery({
+    queryKey: productKeys.list(listParams),
+    queryFn: () => getProducts(listParams),
+  });
+
+  const viewProductQuery = useQuery({
+    queryKey: productKeys.detail(viewModalProductId!),
+    queryFn: () => getProductById(viewModalProductId!),
+    enabled: viewModalProductId != null,
+  });
+
+  const editProductQuery = useQuery({
+    queryKey: productKeys.detail(editModalProductId!),
+    queryFn: () => getProductById(editModalProductId!),
+    enabled: editModalProductId != null,
+  });
+
+  const createProductMutation = useMutation({
+    mutationFn: (body: CreateProductInput) => createProduct(body),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+      setAddProductModalOpen(false);
+      addProductForm.resetFields();
+      message.success('Product created.');
+    },
+    onError: (e: Error) => message.error(e.message || 'Failed to create product'),
+  });
+
+  const updateProductMutation = useMutation({
+    mutationFn: ({ id, body }: { id: number; body: UpdateProductInput }) => updateProduct(id, body),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+      queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
+      setEditModalProductId(null);
+      editProductForm.resetFields();
+      message.success('Product updated.');
+    },
+    onError: (e: Error) => message.error(e.message || 'Failed to update product'),
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: (id: number) => deleteProduct(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+      message.success('Product removed.');
+    },
+    onError: (e: Error) => message.error(e.message || 'Failed to remove product'),
+  });
 
   const filteredProducts = useMemo(() => {
     const categoryFilterLower = categoryFilter.trim().toLowerCase();
     const brandFilterLower = brandFilter.trim().toLowerCase();
-    return products.filter((product) => {
+    return listData.filter((product) => {
       const matchSearch = product.name.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === 'all' || product.status === statusFilter;
-      const categoryName = product.categoryId != null ? categoryMocks.find((c) => c.id === product.categoryId)?.name ?? '' : '';
-      const brandName = product.brandId != null ? brandMocks.find((b) => b.id === product.brandId)?.name ?? '' : '';
+      const categoryName = product.categoryId != null ? '' : '—';
+      const brandName = product.brandId != null ? '' : '—';
       const matchCategory = !categoryFilterLower || categoryName.toLowerCase().includes(categoryFilterLower);
       const matchBrand = !brandFilterLower || brandName.toLowerCase().includes(brandFilterLower);
-      return matchSearch && matchStatus && matchCategory && matchBrand;
+      return matchSearch && matchCategory && matchBrand;
     });
-  }, [products, search, statusFilter, categoryFilter, brandFilter]);
+  }, [listData, search, categoryFilter, brandFilter]);
 
-  const nextSkuId = useMemo(() => {
-    const maxId = products.reduce(
-      (max, p) => Math.max(max, ...p.skus.map((s) => s.id)),
-      0
-    );
-    return maxId + 1;
-  }, [products]);
-
-  const addSkuToProduct = (productId: number, newSku: Omit<SKU, 'id'>) => {
-    const id = nextSkuId;
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === productId
-          ? { ...p, skus: [...p.skus, { ...newSku, id, productId }] }
-          : p
-      )
-    );
-    message.success('SKU added.');
-  };
-
-  const removeProduct = useCallback((productId: number) => {
-    setProducts((prev) => prev.filter((p) => p.id !== productId));
-    message.success('Product removed.');
-  }, []);
-
-  const removeSku = useCallback((productId: number, skuId: number) => {
-    setProducts((prev) =>
-      prev.map((p) =>
-        p.id === productId
-          ? { ...p, skus: p.skus.filter((s) => s.id !== skuId) }
-          : p
-      )
-    );
-    message.success('SKU removed.');
-  }, []);
-
-  const openAddSkuModal = useCallback(
-    (productId: number) => {
-      setAddSkuProductId(productId);
-      addSkuForm.resetFields();
-      const product = products.find((p) => p.id === productId);
-      if (product?.attributeDefinitions?.length) {
-        addSkuForm.setFieldsValue({
-          attributes: Object.fromEntries(product.attributeDefinitions.map((d) => [d.key, ''])),
-        });
-      } else {
-        addSkuForm.setFieldsValue({ attributes: [] });
-      }
-      setAddSkuModalOpen(true);
-    },
-    [addSkuForm, products]
-  );
+  const openAddSkuModal = useCallback((record: ProductRow) => {
+    setAddSkuProduct(record);
+    addSkuForm.resetFields();
+    if (record.attributeDefinitions?.length) {
+      addSkuForm.setFieldsValue({
+        attributes: Object.fromEntries(record.attributeDefinitions.map((d) => [d.key, ''])),
+      });
+    } else {
+      addSkuForm.setFieldsValue({ attributes: [] });
+    }
+    setAddSkuModalOpen(true);
+  }, [addSkuForm]);
 
   const closeAddSkuModal = () => {
     setAddSkuModalOpen(false);
-    setAddSkuProductId(null);
+    setAddSkuProduct(null);
     addSkuForm.resetFields();
   };
 
   const submitAddSku = () => {
-    if (addSkuProductId == null) return;
-    const product = products.find((p) => p.id === addSkuProductId);
+    if (addSkuProduct == null) return;
+    const product = addSkuProduct;
     addSkuForm.validateFields().then((values) => {
       const attrsRaw = values.attributes;
       const attributes: Record<string, string> =
@@ -161,21 +201,53 @@ export function ProductsPage() {
               },
               {}
             );
-      addSkuToProduct(addSkuProductId, {
-        productId: addSkuProductId,
-        price: values.price,
-        stock: values.stock,
-        attributes,
-      });
-      closeAddSkuModal();
+      const newSkus = [
+        ...product.skus.map((s) => ({
+          productId: product.id,
+          price: s.price,
+          stock: s.stock,
+          attributes: s.attributes ?? {},
+        })),
+        { productId: product.id, price: values.price, stock: values.stock, attributes },
+      ];
+      updateProductMutation.mutate(
+        { id: product.id, body: { skus: newSkus } },
+        {
+          onSuccess: () => {
+            closeAddSkuModal();
+            message.success('SKU added.');
+          },
+        }
+      );
     }).catch(() => {});
   };
 
+  const removeProduct = useCallback(
+    (productId: number) => {
+      deleteProductMutation.mutate(productId);
+    },
+    [deleteProductMutation]
+  );
+
+  const removeSku = useCallback(
+    (record: ProductRow, skuId: number) => {
+      const newSkus = record.skus
+        .filter((s) => s.id !== skuId)
+        .map((s) => ({
+          productId: record.id,
+          price: s.price,
+          stock: s.stock,
+          attributes: s.attributes ?? {},
+        }));
+      updateProductMutation.mutate(
+        { id: record.id, body: { skus: newSkus } },
+        { onSuccess: () => message.success('SKU removed.') }
+      );
+    },
+    [updateProductMutation]
+  );
+
   const sortedProducts = useMemo(() => {
-    const getCategoryName = (id: number | undefined) =>
-      categoryMocks.find((c) => c.id === id)?.name ?? '—';
-    const getBrandName = (id: number | undefined) =>
-      brandMocks.find((b) => b.id === id)?.name ?? '—';
     const products = filteredProducts.map((product): ProductRow => {
       const prices = product.skus.map((sku) => sku.price);
       const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
@@ -187,8 +259,8 @@ export function ProductsPage() {
         minPrice,
         maxPrice,
         totalStock,
-        categoryName: getCategoryName(product.categoryId),
-        brandName: getBrandName(product.brandId),
+        categoryName: '—',
+        brandName: '—',
       };
     });
     if (!sortField || !sortOrder) return products;
@@ -223,14 +295,14 @@ export function ProductsPage() {
     });
   }, [filteredProducts, sortField, sortOrder]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedProducts.length / pageSize));
+  const hasNextPage = listData.length >= pageSize;
+  const totalPages = hasNextPage ? page + 1 : page;
   const safePage = Math.min(page, totalPages);
   const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
-  const paginatedProducts = sortedProducts
-    .slice((safePage - 1) * pageSize, safePage * pageSize);
+  const paginatedProducts = sortedProducts;
 
-  const showingFrom = sortedProducts.length === 0 ? 0 : (safePage - 1) * pageSize + 1;
-  const showingTo = Math.min(safePage * pageSize, sortedProducts.length);
+  const showingFrom = sortedProducts.length === 0 ? 0 : (page - 1) * pageSize + 1;
+  const showingTo = (page - 1) * pageSize + sortedProducts.length;
 
   const handleTableChange = (_pagination: unknown, _filters: unknown, sorter: SorterResult<ProductRow> | SorterResult<ProductRow>[]) => {
     const result = Array.isArray(sorter) ? sorter[0] : sorter;
@@ -347,19 +419,22 @@ export function ProductsPage() {
             key: 'add-sku',
             icon: <PlusOutlined />,
             label: 'Add SKU',
-            onClick: () => openAddSkuModal(record.id),
+            onClick: () => openAddSkuModal(record),
           },
           {
             key: 'view',
             icon: <EyeOutlined className="!text-blue-600" />,
             label: 'View',
-            onClick: () => message.info(`View product ${record.id}`),
+            onClick: () => setViewModalProductId(record.id),
           },
           {
             key: 'edit',
             icon: <EditOutlined className="!text-amber-600" />,
             label: 'Edit',
-            onClick: () => message.info(`Edit product ${record.id}`),
+            onClick: () => {
+              setEditModalProductId(record.id);
+              editProductForm.setFieldsValue({ name: record.name, status: record.status });
+            },
           },
           {
             type: 'divider',
@@ -397,7 +472,7 @@ export function ProductsPage() {
       },
     },
   ],
-  [sortField, sortOrder, openAddSkuModal, removeProduct]
+  [sortField, sortOrder, openAddSkuModal, removeProduct, editProductForm]
   );
 
   return (
@@ -426,6 +501,7 @@ export function ProductsPage() {
               size="large"
               icon={<PlusOutlined />}
               className="!inline-flex !items-center !gap-2 !rounded-lg !border-brand-500 !bg-brand-500 !px-4 !text-sm !font-medium !text-white hover:!border-brand-600 hover:!bg-brand-600"
+              onClick={() => setAddProductModalOpen(true)}
             >
               Add Product
             </Button>
@@ -477,8 +553,8 @@ export function ProductsPage() {
               <Button
                 size="large"
                 aria-label="Next page"
-                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                disabled={safePage === totalPages}
+                onClick={() => setPage((current) => current + 1)}
+                disabled={!hasNextPage}
                 className="!h-10 !w-10 !rounded-lg"
                 icon={<RightOutlined />}
               >
@@ -587,16 +663,22 @@ export function ProductsPage() {
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-auto">
+          {listError ? (
+            <div className="flex items-center justify-center p-8 text-red-600 dark:text-red-400">
+              {listErrorDetail instanceof Error ? listErrorDetail.message : 'Failed to load products'}
+            </div>
+          ) : (
           <Table<ProductRow>
           tableLayout="fixed"
           columns={columns}
           dataSource={paginatedProducts}
+          loading={listLoading}
           onChange={handleTableChange}
           sortDirections={['ascend', 'descend']}
           pagination={false}
           size="large"
           rowClassName={() => 'cursor-pointer'}
-          locale={{ emptyText: 'No products match the current filters.' }}
+          locale={{ emptyText: listLoading ? 'Loading...' : 'No products match the current filters.' }}
           expandable={{
             showExpandColumn: true,
             columnWidth: 44,
@@ -721,7 +803,7 @@ export function ProductsPage() {
                               okText: 'Remove',
                               okType: 'danger',
                               cancelText: 'Cancel',
-                              onOk: () => removeSku(record.id, sku.id),
+                              onOk: () => removeSku(record, sku.id),
                             });
                           },
                         },
@@ -744,8 +826,111 @@ export function ProductsPage() {
             ),
           }}
         />
+          )}
         </div>
       </Card>
+
+      <Modal
+        title="View Product"
+        open={viewModalProductId != null}
+        onCancel={() => setViewModalProductId(null)}
+        footer={[<Button key="close" onClick={() => setViewModalProductId(null)}>Close</Button>]}
+        destroyOnClose
+      >
+        {viewModalProductId != null && (
+          viewProductQuery.isLoading ? (
+            <p className="text-body dark:text-bodydark2">Loading...</p>
+          ) : viewProductQuery.data ? (
+            <div className="flex flex-col gap-2 text-sm">
+              <p><span className="font-medium text-gray-700 dark:text-gray-300">Name:</span> {viewProductQuery.data.name}</p>
+              <p><span className="font-medium text-gray-700 dark:text-gray-300">Status:</span> <Tag bordered={false} className={getProductStatusClass(viewProductQuery.data.status)}>{viewProductQuery.data.status}</Tag></p>
+              <p><span className="font-medium text-gray-700 dark:text-gray-300">SKUs:</span> {viewProductQuery.data.skus.length}</p>
+              {viewProductQuery.data.skus.length > 0 && (
+                <ul className="list-inside list-disc text-body dark:text-bodydark2">
+                  {viewProductQuery.data.skus.map((sku) => (
+                    <li key={sku.id}>{formatSkuId(sku.id)} — {formatPrice(sku.price)}, stock: {sku.stock}{Object.keys(sku.attributes ?? {}).length > 0 ? ` (${formatKeyValuePairs(sku.attributes ?? {})})` : ''}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : (
+            <p className="text-body dark:text-bodydark2">Product not found.</p>
+          )
+        )}
+      </Modal>
+
+      <Modal
+        title="Edit Product"
+        open={editModalProductId != null}
+        onCancel={() => {
+          setEditModalProductId(null);
+          editProductForm.resetFields();
+        }}
+        onOk={() => {
+          if (editModalProductId == null) return;
+          editProductForm.validateFields().then((values) => {
+            updateProductMutation.mutate({ id: editModalProductId, body: { name: values.name, status: values.status } });
+          }).catch(() => {});
+        }}
+        okText="Save"
+        confirmLoading={updateProductMutation.isPending}
+        destroyOnClose
+      >
+        {editModalProductId != null && editProductQuery.data && (
+          <Form form={editProductForm} layout="vertical" className="mt-4" initialValues={{ name: editProductQuery.data.name, status: editProductQuery.data.status }}>
+            <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Required' }]}>
+              <Input placeholder="Product name" maxLength={255} showCount />
+            </Form.Item>
+            <Form.Item name="status" label="Status" rules={[{ required: true }]}>
+              <Select
+                options={[
+                  { value: 'Draft', label: 'Draft' },
+                  { value: 'Active', label: 'Active' },
+                  { value: 'Inactive', label: 'Inactive' },
+                ]}
+              />
+            </Form.Item>
+          </Form>
+        )}
+        {editModalProductId != null && editProductQuery.isLoading && <p className="text-body dark:text-bodydark2">Loading...</p>}
+        {editModalProductId != null && !editProductQuery.isLoading && !editProductQuery.data && <p className="text-body dark:text-bodydark2">Product not found.</p>}
+      </Modal>
+
+      <Modal
+        title="Add Product"
+        open={addProductModalOpen}
+        onCancel={() => {
+          setAddProductModalOpen(false);
+          addProductForm.resetFields();
+        }}
+        onOk={() => {
+          addProductForm.validateFields().then((values) => {
+            createProductMutation.mutate({
+              name: values.name,
+              status: values.status,
+              skus: [],
+            });
+          }).catch(() => {});
+        }}
+        okText="Create"
+        confirmLoading={createProductMutation.isPending}
+        destroyOnClose
+      >
+        <Form form={addProductForm} layout="vertical" className="mt-4">
+          <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Required' }]}>
+            <Input placeholder="Product name" maxLength={255} showCount />
+          </Form.Item>
+          <Form.Item name="status" label="Status" rules={[{ required: true }]} initialValue="Draft">
+            <Select
+              options={[
+                { value: 'Draft', label: 'Draft' },
+                { value: 'Active', label: 'Active' },
+                { value: 'Inactive', label: 'Inactive' },
+              ]}
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       <Modal
         title="Add SKU"
@@ -770,11 +955,10 @@ export function ProductsPage() {
           >
             <InputNumber min={0} precision={0} className="w-full" />
           </Form.Item>
-          {addSkuProductId != null && (() => {
-            const product = products.find((p) => p.id === addSkuProductId);
-            const defs = product?.attributeDefinitions;
+          {addSkuProduct != null && (() => {
+            const defs = addSkuProduct.attributeDefinitions;
             if (defs?.length) {
-              return defs.map((def) => (
+              return defs.map((def: AttributeDefinition) => (
                 <Form.Item
                   key={def.key}
                   name={['attributes', def.key]}
