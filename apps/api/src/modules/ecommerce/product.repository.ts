@@ -6,25 +6,27 @@ import { prisma } from '../../lib/prisma.js';
  */
 export const productRepository = {
   async create(data: CreateProductInput) {
-    const product = await prisma.product.create({
-      data: {
-        name: data.name,
-        status: data.status,
-      },
-    });
-    if (data.skus.length > 0) {
-      await prisma.sku.createMany({
-        data: data.skus.map((sku) => ({
-          productId: product.id,
-          price: sku.price,
-          stock: sku.stock,
-          attributes: sku.attributes as object,
-        })),
+    return prisma.$transaction(async (tx) => {
+      const product = await tx.product.create({
+        data: {
+          name: data.name,
+          status: data.status,
+        },
       });
-    }
-    return prisma.product.findUniqueOrThrow({
-      where: { id: product.id },
-      include: { skus: true },
+      if (data.skus.length > 0) {
+        await tx.sku.createMany({
+          data: data.skus.map((sku) => ({
+            productId: product.id,
+            price: sku.price,
+            stock: sku.stock,
+            attributes: sku.attributes as object,
+          })),
+        });
+      }
+      return tx.product.findUniqueOrThrow({
+        where: { id: product.id },
+        include: { skus: true },
+      });
     });
   },
 
