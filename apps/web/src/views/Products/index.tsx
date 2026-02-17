@@ -604,7 +604,7 @@ export function ProductsPage() {
                 setPendingBrandFilter(brandFilter);
               }
             }}
-            dropdownRender={() => (
+            popupRender={() => (
               <div className="min-w-[220px] rounded-2xl border border-gray-200 bg-white p-4 shadow-[0px_12px_16px_-4px_rgba(16,24,40,0.08),0px_4px_6px_-2px_rgba(16,24,40,0.03)] dark:border-gray-800 dark:bg-gray-800">
                 <div className="flex flex-col gap-4">
                   <div>
@@ -835,7 +835,7 @@ export function ProductsPage() {
         open={viewModalProductId != null}
         onCancel={() => setViewModalProductId(null)}
         footer={[<Button key="close" onClick={() => setViewModalProductId(null)}>Close</Button>]}
-        destroyOnClose
+        destroyOnHidden
       >
         {viewModalProductId != null && (
           viewProductQuery.isLoading ? (
@@ -874,7 +874,7 @@ export function ProductsPage() {
         }}
         okText="Save"
         confirmLoading={updateProductMutation.isPending}
-        destroyOnClose
+        destroyOnHidden
       >
         {editModalProductId != null && editProductQuery.data && (
           <Form form={editProductForm} layout="vertical" className="mt-4" initialValues={{ name: editProductQuery.data.name, status: editProductQuery.data.status }}>
@@ -914,7 +914,7 @@ export function ProductsPage() {
         }}
         okText="Create"
         confirmLoading={createProductMutation.isPending}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={addProductForm} layout="vertical" className="mt-4">
           <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Required' }]}>
@@ -938,7 +938,7 @@ export function ProductsPage() {
         onCancel={closeAddSkuModal}
         onOk={submitAddSku}
         okText="Add"
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={addSkuForm} layout="vertical" className="mt-4">
           <Form.Item
