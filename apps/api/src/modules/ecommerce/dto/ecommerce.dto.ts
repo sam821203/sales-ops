@@ -17,10 +17,16 @@ export const createSkuSchema = z.object({
   attributes: z.record(z.string(), z.string()),
 });
 
+export const createProductSkuItemSchema = z.object({
+  price: z.number().nonnegative(),
+  stock: z.number().int().nonnegative(),
+  attributes: z.record(z.string(), z.string()),
+});
+
 export const createProductSchema = z.object({
   name: z.string().min(1).max(255),
   status: z.enum(productStatusValues),
-  skus: z.array(createSkuSchema).default([]),
+  skus: z.array(createProductSkuItemSchema).default([]),
 });
 
 export const productIdParamSchema = z.object({
@@ -95,6 +101,7 @@ export type {
   CreateProductInput,
   UpdateProductInput,
   ListProductsQuery,
+  ProductSkuItemInput,
 } from '@salesops/shared';
 export type ProductIdParam = z.infer<typeof productIdParamSchema>;
 export type CreatePromotionInput = z.infer<typeof createPromotionSchema>;

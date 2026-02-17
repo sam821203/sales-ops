@@ -203,12 +203,11 @@ export function ProductsPage() {
             );
       const newSkus = [
         ...product.skus.map((s) => ({
-          productId: product.id,
           price: s.price,
           stock: s.stock,
           attributes: s.attributes ?? {},
         })),
-        { productId: product.id, price: values.price, stock: values.stock, attributes },
+        { price: values.price, stock: values.stock, attributes },
       ];
       updateProductMutation.mutate(
         { id: product.id, body: { skus: newSkus } },
@@ -234,7 +233,6 @@ export function ProductsPage() {
       const newSkus = record.skus
         .filter((s) => s.id !== skuId)
         .map((s) => ({
-          productId: record.id,
           price: s.price,
           stock: s.stock,
           attributes: s.attributes ?? {},
@@ -431,10 +429,7 @@ export function ProductsPage() {
             key: 'edit',
             icon: <EditOutlined className="!text-amber-600" />,
             label: 'Edit',
-            onClick: () => {
-              setEditModalProductId(record.id);
-              editProductForm.setFieldsValue({ name: record.name, status: record.status });
-            },
+            onClick: () => setEditModalProductId(record.id),
           },
           {
             type: 'divider',
@@ -876,7 +871,7 @@ export function ProductsPage() {
         confirmLoading={updateProductMutation.isPending}
         destroyOnHidden
       >
-        {editModalProductId != null && editProductQuery.data && (
+        {editModalProductId != null && editProductQuery.data && editProductQuery.data.id === editModalProductId && (
           <Form form={editProductForm} layout="vertical" className="mt-4" initialValues={{ name: editProductQuery.data.name, status: editProductQuery.data.status }}>
             <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Required' }]}>
               <Input placeholder="Product name" maxLength={255} showCount />

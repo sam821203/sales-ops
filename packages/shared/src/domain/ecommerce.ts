@@ -87,10 +87,17 @@ export type CreateSkuInput = {
   attributes: Record<string, string>;
 };
 
+/** SKU item when creating/updating a product (server sets productId). */
+export type ProductSkuItemInput = {
+  price: number;
+  stock: number;
+  attributes: Record<string, string>;
+};
+
 export type CreateProductInput = {
   name: string;
   status: ProductStatus;
-  skus: CreateSkuInput[];
+  skus: ProductSkuItemInput[];
 };
 
 export type UpdateProductInput = Partial<CreateProductInput>;

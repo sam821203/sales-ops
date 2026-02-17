@@ -1,7 +1,7 @@
 import type {
   Product,
   CreateProductInput,
-  CreateSkuInput,
+  ProductSkuItemInput,
   UpdateProductInput,
   ListProductsQuery,
 } from '@salesops/shared';
@@ -40,8 +40,7 @@ export async function createProduct(body: CreateProductInput): Promise<Product> 
   const payload = {
     name: body.name,
     status: body.status,
-    skus: (body.skus ?? []).map((s: CreateSkuInput) => ({
-      productId: s.productId || 1,
+    skus: (body.skus ?? []).map((s: ProductSkuItemInput) => ({
       price: s.price,
       stock: s.stock,
       attributes: s.attributes ?? {},
@@ -61,8 +60,7 @@ export async function updateProduct(
   if (body.name !== undefined) payload.name = body.name;
   if (body.status !== undefined) payload.status = body.status;
   if (body.skus !== undefined) {
-    payload.skus = body.skus.map((s: CreateSkuInput) => ({
-      productId: id,
+    payload.skus = body.skus.map((s: ProductSkuItemInput) => ({
       price: s.price,
       stock: s.stock,
       attributes: s.attributes ?? {},
