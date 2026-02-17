@@ -90,11 +90,13 @@ export const createRefundSchema = z.object({
   processedAt: z.coerce.date().optional(),
 });
 
-export type CreateSkuInput = z.infer<typeof createSkuSchema>;
-export type CreateProductInput = z.infer<typeof createProductSchema>;
+export type {
+  CreateSkuInput,
+  CreateProductInput,
+  UpdateProductInput,
+  ListProductsQuery,
+} from '@salesops/shared';
 export type ProductIdParam = z.infer<typeof productIdParamSchema>;
-export type UpdateProductInput = z.infer<typeof updateProductSchema>;
-export type ListProductsQuery = z.infer<typeof listProductsQuerySchema>;
 export type CreatePromotionInput = z.infer<typeof createPromotionSchema>;
 export type CreateOrderItemInput = z.infer<typeof createOrderItemSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
