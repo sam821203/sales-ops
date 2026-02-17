@@ -18,8 +18,8 @@ export async function getProducts(
   params: ListProductsQuery
 ): Promise<Product[]> {
   const search = new URLSearchParams();
-  search.set('limit', String(params.limit));
-  search.set('offset', String(params.offset));
+  if (params.limit != null) search.set('limit', String(params.limit));
+  if (params.offset != null) search.set('offset', String(params.offset));
   if (params.status != null) {
     search.set('status', params.status);
   }
