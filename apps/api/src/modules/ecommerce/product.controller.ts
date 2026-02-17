@@ -53,12 +53,8 @@ products.patch(
 // DELETE /products/:id
 products.delete('/:id', zValidator('param', productIdParamSchema), async (c) => {
   const { id } = c.req.valid('param');
-  try {
-    await productService.deleteProduct(id);
-    return c.body(null, 204);
-  } catch {
-    return c.json({ error: 'Not Found', message: 'Product not found' }, 404);
-  }
+  await productService.deleteProduct(id);
+  return c.body(null, 204);
 });
 
 export { products as productController };

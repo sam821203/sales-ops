@@ -46,30 +46,32 @@ export const productRepository = {
   },
 
   async update(id: number, data: UpdateProductInput) {
-    const product = await prisma.product.findUnique({ where: { id } });
-    if (!product) return null;
+    return prisma.$transaction(async (tx) => {
+      const product = await tx.product.findUnique({ where: { id } });
+      if (!product) return null;
 
-    if (data.skus !== undefined) {
-      await prisma.sku.deleteMany({ where: { productId: id } });
-      if (data.skus.length > 0) {
-        await prisma.sku.createMany({
-          data: data.skus.map((sku) => ({
-            productId: id,
-            price: sku.price,
-            stock: sku.stock,
-            attributes: sku.attributes as object,
-          })),
-        });
+      if (data.skus !== undefined) {
+        await tx.sku.deleteMany({ where: { productId: id } });
+        if (data.skus.length > 0) {
+          await tx.sku.createMany({
+            data: data.skus.map((sku) => ({
+              productId: id,
+              price: sku.price,
+              stock: sku.stock,
+              attributes: sku.attributes as object,
+            })),
+          });
+        }
       }
-    }
 
-    return prisma.product.update({
-      where: { id },
-      data: {
-        ...(data.name !== undefined && { name: data.name }),
-        ...(data.status !== undefined && { status: data.status }),
-      },
-      include: { skus: true },
+      return tx.product.update({
+        where: { id },
+        data: {
+          ...(data.name !== undefined && { name: data.name }),
+          ...(data.status !== undefined && { status: data.status }),
+        },
+        include: { skus: true },
+      });
     });
   },
 
