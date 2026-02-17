@@ -79,6 +79,35 @@ export type SKU = {
   attributes: Record<string, string>;
 };
 
+// Product API request types (align with API validation)
+export type CreateSkuInput = {
+  productId: number;
+  price: number;
+  stock: number;
+  attributes: Record<string, string>;
+};
+
+/** SKU item when creating/updating a product (server sets productId). */
+export type ProductSkuItemInput = {
+  price: number;
+  stock: number;
+  attributes: Record<string, string>;
+};
+
+export type CreateProductInput = {
+  name: string;
+  status: ProductStatus;
+  skus: ProductSkuItemInput[];
+};
+
+export type UpdateProductInput = Partial<CreateProductInput>;
+
+export type ListProductsQuery = {
+  limit?: number;
+  offset?: number;
+  status?: ProductStatus;
+};
+
 export type Promotion = {
   id: number;
   name: string;

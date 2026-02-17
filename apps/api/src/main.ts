@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { env } from './config/index.js';
 import { errorHandler } from './common/filters/error-handler.js';
@@ -11,7 +12,8 @@ import { userController } from './modules/user/user.controller.js';
 
 const app = new Hono({ strict: false });
 
-// Global middleware
+// Global middleware: CORS first (handles preflight), then logging
+app.use('*', cors({ origin: env.CORS_ORIGIN ?? '*' }));
 app.use('*', requestLogger);
 
 // API sub-app: routes are /health, /products, /users (mounted at API_PREFIX in app.route below)

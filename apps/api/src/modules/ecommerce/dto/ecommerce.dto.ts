@@ -17,10 +17,16 @@ export const createSkuSchema = z.object({
   attributes: z.record(z.string(), z.string()),
 });
 
+export const createProductSkuItemSchema = z.object({
+  price: z.number().nonnegative(),
+  stock: z.number().int().nonnegative(),
+  attributes: z.record(z.string(), z.string()),
+});
+
 export const createProductSchema = z.object({
   name: z.string().min(1).max(255),
   status: z.enum(productStatusValues),
-  skus: z.array(createSkuSchema).default([]),
+  skus: z.array(createProductSkuItemSchema).default([]),
 });
 
 export const productIdParamSchema = z.object({
@@ -90,11 +96,14 @@ export const createRefundSchema = z.object({
   processedAt: z.coerce.date().optional(),
 });
 
-export type CreateSkuInput = z.infer<typeof createSkuSchema>;
-export type CreateProductInput = z.infer<typeof createProductSchema>;
+export type {
+  CreateSkuInput,
+  CreateProductInput,
+  UpdateProductInput,
+  ListProductsQuery,
+  ProductSkuItemInput,
+} from '@salesops/shared';
 export type ProductIdParam = z.infer<typeof productIdParamSchema>;
-export type UpdateProductInput = z.infer<typeof updateProductSchema>;
-export type ListProductsQuery = z.infer<typeof listProductsQuerySchema>;
 export type CreatePromotionInput = z.infer<typeof createPromotionSchema>;
 export type CreateOrderItemInput = z.infer<typeof createOrderItemSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
