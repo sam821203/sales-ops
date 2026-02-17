@@ -45,12 +45,8 @@ user.patch('/:id', async (c) => {
 // DELETE /users/:id
 user.delete('/:id', async (c) => {
   const id = c.req.param('id');
-  try {
-    await userService.deleteUser(id);
-    return c.body(null, 204);
-  } catch {
-    return c.json({ error: 'Not Found', message: 'User not found' }, 404);
-  }
+  await userService.deleteUser(id);
+  return c.body(null, 204);
 });
 
 export { user as userController };

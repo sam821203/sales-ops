@@ -23,6 +23,7 @@ apps/web/public/example/
 # API env and local DB
 .env
 apps/api/.env
+apps/api/generated/
 apps/api/prisma/**/*.db
 apps/api/prisma/**/*.db-journal
 
