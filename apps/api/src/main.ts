@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
@@ -5,6 +6,7 @@ import { env } from './config/index.js';
 import { errorHandler } from './common/filters/error-handler.js';
 import { requestLogger } from './common/interceptors/logging.js';
 import { healthController } from './modules/health/health.controller.js';
+import { productController } from './modules/ecommerce/product.controller.js';
 import { userController } from './modules/user/user.controller.js';
 
 const app = new Hono({ strict: false });
@@ -12,11 +14,12 @@ const app = new Hono({ strict: false });
 // Global middleware
 app.use('*', requestLogger);
 
-// API prefix
-const api = new Hono().basePath(env.API_PREFIX);
+// API sub-app: routes are /health, /products, /users (mounted at API_PREFIX in app.route below)
+const api = new Hono();
 
 // RESTful routes
 api.route('/health', healthController);
+api.route('/products', productController);
 api.route('/users', userController);
 
 // OpenAPI doc (static contract; extend with @hono/zod-openapi if needed)
@@ -29,6 +32,15 @@ api.get('/openapi.json', (c) => {
     paths: {
       '/health': {
         get: { summary: 'Health check', responses: { 200: { description: 'OK' } } },
+      },
+      '/products': {
+        get: { summary: 'List products', description: 'Query: limit, offset, status (optional)', responses: { 200: { description: 'OK' } } },
+        post: { summary: 'Create product', description: 'Body: name, status, skus[]', responses: { 201: { description: 'Created' } } },
+      },
+      '/products/{id}': {
+        get: { summary: 'Get product by id', responses: { 200: { description: 'OK' }, 404: { description: 'Not Found' } } },
+        patch: { summary: 'Update product', description: 'Body: name?, status?, skus? (optional)', responses: { 200: { description: 'OK' }, 404: { description: 'Not Found' } } },
+        delete: { summary: 'Delete product', responses: { 204: { description: 'No Content' }, 404: { description: 'Not Found' } } },
       },
       '/users': {
         get: { summary: 'List users', responses: { 200: { description: 'OK' } } },
