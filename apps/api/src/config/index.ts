@@ -4,6 +4,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(3000),
   API_PREFIX: z.string().default('/api'),
+  CORS_ORIGIN: z.string().optional(),
   DATABASE_URL: z
     .string()
     .default('file:./prisma/dev.db')
