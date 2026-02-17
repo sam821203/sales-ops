@@ -1,5 +1,5 @@
 import type { SorterResult } from 'antd/es/table/interface';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
   SKU,
@@ -121,6 +121,19 @@ export function ProductsPage() {
     queryFn: () => getProductById(editModalProductId!),
     enabled: editModalProductId != null,
   });
+
+  useEffect(() => {
+    if (
+      editModalProductId != null &&
+      editProductQuery.data &&
+      editProductQuery.data.id === editModalProductId
+    ) {
+      editProductForm.setFieldsValue({
+        name: editProductQuery.data.name,
+        status: editProductQuery.data.status,
+      });
+    }
+  }, [editModalProductId, editProductQuery.data, editProductForm]);
 
   const createProductMutation = useMutation({
     mutationFn: (body: CreateProductInput) => createProduct(body),
