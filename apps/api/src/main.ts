@@ -36,7 +36,7 @@ api.get('/openapi.json', (c) => {
         get: { summary: 'Health check', responses: { 200: { description: 'OK' } } },
       },
       '/products': {
-        get: { summary: 'List products', description: 'Query: limit, offset, status (optional)', responses: { 200: { description: 'OK' } } },
+        get: { summary: 'List products', description: 'Query: page, pageSize, status (optional), sortBy, sortOrder, q (search). Returns { items, total }.', responses: { 200: { description: 'OK' } } },
         post: { summary: 'Create product', description: 'Body: name, status, skus[]', responses: { 201: { description: 'Created' } } },
       },
       '/products/{id}': {

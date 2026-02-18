@@ -102,10 +102,21 @@ export type CreateProductInput = {
 
 export type UpdateProductInput = Partial<CreateProductInput>;
 
+export const productSortByValues = ['name', 'status', 'createdAt', 'skuCount'] as const;
+export type ProductSortBy = (typeof productSortByValues)[number];
+
 export type ListProductsQuery = {
-  limit?: number;
-  offset?: number;
+  page: number;
+  pageSize: number;
   status?: ProductStatus;
+  sortBy?: ProductSortBy;
+  sortOrder?: 'asc' | 'desc';
+  q?: string;
+};
+
+export type ListProductsResponse = {
+  items: Product[];
+  total: number;
 };
 
 export type Promotion = {

@@ -1,5 +1,5 @@
 import type { CreateProductInput, UpdateProductInput } from './dto/ecommerce.dto.js';
-import type { Product } from '@salesops/shared';
+import type { ListProductsResponse, Product, ProductSortBy } from '@salesops/shared';
 import { toSharedProductStatus } from './mappers/enum.mapper.js';
 import { productRepository } from './product.repository.js';
 
@@ -21,6 +21,8 @@ function toProduct(row: PrismaProductWithSkusNonNull): Product {
   };
 }
 
+type ProductStatus = 'Draft' | 'Active' | 'Inactive';
+
 /**
  * Business logic only. No HTTP/framework types.
  */
@@ -35,9 +37,13 @@ export const productService = {
     return product ? toProduct(product) : null;
   },
 
-  async getProducts(limit: number, offset: number, status?: 'Draft' | 'Active' | 'Inactive'): Promise<Product[]> {
-    const products = await productRepository.findMany(limit, offset, status);
-    return products.map(toProduct);
+  async getProducts(
+    page: number,
+    pageSize: number,
+    options: { status?: ProductStatus; sortBy?: ProductSortBy; sortOrder?: 'asc' | 'desc'; q?: string }
+  ): Promise<ListProductsResponse> {
+    const { items, total } = await productRepository.findManyAndCount(page, pageSize, options);
+    return { items: items.map(toProduct), total };
   },
 
   async updateProduct(id: number, data: UpdateProductInput): Promise<Product | null> {

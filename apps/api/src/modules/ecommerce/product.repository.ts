@@ -1,5 +1,27 @@
 import type { CreateProductInput, UpdateProductInput } from './dto/ecommerce.dto.js';
+import type { ProductSortBy } from '@salesops/shared';
 import { prisma } from '../../lib/prisma.js';
+
+type ProductStatus = 'Draft' | 'Active' | 'Inactive';
+
+function buildWhere(options: { status?: ProductStatus; q?: string }) {
+  const conditions: { status?: ProductStatus; name?: { contains: string } } = {};
+  if (options.status !== undefined) conditions.status = options.status;
+  if (options.q !== undefined && options.q.trim() !== '') {
+    conditions.name = { contains: options.q.trim() };
+  }
+  return Object.keys(conditions).length > 0 ? conditions : undefined;
+}
+
+function buildOrderBy(sortBy?: ProductSortBy, sortOrder: 'asc' | 'desc' = 'desc') {
+  if (sortBy === undefined || sortBy === 'createdAt') {
+    return { createdAt: sortOrder };
+  }
+  if (sortBy === 'skuCount') {
+    return { skus: { _count: sortOrder } };
+  }
+  return { [sortBy]: sortOrder };
+}
 
 /**
  * Data access only. No business logic; all SQL/ORM here.
@@ -37,13 +59,58 @@ export const productRepository = {
     });
   },
 
-  async findMany(limit: number, offset: number, status?: 'Draft' | 'Active' | 'Inactive') {
+  async findMany(
+    page: number,
+    pageSize: number,
+    options: {
+      status?: ProductStatus;
+      sortBy?: ProductSortBy;
+      sortOrder?: 'asc' | 'desc';
+      q?: string;
+    }
+  ) {
+    const where = buildWhere({ status: options.status, q: options.q });
+    const orderBy = buildOrderBy(options.sortBy, options.sortOrder ?? 'desc');
+    const skip = (page - 1) * pageSize;
     return prisma.product.findMany({
-      where: status !== undefined ? { status } : undefined,
-      take: limit,
-      skip: offset,
-      orderBy: { createdAt: 'desc' },
+      where,
+      skip,
+      take: pageSize,
+      orderBy,
       include: { skus: true },
+    });
+  },
+
+  async count(options: { status?: ProductStatus; q?: string }) {
+    const where = buildWhere(options);
+    return prisma.product.count({ where });
+  },
+
+  async findManyAndCount(
+    page: number,
+    pageSize: number,
+    options: {
+      status?: ProductStatus;
+      sortBy?: ProductSortBy;
+      sortOrder?: 'asc' | 'desc';
+      q?: string;
+    }
+  ) {
+    const where = buildWhere({ status: options.status, q: options.q });
+    const orderBy = buildOrderBy(options.sortBy, options.sortOrder ?? 'desc');
+    const skip = (page - 1) * pageSize;
+    return prisma.$transaction(async (tx) => {
+      const [items, total] = await Promise.all([
+        tx.product.findMany({
+          where,
+          skip,
+          take: pageSize,
+          orderBy,
+          include: { skus: true },
+        }),
+        tx.product.count({ where }),
+      ]);
+      return { items, total };
     });
   },
 
