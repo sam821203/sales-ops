@@ -1,9 +1,10 @@
 import type {
   Product,
   CreateProductInput,
+  ListProductsQuery,
+  ListProductsResponse,
   ProductSkuItemInput,
   UpdateProductInput,
-  ListProductsQuery,
 } from '@salesops/shared';
 import { apiFetch } from '@/api/client';
 
@@ -16,14 +17,15 @@ export const productKeys = {
 
 export async function getProducts(
   params: ListProductsQuery
-): Promise<Product[]> {
+): Promise<ListProductsResponse> {
   const search = new URLSearchParams();
-  if (params.limit != null) search.set('limit', String(params.limit));
-  if (params.offset != null) search.set('offset', String(params.offset));
-  if (params.status != null) {
-    search.set('status', params.status);
-  }
-  return apiFetch<Product[]>(`/products?${search.toString()}`);
+  search.set('page', String(params.page));
+  search.set('pageSize', String(params.pageSize));
+  if (params.status != null) search.set('status', params.status);
+  if (params.sortBy != null) search.set('sortBy', params.sortBy);
+  if (params.sortOrder != null) search.set('sortOrder', params.sortOrder);
+  if (params.q != null && params.q.trim() !== '') search.set('q', params.q.trim());
+  return apiFetch<ListProductsResponse>(`/products?${search.toString()}`);
 }
 
 export async function getProductById(id: number): Promise<Product | null> {

@@ -3,9 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
   SKU,
+  Product,
   ProductStatus,
   AttributeDefinition,
   CreateProductInput,
+  ListProductsQuery,
+  ProductSortBy,
   UpdateProductInput,
 } from '@salesops/shared';
 import type { StatusFilter, ProductRow } from './types';
@@ -92,16 +95,26 @@ export function ProductsPage() {
   const [addProductForm] = Form.useForm<{ name: string; status: ProductStatus }>();
   const [editProductForm] = Form.useForm<{ name: string; status: ProductStatus }>();
 
-  const listParams = useMemo(
-    () => ({
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
+  const sortByFromField = (field: string | undefined): ProductSortBy | undefined => {
+    if (field === 'name' || field === 'status' || field === 'createdAt' || field === 'skuCount') return field;
+    if (field === 'category' || field === 'brand' || field === 'totalStock' || field === 'minPrice') return 'createdAt';
+    return undefined;
+  };
+
+  const listParams = useMemo((): ListProductsQuery => {
+    const sortBy = sortByFromField(sortField);
+    const sortOrderApi = sortOrder === 'ascend' ? 'asc' : sortOrder === 'descend' ? 'desc' : undefined;
+    return {
+      page,
+      pageSize,
       status: statusFilter === 'all' ? undefined : statusFilter,
-    }),
-    [page, pageSize, statusFilter]
-  );
+      ...(sortBy != null && sortOrderApi != null && { sortBy, sortOrder: sortOrderApi }),
+      ...(search.trim() !== '' && { q: search.trim() }),
+    };
+  }, [page, pageSize, statusFilter, sortField, sortOrder, search]);
+
   const {
-    data: listData = [],
+    data: listResponse,
     isLoading: listLoading,
     isError: listError,
     error: listErrorDetail,
@@ -109,6 +122,8 @@ export function ProductsPage() {
     queryKey: productKeys.list(listParams),
     queryFn: () => getProducts(listParams),
   });
+
+  const totalFromApi = listResponse?.total ?? 0;
 
   const viewProductQuery = useQuery({
     queryKey: productKeys.detail(viewModalProductId!),
@@ -168,17 +183,17 @@ export function ProductsPage() {
   });
 
   const filteredProducts = useMemo(() => {
+    const items = listResponse?.items ?? [];
     const categoryFilterLower = categoryFilter.trim().toLowerCase();
     const brandFilterLower = brandFilter.trim().toLowerCase();
-    return listData.filter((product) => {
-      const matchSearch = product.name.toLowerCase().includes(search.toLowerCase());
+    return items.filter((product: Product) => {
       const categoryName = product.categoryId != null ? '' : '—';
       const brandName = product.brandId != null ? '' : '—';
       const matchCategory = !categoryFilterLower || categoryName.toLowerCase().includes(categoryFilterLower);
       const matchBrand = !brandFilterLower || brandName.toLowerCase().includes(brandFilterLower);
-      return matchSearch && matchCategory && matchBrand;
+      return matchCategory && matchBrand;
     });
-  }, [listData, search, categoryFilter, brandFilter]);
+  }, [listResponse?.items, categoryFilter, brandFilter]);
 
   const openAddSkuModal = useCallback((record: ProductRow) => {
     setAddSkuProduct(record);
@@ -258,12 +273,12 @@ export function ProductsPage() {
     [updateProductMutation]
   );
 
-  const sortedProducts = useMemo(() => {
-    const products = filteredProducts.map((product): ProductRow => {
-      const prices = product.skus.map((sku) => sku.price);
+  const tableRows = useMemo(() => {
+    return filteredProducts.map((product: Product): ProductRow => {
+      const prices = product.skus.map((sku: SKU) => sku.price);
       const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
       const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
-      const totalStock = product.skus.reduce((sum, sku) => sum + sku.stock, 0);
+      const totalStock = product.skus.reduce((sum: number, sku: SKU) => sum + sku.stock, 0);
       return {
         ...product,
         key: product.id,
@@ -274,46 +289,16 @@ export function ProductsPage() {
         brandName: '—',
       };
     });
-    if (!sortField || !sortOrder) return products;
-    return [...products].sort((a, b) => {
-      let comparison = 0;
-      switch (sortField) {
-        case 'name':
-          comparison = a.name.localeCompare(b.name);
-          break;
-        case 'status':
-          comparison = (a.status ?? '').localeCompare(b.status ?? '');
-          break;
-        case 'category':
-          comparison = (a.categoryName ?? '').localeCompare(b.categoryName ?? '');
-          break;
-        case 'brand':
-          comparison = (a.brandName ?? '').localeCompare(b.brandName ?? '');
-          break;
-        case 'skuCount':
-          comparison = a.skus.length - b.skus.length;
-          break;
-        case 'totalStock':
-          comparison = a.totalStock - b.totalStock;
-          break;
-        case 'minPrice':
-          comparison = a.minPrice - b.minPrice;
-          break;
-        default:
-          return 0;
-      }
-      return sortOrder === 'ascend' ? comparison : -comparison;
-    });
-  }, [filteredProducts, sortField, sortOrder]);
+  }, [filteredProducts]);
 
-  const hasNextPage = listData.length >= pageSize;
-  const totalPages = hasNextPage ? page + 1 : page;
+  const totalPages = Math.max(1, Math.ceil(totalFromApi / pageSize));
+  const hasNextPage = page < totalPages;
   const safePage = Math.min(page, totalPages);
   const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
-  const paginatedProducts = sortedProducts;
+  const paginatedProducts = tableRows;
 
-  const showingFrom = sortedProducts.length === 0 ? 0 : (page - 1) * pageSize + 1;
-  const showingTo = (page - 1) * pageSize + sortedProducts.length;
+  const showingFrom = totalFromApi === 0 ? 0 : (page - 1) * pageSize + 1;
+  const showingTo = Math.min(page * pageSize, totalFromApi);
 
   const handleTableChange = (_pagination: unknown, _filters: unknown, sorter: SorterResult<ProductRow> | SorterResult<ProductRow>[]) => {
     const result = Array.isArray(sorter) ? sorter[0] : sorter;
@@ -480,7 +465,7 @@ export function ProductsPage() {
       },
     },
   ],
-  [sortField, sortOrder, openAddSkuModal, removeProduct, editProductForm]
+  [sortField, sortOrder, openAddSkuModal, removeProduct]
   );
 
   return (
@@ -518,7 +503,7 @@ export function ProductsPage() {
         footer={
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-body dark:text-bodydark2">
-              Showing {showingFrom}-{showingTo} of {sortedProducts.length}
+              Showing {showingFrom}-{showingTo} of {totalFromApi}
             </p>
             <div className="flex items-center gap-2">
               <Select<number>
