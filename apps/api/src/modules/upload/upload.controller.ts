@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { Readable } from 'node:stream';
+import { fileTypeFromBuffer } from 'file-type';
 import { v2 as cloudinary } from 'cloudinary';
 import { env } from '../../config/index.js';
 
@@ -59,18 +60,22 @@ upload.post('/', async (c) => {
   }
 
   const blob = file as Blob;
-  const type = blob.type;
-  if (!ALLOWED_TYPES.has(type)) {
-    throw new HTTPException(400, {
-      message: `Invalid file type. Allowed: ${[...ALLOWED_TYPES].join(', ')}`,
-    });
-  }
   if (blob.size > MAX_SIZE_BYTES) {
     throw new HTTPException(400, { message: `File too large. Max size: ${MAX_SIZE_BYTES / 1024 / 1024}MB` });
   }
 
   const arrayBuffer = await blob.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
+
+  const detected = await fileTypeFromBuffer(buffer);
+  if (!detected) {
+    throw new HTTPException(400, { message: 'Invalid or unsupported file type' });
+  }
+  if (!ALLOWED_TYPES.has(detected.mime)) {
+    throw new HTTPException(400, {
+      message: `Invalid file type. Allowed: ${[...ALLOWED_TYPES].join(', ')}`,
+    });
+  }
 
   try {
     const { secure_url } = await uploadBufferToCloudinary(buffer);
