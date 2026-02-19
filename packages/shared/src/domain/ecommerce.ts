@@ -100,6 +100,7 @@ export type CreateProductInput = {
   name: string;
   status: ProductStatus;
   skus: ProductSkuItemInput[];
+  imageUrl?: string;
 };
 
 export type UpdateProductInput = Partial<CreateProductInput>;

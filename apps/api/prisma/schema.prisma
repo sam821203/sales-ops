@@ -93,6 +93,7 @@ model Product {
   id           Int                   @id @default(autoincrement())
   name         String
   status       ProductStatus         @default(Draft)
+  imageUrl     String?
   skus         Sku[]
   priceHistory ProductPriceHistory[]
   createdAt    DateTime              @default(now())

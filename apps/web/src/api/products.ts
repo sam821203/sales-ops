@@ -47,6 +47,7 @@ export async function createProduct(body: CreateProductInput): Promise<Product> 
       stock: s.stock,
       attributes: s.attributes ?? {},
     })),
+    ...(body.imageUrl != null && body.imageUrl !== '' && { imageUrl: body.imageUrl }),
   };
   return apiFetch<Product>('/products', {
     method: 'POST',
@@ -61,6 +62,7 @@ export async function updateProduct(
   const payload: Record<string, unknown> = {};
   if (body.name !== undefined) payload.name = body.name;
   if (body.status !== undefined) payload.status = body.status;
+  if (body.imageUrl !== undefined) payload.imageUrl = body.imageUrl || null;
   if (body.skus !== undefined) {
     payload.skus = body.skus.map((s: ProductSkuItemInput) => ({
       price: s.price,
