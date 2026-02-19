@@ -8,6 +8,7 @@ import { errorHandler } from './common/filters/error-handler.js';
 import { requestLogger } from './common/interceptors/logging.js';
 import { healthController } from './modules/health/health.controller.js';
 import { productController } from './modules/ecommerce/product.controller.js';
+import { uploadController } from './modules/upload/upload.controller.js';
 import { userController } from './modules/user/user.controller.js';
 
 const app = new Hono({ strict: false });
@@ -22,6 +23,7 @@ const api = new Hono();
 // RESTful routes
 api.route('/health', healthController);
 api.route('/products', productController);
+api.route('/upload', uploadController);
 api.route('/users', userController);
 
 // OpenAPI doc (static contract; extend with @hono/zod-openapi if needed)
