@@ -1,11 +1,15 @@
 import type { SorterResult } from 'antd/es/table/interface';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearch, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
   SKU,
+  Product,
   ProductStatus,
   AttributeDefinition,
   CreateProductInput,
+  ListProductsQuery,
+  ProductSortBy,
   UpdateProductInput,
 } from '@salesops/shared';
 import type { StatusFilter, ProductRow } from './types';
@@ -67,18 +71,37 @@ function getAttributesFromForm(
 
 export function ProductsPage() {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const searchParams = useSearch({ strict: false });
+  const navigate = useNavigate();
+
+  const page = searchParams?.page ?? 1;
+  const pageSize = searchParams?.pageSize ?? DEFAULT_TABLE_PAGE_SIZE;
+  const statusFilter: StatusFilter =
+    searchParams?.status === 'Draft' ||
+    searchParams?.status === 'Active' ||
+    searchParams?.status === 'Inactive'
+      ? searchParams.status
+      : 'all';
+  const sortField = searchParams?.sortBy;
+  const sortOrder =
+    searchParams?.sortOrder === 'asc'
+      ? ('ascend' as const)
+      : searchParams?.sortOrder === 'desc'
+        ? ('descend' as const)
+        : undefined;
+  const searchQuery = searchParams?.q ?? '';
+
+  const [searchInput, setSearchInput] = useState(searchQuery);
+  useEffect(() => {
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
+
   const [categoryFilter, setCategoryFilter] = useState('');
   const [brandFilter, setBrandFilter] = useState('');
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
   const [pendingCategoryFilter, setPendingCategoryFilter] = useState('');
   const [pendingBrandFilter, setPendingBrandFilter] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
   const [expandedRowKeys, setExpandedRowKeys] = useState<readonly number[]>([]);
-  const [sortField, setSortField] = useState<string | undefined>();
-  const [sortOrder, setSortOrder] = useState<'ascend' | 'descend' | undefined>();
   const [addSkuModalOpen, setAddSkuModalOpen] = useState(false);
   const [addSkuProduct, setAddSkuProduct] = useState<ProductRow | null>(null);
   const [viewModalProductId, setViewModalProductId] = useState<number | null>(null);
@@ -92,16 +115,37 @@ export function ProductsPage() {
   const [addProductForm] = Form.useForm<{ name: string; status: ProductStatus }>();
   const [editProductForm] = Form.useForm<{ name: string; status: ProductStatus }>();
 
-  const listParams = useMemo(
-    () => ({
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-      status: statusFilter === 'all' ? undefined : statusFilter,
-    }),
-    [page, pageSize, statusFilter]
+  const updateSearch = useCallback(
+    (updates: Partial<Record<string, string | number | undefined>>) => {
+      const next = {
+        page: searchParams?.page ?? 1,
+        pageSize: searchParams?.pageSize ?? DEFAULT_TABLE_PAGE_SIZE,
+        status: searchParams?.status ?? 'all',
+        sortBy: searchParams?.sortBy,
+        sortOrder: searchParams?.sortOrder,
+        q: searchParams?.q ?? '',
+        ...updates,
+      };
+      navigate({ to: '.', search: next as Record<string, unknown> });
+    },
+    [navigate, searchParams]
   );
+
+  const listParams = useMemo((): ListProductsQuery => {
+    return {
+      page,
+      pageSize,
+      status: statusFilter === 'all' ? undefined : statusFilter,
+      ...(sortField != null && sortOrder != null && {
+        sortBy: sortField as ProductSortBy,
+        sortOrder: sortOrder === 'ascend' ? 'asc' : 'desc',
+      }),
+      ...(searchQuery.trim() !== '' && { q: searchQuery.trim() }),
+    };
+  }, [page, pageSize, statusFilter, sortField, sortOrder, searchQuery]);
+
   const {
-    data: listData = [],
+    data: listResponse,
     isLoading: listLoading,
     isError: listError,
     error: listErrorDetail,
@@ -109,6 +153,8 @@ export function ProductsPage() {
     queryKey: productKeys.list(listParams),
     queryFn: () => getProducts(listParams),
   });
+
+  const totalFromApi = listResponse?.total ?? 0;
 
   const viewProductQuery = useQuery({
     queryKey: productKeys.detail(viewModalProductId!),
@@ -168,17 +214,17 @@ export function ProductsPage() {
   });
 
   const filteredProducts = useMemo(() => {
+    const items = listResponse?.items ?? [];
     const categoryFilterLower = categoryFilter.trim().toLowerCase();
     const brandFilterLower = brandFilter.trim().toLowerCase();
-    return listData.filter((product) => {
-      const matchSearch = product.name.toLowerCase().includes(search.toLowerCase());
+    return items.filter((product: Product) => {
       const categoryName = product.categoryId != null ? '' : '—';
       const brandName = product.brandId != null ? '' : '—';
       const matchCategory = !categoryFilterLower || categoryName.toLowerCase().includes(categoryFilterLower);
       const matchBrand = !brandFilterLower || brandName.toLowerCase().includes(brandFilterLower);
-      return matchSearch && matchCategory && matchBrand;
+      return matchCategory && matchBrand;
     });
-  }, [listData, search, categoryFilter, brandFilter]);
+  }, [listResponse?.items, categoryFilter, brandFilter]);
 
   const openAddSkuModal = useCallback((record: ProductRow) => {
     setAddSkuProduct(record);
@@ -258,12 +304,12 @@ export function ProductsPage() {
     [updateProductMutation]
   );
 
-  const sortedProducts = useMemo(() => {
-    const products = filteredProducts.map((product): ProductRow => {
-      const prices = product.skus.map((sku) => sku.price);
+  const tableRows = useMemo(() => {
+    return filteredProducts.map((product: Product): ProductRow => {
+      const prices = product.skus.map((sku: SKU) => sku.price);
       const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
       const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
-      const totalStock = product.skus.reduce((sum, sku) => sum + sku.stock, 0);
+      const totalStock = product.skus.reduce((sum: number, sku: SKU) => sum + sku.stock, 0);
       return {
         ...product,
         key: product.id,
@@ -274,52 +320,32 @@ export function ProductsPage() {
         brandName: '—',
       };
     });
-    if (!sortField || !sortOrder) return products;
-    return [...products].sort((a, b) => {
-      let comparison = 0;
-      switch (sortField) {
-        case 'name':
-          comparison = a.name.localeCompare(b.name);
-          break;
-        case 'status':
-          comparison = (a.status ?? '').localeCompare(b.status ?? '');
-          break;
-        case 'category':
-          comparison = (a.categoryName ?? '').localeCompare(b.categoryName ?? '');
-          break;
-        case 'brand':
-          comparison = (a.brandName ?? '').localeCompare(b.brandName ?? '');
-          break;
-        case 'skuCount':
-          comparison = a.skus.length - b.skus.length;
-          break;
-        case 'totalStock':
-          comparison = a.totalStock - b.totalStock;
-          break;
-        case 'minPrice':
-          comparison = a.minPrice - b.minPrice;
-          break;
-        default:
-          return 0;
-      }
-      return sortOrder === 'ascend' ? comparison : -comparison;
-    });
-  }, [filteredProducts, sortField, sortOrder]);
+  }, [filteredProducts]);
 
-  const hasNextPage = listData.length >= pageSize;
-  const totalPages = hasNextPage ? page + 1 : page;
+  const totalPages = Math.max(1, Math.ceil(totalFromApi / pageSize));
+  const hasNextPage = page < totalPages;
   const safePage = Math.min(page, totalPages);
   const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
-  const paginatedProducts = sortedProducts;
+  const paginatedProducts = tableRows;
 
-  const showingFrom = sortedProducts.length === 0 ? 0 : (page - 1) * pageSize + 1;
-  const showingTo = (page - 1) * pageSize + sortedProducts.length;
+  const showingFrom = totalFromApi === 0 ? 0 : (page - 1) * pageSize + 1;
+  const showingTo = Math.min(page * pageSize, totalFromApi);
+
+  const sortFieldDisplay = sortField === 'createdAt' ? 'category' : sortField;
+
+  const tableSortToSortBy = (columnKey: string | undefined): ProductSortBy | undefined => {
+    if (columnKey === 'name' || columnKey === 'status' || columnKey === 'createdAt' || columnKey === 'skuCount')
+      return columnKey as ProductSortBy;
+    if (columnKey === 'category' || columnKey === 'brand' || columnKey === 'totalStock' || columnKey === 'minPrice')
+      return 'createdAt';
+    return undefined;
+  };
 
   const handleTableChange = (_pagination: unknown, _filters: unknown, sorter: SorterResult<ProductRow> | SorterResult<ProductRow>[]) => {
     const result = Array.isArray(sorter) ? sorter[0] : sorter;
-    setSortField(result.columnKey as string | undefined);
-    setSortOrder(result.order === null ? undefined : result.order);
-    setPage(1);
+    const nextSortBy = result.columnKey ? tableSortToSortBy(result.columnKey as string) : undefined;
+    const nextSortOrder = result.order === 'ascend' ? 'asc' : result.order === 'descend' ? 'desc' : undefined;
+    updateSearch({ sortBy: nextSortBy, sortOrder: nextSortOrder, page: 1 });
   };
 
   const columns: TableColumnsType<ProductRow> = useMemo(
@@ -330,7 +356,7 @@ export function ProductsPage() {
       key: 'name',
       width: 260,
       sorter: true,
-      sortOrder: sortField === 'name' ? sortOrder : undefined,
+      sortOrder: sortFieldDisplay === 'name' ? sortOrder : undefined,
       showSorterTooltip: false,
       render: (name: string, record: ProductRow) => (
         <div className="flex items-center gap-3">
@@ -352,7 +378,7 @@ export function ProductsPage() {
       key: 'status',
       width: 150,
       sorter: true,
-      sortOrder: sortField === 'status' ? sortOrder : undefined,
+      sortOrder: sortFieldDisplay === 'status' ? sortOrder : undefined,
       showSorterTooltip: false,
       render: (status: ProductStatus) => (
         <Tag bordered={false} className={getProductStatusClass(status)}>
@@ -366,7 +392,7 @@ export function ProductsPage() {
       key: 'category',
       width: 120,
       sorter: true,
-      sortOrder: sortField === 'category' ? sortOrder : undefined,
+      sortOrder: sortFieldDisplay === 'category' ? sortOrder : undefined,
       showSorterTooltip: false,
       render: (_value: string, record: ProductRow) => (
         <span className="text-gray-800 dark:text-white/90">{record.categoryName ?? '—'}</span>
@@ -378,7 +404,7 @@ export function ProductsPage() {
       key: 'brand',
       width: 120,
       sorter: true,
-      sortOrder: sortField === 'brand' ? sortOrder : undefined,
+      sortOrder: undefined,
       showSorterTooltip: false,
       render: (_value: string, record: ProductRow) => (
         <span className="text-gray-800 dark:text-white/90">{record.brandName ?? '—'}</span>
@@ -390,7 +416,7 @@ export function ProductsPage() {
       width: 100,
       align: 'right',
       sorter: true,
-      sortOrder: sortField === 'skuCount' ? sortOrder : undefined,
+      sortOrder: sortFieldDisplay === 'skuCount' ? sortOrder : undefined,
       showSorterTooltip: false,
       render: (_value, record) => record.skus.length,
     },
@@ -401,7 +427,7 @@ export function ProductsPage() {
       width: 140,
       align: 'right',
       sorter: true,
-      sortOrder: sortField === 'totalStock' ? sortOrder : undefined,
+      sortOrder: undefined,
       showSorterTooltip: false,
     },
     {
@@ -410,7 +436,7 @@ export function ProductsPage() {
       width: 180,
       align: 'right',
       sorter: true,
-      sortOrder: sortField === 'minPrice' ? sortOrder : undefined,
+      sortOrder: undefined,
       showSorterTooltip: false,
       render: (_value, record) => (
         <span className="text-gray-800 dark:text-white/90">
@@ -480,7 +506,7 @@ export function ProductsPage() {
       },
     },
   ],
-  [sortField, sortOrder, openAddSkuModal, removeProduct, editProductForm]
+  [sortFieldDisplay, sortOrder, openAddSkuModal, removeProduct]
   );
 
   return (
@@ -518,15 +544,14 @@ export function ProductsPage() {
         footer={
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-body dark:text-bodydark2">
-              Showing {showingFrom}-{showingTo} of {sortedProducts.length}
+              Showing {showingFrom}-{showingTo} of {totalFromApi}
             </p>
             <div className="flex items-center gap-2">
               <Select<number>
                 value={pageSize}
                 size="large"
                 onChange={(value) => {
-                  setPageSize(value);
-                  setPage(1);
+                  updateSearch({ pageSize: value, page: 1 });
                 }}
                 className="w-24"
                 options={DEFAULT_TABLE_PAGE_SIZE_OPTIONS.map((value) => ({
@@ -537,7 +562,7 @@ export function ProductsPage() {
               <Button
                 size="large"
                 aria-label="Previous page"
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                onClick={() => updateSearch({ page: Math.max(1, page - 1) })}
                 disabled={safePage === 1}
                 className="!h-10 !w-10 !rounded-lg"
                 icon={<LeftOutlined />}
@@ -553,7 +578,7 @@ export function ProductsPage() {
                       ? '!border-brand-500 !bg-brand-500 !text-white hover:!border-brand-600 hover:!bg-brand-600'
                       : '!border-gray-300 !bg-white !text-gray-700 hover:!border-gray-400 dark:!border-gray-700 dark:!bg-gray-800 dark:!text-gray-200'
                   }`}
-                  onClick={() => setPage(number)}
+                  onClick={() => updateSearch({ page: number })}
                 >
                   {number}
                 </Button>
@@ -561,7 +586,7 @@ export function ProductsPage() {
               <Button
                 size="large"
                 aria-label="Next page"
-                onClick={() => setPage((current) => current + 1)}
+                onClick={() => updateSearch({ page: page + 1 })}
                 disabled={!hasNextPage}
                 className="!h-10 !w-10 !rounded-lg"
                 icon={<RightOutlined />}
@@ -572,28 +597,31 @@ export function ProductsPage() {
         }
       >
         <div className="flex shrink-0 flex-col gap-3 border-b border-gray-200 px-6 py-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
-          <div className="w-full sm:w-64">
-            <Input
+          <div className="w-full sm:w-auto sm:max-w-[320px]">
+            <Input.Search
               allowClear
               size="large"
               placeholder="Search..."
-              value={search}
+              value={searchInput}
               onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
+                const v = event.target.value;
+                setSearchInput(v);
+                if (v === '') updateSearch({ q: '', page: 1 });
               }}
-              prefix={<SearchOutlined className="text-gray-400 dark:text-white/30" />}
-              className="products-search-input w-full"
+              onSearch={(value) => updateSearch({ q: (value ?? '').trim(), page: 1 })}
+              enterButton={
+                <span className="inline-flex items-center">
+                  <SearchOutlined />
+                </span>
+              }
+              className="products-search-input"
             />
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
             <Select<StatusFilter>
               value={statusFilter}
               size="large"
-              onChange={(value) => {
-                setStatusFilter(value);
-                setPage(1);
-              }}
+              onChange={(value) => updateSearch({ status: value, page: 1 })}
               className="w-full sm:w-36"
               options={[
                 { value: 'all', label: 'All Status' },
@@ -649,7 +677,7 @@ export function ProductsPage() {
                     onClick={() => {
                       setCategoryFilter(pendingCategoryFilter);
                       setBrandFilter(pendingBrandFilter);
-                      setPage(1);
+                      updateSearch({ page: 1 });
                       setFilterDropdownOpen(false);
                     }}
                     className="!h-11 !w-full !rounded-lg !border-0 !bg-brand-500 !px-5 !py-3.5 !text-sm !font-medium !text-white !shadow-[0px_1px_2px_0px_rgba(16,24,40,0.05)] hover:!bg-brand-600"
@@ -900,7 +928,7 @@ export function ProductsPage() {
             </Form.Item>
           </Form>
         )}
-        {editModalProductId != null && editProductQuery.isLoading && <p className="text-body dark:text-bodydark2">Loading...</p>}
+        {editModalProductId != null && editProductQuery.isLoading && <p className="text-body dark:text-bodydark2">Loading...</p>}ｚ
         {editModalProductId != null && !editProductQuery.isLoading && !editProductQuery.data && <p className="text-body dark:text-bodydark2">Product not found.</p>}
       </Modal>
 

@@ -12,8 +12,13 @@ const products = new Hono();
 
 // GET /products
 products.get('/', zValidator('query', listProductsQuerySchema), async (c) => {
-  const { limit, offset, status } = c.req.valid('query');
-  const list = await productService.getProducts(limit, offset, status);
+  const { page, pageSize, status, sortBy, sortOrder, q } = c.req.valid('query');
+  const list = await productService.getProducts(page, pageSize, {
+    status,
+    sortBy,
+    sortOrder,
+    q,
+  });
   return c.json(list);
 });
 

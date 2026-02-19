@@ -4,6 +4,7 @@ import {
   paymentMethodValues,
   paymentStatusValues,
   paymentTransactionStatusValues,
+  productSortByValues,
   productStatusValues,
   promotionStatusValues,
   refundStatusValues,
@@ -36,9 +37,12 @@ export const productIdParamSchema = z.object({
 export const updateProductSchema = createProductSchema.partial();
 
 export const listProductsQuerySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
-  offset: z.coerce.number().int().min(0).optional().default(0),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(10),
   status: z.enum(productStatusValues).optional(),
+  sortBy: z.enum(productSortByValues).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+  q: z.string().optional(),
 });
 
 export const createPromotionSchema = z
@@ -99,8 +103,9 @@ export const createRefundSchema = z.object({
 export type {
   CreateSkuInput,
   CreateProductInput,
-  UpdateProductInput,
   ListProductsQuery,
+  ListProductsResponse,
+  UpdateProductInput,
   ProductSkuItemInput,
 } from '@salesops/shared';
 export type ProductIdParam = z.infer<typeof productIdParamSchema>;
