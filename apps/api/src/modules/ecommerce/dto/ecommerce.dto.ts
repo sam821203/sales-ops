@@ -28,6 +28,7 @@ export const createProductSchema = z.object({
   name: z.string().min(1).max(255),
   status: z.enum(productStatusValues),
   skus: z.array(createProductSkuItemSchema).default([]),
+  imageUrl: z.union([z.string().url(), z.literal('')]).optional(),
 });
 
 export const productIdParamSchema = z.object({

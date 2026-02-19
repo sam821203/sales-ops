@@ -33,6 +33,7 @@ export const productRepository = {
         data: {
           name: data.name,
           status: data.status,
+          imageUrl: data.imageUrl ?? null,
         },
       });
       if (data.skus.length > 0) {
@@ -138,6 +139,7 @@ export const productRepository = {
         data: {
           ...(data.name !== undefined && { name: data.name }),
           ...(data.status !== undefined && { status: data.status }),
+          ...(data.imageUrl !== undefined && { imageUrl: data.imageUrl || null }),
         },
         include: { skus: true },
       });
