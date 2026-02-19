@@ -93,6 +93,10 @@
   @apply !text-gray-400 dark:!text-white/30;
 }
 
+.ant-input-search .ant-input-search-button {
+  @apply !border !border-brand-500 !bg-brand-500 !text-white hover:!border-brand-600 hover:!bg-brand-600;
+}
+
 .apexcharts-legend-text {
   @apply !text-body dark:!text-bodydark;
 }

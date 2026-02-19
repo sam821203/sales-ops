@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export const productStatusValues = ['Draft', 'Active', 'Inactive'] as const;
 export type ProductStatus = (typeof productStatusValues)[number];
 
@@ -113,6 +115,18 @@ export type ListProductsQuery = {
   sortOrder?: 'asc' | 'desc';
   q?: string;
 };
+
+/** URL search params schema for products list (e.g. TanStack Router validateSearch). */
+export const productsSearchSchema = z.object({
+  q: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(10),
+  status: z.enum(['all', 'Draft', 'Active', 'Inactive']).optional(),
+  sortBy: z.enum(['name', 'status', 'createdAt', 'skuCount']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).optional(),
+});
+
+export type ProductsSearchParams = z.infer<typeof productsSearchSchema>;
 
 export type ListProductsResponse = {
   items: Product[];

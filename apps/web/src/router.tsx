@@ -1,4 +1,6 @@
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
+import { zodValidator } from '@tanstack/zod-adapter';
+import { productsSearchSchema } from '@salesops/shared';
 import App from '@/App';
 import { ECommercePage } from '@/views/ECommercePage';
 import { DashboardAnalyticsPage } from '@/views/DashboardAnalyticsPage';
@@ -155,6 +157,7 @@ const productsRoute = createRoute({
   getParentRoute: () => ecommerceRoute,
   path: 'products',
   component: ProductsPage,
+  validateSearch: zodValidator(productsSearchSchema),
 });
 
 const priceHistoryRoute = createRoute({
