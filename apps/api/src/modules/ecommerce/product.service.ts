@@ -18,7 +18,7 @@ function toProduct(row: PrismaProductWithSkusNonNull): Product {
       stock: sku.stock,
       attributes: sku.attributes as Record<string, string>,
     })),
-    imageUrl: row.imageUrl ?? undefined,
+    imageUrl: row.imageUrl || undefined,
   };
 }
 

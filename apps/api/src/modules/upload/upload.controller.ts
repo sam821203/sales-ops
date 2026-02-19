@@ -42,6 +42,8 @@ function uploadBufferToCloudinary(buffer: Buffer): Promise<{ secure_url: string 
 
 const upload = new Hono();
 
+// TODO: Apply authentication middleware when auth is implemented — POST /upload is currently public and can consume Cloudinary quota.
+
 upload.post('/', async (c) => {
   const config = configureCloudinary();
   if (!config) {

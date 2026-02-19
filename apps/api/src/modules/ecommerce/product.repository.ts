@@ -33,7 +33,7 @@ export const productRepository = {
         data: {
           name: data.name,
           status: data.status,
-          imageUrl: data.imageUrl ?? null,
+          imageUrl: data.imageUrl || null,
         },
       });
       if (data.skus.length > 0) {
