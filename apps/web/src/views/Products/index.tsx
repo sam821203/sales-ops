@@ -27,7 +27,7 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { Avatar, Button, Dropdown, Form, Input, InputNumber, message, Modal, Select, Space, Table, Tag } from 'antd';
+import { Avatar, Button, Dropdown, Form, Input, InputNumber, message, Modal, Select, Space, Table, Tag, Upload } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { Card } from '@/components/common/Card/index.ts';
 import { PageBreadcrumb } from '@/components/common/breadcrumb';
@@ -43,6 +43,7 @@ import {
   deleteProduct,
   productKeys,
 } from '@/api/products';
+import { uploadProductImage } from '@/api/upload';
 import { formatPrice, formatPriceRange, formatKeyValuePairs } from '@/utils/format';
 import { getProductStatusClass, getStockStatusClass } from '@/utils/statusClasses';
 
@@ -67,6 +68,43 @@ function getAttributesFromForm(
     }
   }
   return result;
+}
+
+function ProductImageUploadField({
+  form,
+}: {
+  form: ReturnType<typeof Form.useForm<{ name: string; status: ProductStatus; imageUrl?: string }>>[0];
+}) {
+  const imageUrl = Form.useWatch('imageUrl', form);
+  const [loading, setLoading] = useState(false);
+  return (
+    <div className="flex flex-col gap-2">
+      {imageUrl && (
+        <Avatar src={imageUrl} shape="square" size={64} className="shrink-0" />
+      )}
+      <Upload
+        showUploadList={false}
+        accept="image/jpeg,image/png,image/gif,image/webp"
+        customRequest={async ({ file, onSuccess, onError }) => {
+          setLoading(true);
+          try {
+            const { url } = await uploadProductImage(file as File);
+            form.setFieldValue('imageUrl', url);
+            onSuccess?.(url);
+          } catch (e) {
+            message.error((e as Error).message ?? 'Upload failed');
+            onError?.(e as Error);
+          } finally {
+            setLoading(false);
+          }
+        }}
+      >
+        <Button loading={loading}>
+          Choose image
+        </Button>
+      </Upload>
+    </div>
+  );
 }
 
 export function ProductsPage() {
@@ -112,8 +150,8 @@ export function ProductsPage() {
     stock: number;
     attributes: Record<string, string> | { key: string; value: string }[];
   }>();
-  const [addProductForm] = Form.useForm<{ name: string; status: ProductStatus }>();
-  const [editProductForm] = Form.useForm<{ name: string; status: ProductStatus }>();
+  const [addProductForm] = Form.useForm<{ name: string; status: ProductStatus; imageUrl?: string }>();
+  const [editProductForm] = Form.useForm<{ name: string; status: ProductStatus; imageUrl?: string }>();
 
   const updateSearch = useCallback(
     (updates: Partial<Record<string, string | number | undefined>>) => {
@@ -154,6 +192,7 @@ export function ProductsPage() {
     queryFn: () => getProducts(listParams),
   });
 
+  /** Server-reported total count. Footer "of N" uses this. When client filter (category/brand) reduces rows, showingFrom/showingTo use displayedCount so "Showing X–Y" matches actual table rows. */
   const totalFromApi = listResponse?.total ?? 0;
 
   const viewProductQuery = useQuery({
@@ -213,6 +252,7 @@ export function ProductsPage() {
     onError: (e: Error) => message.error(e.message || 'Failed to remove product'),
   });
 
+  /** Client-side category/brand filter on current page items. Table dataSource uses this; if it ever removes rows, footer "Showing X–Y" is derived from displayedCount so it stays consistent with visible rows. */
   const filteredProducts = useMemo(() => {
     const items = listResponse?.items ?? [];
     const categoryFilterLower = categoryFilter.trim().toLowerCase();
@@ -287,6 +327,7 @@ export function ProductsPage() {
     [deleteProductMutation]
   );
 
+  /** Table display count comes from filteredProducts/tableRows; pagination footer "Showing X–Y" is aligned with that via displayedCount. */
   const removeSku = useCallback(
     (record: ProductRow, skuId: number) => {
       const newSkus = record.skus
@@ -322,14 +363,17 @@ export function ProductsPage() {
     });
   }, [filteredProducts]);
 
+  /** Actual number of rows shown on this page (after client category/brand filter). Keeps "Showing X–Y" in sync with table. */
+  const displayedCount = filteredProducts.length;
+
   const totalPages = Math.max(1, Math.ceil(totalFromApi / pageSize));
   const hasNextPage = page < totalPages;
   const safePage = Math.min(page, totalPages);
   const pageNumbers = Array.from({ length: totalPages }, (_, index) => index + 1);
   const paginatedProducts = tableRows;
 
-  const showingFrom = totalFromApi === 0 ? 0 : (page - 1) * pageSize + 1;
-  const showingTo = Math.min(page * pageSize, totalFromApi);
+  const showingFrom = displayedCount === 0 ? 0 : (page - 1) * pageSize + 1;
+  const showingTo = displayedCount === 0 ? 0 : (page - 1) * pageSize + displayedCount;
 
   const sortFieldDisplay = sortField === 'createdAt' ? 'category' : sortField;
 
@@ -545,6 +589,9 @@ export function ProductsPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-body dark:text-bodydark2">
               Showing {showingFrom}-{showingTo} of {totalFromApi}
+              {(listResponse?.items?.length ?? 0) > 0 && displayedCount < (listResponse?.items?.length ?? 0) && (
+                <> ({displayedCount} on this page after filter)</>
+              )}
             </p>
             <div className="flex items-center gap-2">
               <Select<number>
@@ -878,6 +925,12 @@ export function ProductsPage() {
             <p className="text-body dark:text-bodydark2">Loading...</p>
           ) : viewProductQuery.data ? (
             <div className="flex flex-col gap-2 text-sm">
+              {viewProductQuery.data.imageUrl && (
+                <p>
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Image:</span>{' '}
+                  <Avatar src={viewProductQuery.data.imageUrl} shape="square" size={80} className="shrink-0" />
+                </p>
+              )}
               <p><span className="font-medium text-gray-700 dark:text-gray-300">Name:</span> {viewProductQuery.data.name}</p>
               <p><span className="font-medium text-gray-700 dark:text-gray-300">Status:</span> <Tag bordered={false} className={getProductStatusClass(viewProductQuery.data.status)}>{viewProductQuery.data.status}</Tag></p>
               <p><span className="font-medium text-gray-700 dark:text-gray-300">SKUs:</span> {viewProductQuery.data.skus.length}</p>
@@ -905,7 +958,14 @@ export function ProductsPage() {
         onOk={() => {
           if (editModalProductId == null) return;
           editProductForm.validateFields().then((values) => {
-            updateProductMutation.mutate({ id: editModalProductId, body: { name: values.name, status: values.status } });
+            updateProductMutation.mutate({
+              id: editModalProductId,
+              body: {
+                name: values.name,
+                status: values.status,
+                ...(values.imageUrl !== undefined && { imageUrl: values.imageUrl }),
+              },
+            });
           }).catch(() => {});
         }}
         okText="Save"
@@ -913,7 +973,16 @@ export function ProductsPage() {
         destroyOnHidden
       >
         {editModalProductId != null && editProductQuery.data && editProductQuery.data.id === editModalProductId && (
-          <Form form={editProductForm} layout="vertical" className="mt-4" initialValues={{ name: editProductQuery.data.name, status: editProductQuery.data.status }}>
+          <Form
+            form={editProductForm}
+            layout="vertical"
+            className="mt-4"
+            initialValues={{
+              name: editProductQuery.data.name,
+              status: editProductQuery.data.status,
+              imageUrl: editProductQuery.data.imageUrl,
+            }}
+          >
             <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Required' }]}>
               <Input placeholder="Product name" maxLength={255} showCount />
             </Form.Item>
@@ -926,9 +995,12 @@ export function ProductsPage() {
                 ]}
               />
             </Form.Item>
+            <Form.Item name="imageUrl" label="Product image">
+              <ProductImageUploadField form={editProductForm} />
+            </Form.Item>
           </Form>
         )}
-        {editModalProductId != null && editProductQuery.isLoading && <p className="text-body dark:text-bodydark2">Loading...</p>}ｚ
+        {editModalProductId != null && editProductQuery.isLoading && <p className="text-body dark:text-bodydark2">Loading...</p>}
         {editModalProductId != null && !editProductQuery.isLoading && !editProductQuery.data && <p className="text-body dark:text-bodydark2">Product not found.</p>}
       </Modal>
 
@@ -945,6 +1017,7 @@ export function ProductsPage() {
               name: values.name,
               status: values.status,
               skus: [],
+              ...(values.imageUrl != null && values.imageUrl !== '' && { imageUrl: values.imageUrl }),
             });
           }).catch(() => {});
         }}
@@ -964,6 +1037,9 @@ export function ProductsPage() {
                 { value: 'Inactive', label: 'Inactive' },
               ]}
             />
+          </Form.Item>
+          <Form.Item name="imageUrl" label="Product image">
+            <ProductImageUploadField form={addProductForm} />
           </Form.Item>
         </Form>
       </Modal>
