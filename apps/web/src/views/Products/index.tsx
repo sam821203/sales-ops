@@ -142,7 +142,6 @@ export function ProductsPage() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<readonly number[]>([]);
   const [addSkuModalOpen, setAddSkuModalOpen] = useState(false);
   const [addSkuProduct, setAddSkuProduct] = useState<ProductRow | null>(null);
-  const [viewModalProductId, setViewModalProductId] = useState<number | null>(null);
   const [editModalProductId, setEditModalProductId] = useState<number | null>(null);
   const [addProductModalOpen, setAddProductModalOpen] = useState(false);
   const [addSkuForm] = Form.useForm<{
@@ -194,12 +193,6 @@ export function ProductsPage() {
 
   /** Server-reported total count. Footer "of N" uses this. When client filter (category/brand) reduces rows, showingFrom/showingTo use displayedCount so "Showing X–Y" matches actual table rows. */
   const totalFromApi = listResponse?.total ?? 0;
-
-  const viewProductQuery = useQuery({
-    queryKey: productKeys.detail(viewModalProductId!),
-    queryFn: () => getProductById(viewModalProductId!),
-    enabled: viewModalProductId != null,
-  });
 
   const editProductQuery = useQuery({
     queryKey: productKeys.detail(editModalProductId!),
@@ -506,7 +499,7 @@ export function ProductsPage() {
             key: 'view',
             icon: <EyeOutlined className="!text-blue-600" />,
             label: 'View',
-            onClick: () => setViewModalProductId(record.id),
+            onClick: () => navigate({ to: '/ecommerce/product/$productId', params: { productId: String(record.id) } }),
           },
           {
             key: 'edit',
@@ -550,7 +543,7 @@ export function ProductsPage() {
       },
     },
   ],
-  [sortFieldDisplay, sortOrder, openAddSkuModal, removeProduct]
+  [sortFieldDisplay, sortOrder, openAddSkuModal, removeProduct, navigate]
   );
 
   return (
@@ -912,41 +905,6 @@ export function ProductsPage() {
           )}
         </div>
       </Card>
-
-      <Modal
-        title="View Product"
-        open={viewModalProductId != null}
-        onCancel={() => setViewModalProductId(null)}
-        footer={[<Button key="close" onClick={() => setViewModalProductId(null)}>Close</Button>]}
-        destroyOnHidden
-      >
-        {viewModalProductId != null && (
-          viewProductQuery.isLoading ? (
-            <p className="text-body dark:text-bodydark2">Loading...</p>
-          ) : viewProductQuery.data ? (
-            <div className="flex flex-col gap-2 text-sm">
-              {viewProductQuery.data.imageUrl && (
-                <p>
-                  <span className="font-medium text-gray-700 dark:text-gray-300">Image:</span>{' '}
-                  <Avatar src={viewProductQuery.data.imageUrl} shape="square" size={80} className="shrink-0" />
-                </p>
-              )}
-              <p><span className="font-medium text-gray-700 dark:text-gray-300">Name:</span> {viewProductQuery.data.name}</p>
-              <p><span className="font-medium text-gray-700 dark:text-gray-300">Status:</span> <Tag bordered={false} className={getProductStatusClass(viewProductQuery.data.status)}>{viewProductQuery.data.status}</Tag></p>
-              <p><span className="font-medium text-gray-700 dark:text-gray-300">SKUs:</span> {viewProductQuery.data.skus.length}</p>
-              {viewProductQuery.data.skus.length > 0 && (
-                <ul className="list-inside list-disc text-body dark:text-bodydark2">
-                  {viewProductQuery.data.skus.map((sku) => (
-                    <li key={sku.id}>{formatSkuId(sku.id)} — {formatPrice(sku.price)}, stock: {sku.stock}{Object.keys(sku.attributes ?? {}).length > 0 ? ` (${formatKeyValuePairs(sku.attributes ?? {})})` : ''}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          ) : (
-            <p className="text-body dark:text-bodydark2">Product not found.</p>
-          )
-        )}
-      </Modal>
 
       <Modal
         title="Edit Product"
