@@ -1,39 +1,48 @@
-import { Badge, Dropdown } from 'antd';
+import { useState } from 'react';
+import { Dropdown } from 'antd';
 
-const items = [
-  { key: '1', label: 'No new notifications' },
-];
+const items = [{ key: '1', label: 'No new notifications' }];
 
 export default function DropdownNotification() {
+  const [notifying] = useState(true);
+
   return (
-    <li>
-      <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
+    <div className="relative">
+      <Dropdown
+        menu={{ items }}
+        trigger={['click']}
+        placement="bottomRight"
+        getPopupContainer={() =>
+          document.getElementById('header-dropdown-root') || document.body
+        }
+      >
         <button
           type="button"
-          className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-brand-600 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-300 dark:hover:bg-white/10 dark:hover:text-brand-400"
+          className="relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
         >
-          <Badge size="small" count={0} offset={[2, -2]}>
-            <svg
-              className="fill-current"
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M9 17.25C10.0355 17.25 10.875 16.4105 10.875 15.375H7.125C7.125 16.4105 7.96447 17.25 9 17.25Z"
-                fill=""
-              />
-              <path
-                d="M15.75 13.5H2.25C1.83579 13.5 1.5 13.1642 1.5 12.75C1.5 12.3358 1.83579 12 2.25 12H2.625V7.5C2.625 4.3934 5.1434 1.875 8.25 1.875H9.75C12.8566 1.875 15.375 4.3934 15.375 7.5V12H15.75C16.1642 12 16.5 12.3358 16.5 12.75C16.5 13.1642 16.1642 13.5 15.75 13.5Z"
-                fill=""
-              />
-            </svg>
-          </Badge>
+          <span
+            className={`absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-orange-400 ${
+              !notifying ? 'hidden' : 'flex'
+            }`}
+          >
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />
+          </span>
+          <svg
+            className="fill-current"
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M10.75 2.29248C10.75 1.87827 10.4143 1.54248 10 1.54248C9.58583 1.54248 9.25004 1.87827 9.25004 2.29248V2.83613C6.08266 3.20733 3.62504 5.9004 3.62504 9.16748V14.4591H3.33337C2.91916 14.4591 2.58337 14.7949 2.58337 15.2091C2.58337 15.6234 2.91916 15.9591 3.33337 15.9591H4.37504H15.625H16.6667C17.0809 15.9591 17.4167 15.6234 17.4167 15.2091C17.4167 14.7949 17.0809 14.4591 16.6667 14.4591H16.375V9.16748C16.375 5.9004 13.9174 3.20733 10.75 2.83613V2.29248ZM14.875 14.4591V9.16748C14.875 6.47509 12.6924 4.29248 10 4.29248C7.30765 4.29248 5.12504 6.47509 5.12504 9.16748V14.4591H14.875ZM8.00004 17.7085C8.00004 18.1228 8.33583 18.4585 8.75004 18.4585H11.25C11.6643 18.4585 12 18.1228 12 17.7085C12 17.2943 11.6643 16.9585 11.25 16.9585H8.75004C8.33583 16.9585 8.00004 17.2943 8.00004 17.7085Z"
+              fill="currentColor"
+            />
+          </svg>
         </button>
       </Dropdown>
-    </li>
+    </div>
   );
 }
-

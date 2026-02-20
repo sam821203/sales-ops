@@ -19,6 +19,7 @@ import { FormLayoutPage } from '@/views/FormLayoutPage';
 import { SignInPage } from '@/views/SignInPage';
 import { SignUpPage } from '@/views/SignUpPage';
 import { ProductsPage } from '@/views/Products';
+import { ProductDetailPage } from '@/views/ProductDetailPage';
 import { PriceHistoryPage } from '@/views/PriceHistoryPage';
 import { InventoryAdjustmentPage } from '@/views/InventoryAdjustmentPage';
 import { OrdersPage } from '@/views/OrdersPage';
@@ -160,6 +161,12 @@ const productsRoute = createRoute({
   validateSearch: zodValidator(productsSearchSchema),
 });
 
+const productDetailRoute = createRoute({
+  getParentRoute: () => ecommerceRoute,
+  path: 'product/$productId',
+  component: ProductDetailPage,
+});
+
 const priceHistoryRoute = createRoute({
   getParentRoute: () => ecommerceRoute,
   path: 'price-history',
@@ -246,6 +253,7 @@ const routeTree = rootRoute.addChildren([
   signUpRoute,
   ecommerceRoute.addChildren([
     productsRoute,
+    productDetailRoute,
     priceHistoryRoute,
     inventoryAdjustmentRoute,
     ordersRoute,

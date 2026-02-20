@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Avatar, Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 
@@ -9,36 +10,48 @@ const items: MenuProps['items'] = [
 ];
 
 export default function DropdownUser() {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
+    <Dropdown
+      menu={{ items }}
+      trigger={['click']}
+      placement="bottomRight"
+      open={open}
+      onOpenChange={setOpen}
+      getPopupContainer={() =>
+        document.getElementById('header-dropdown-root') || document.body
+      }
+    >
       <button
         type="button"
-        className="flex items-center gap-2.5 rounded-lg border border-transparent px-2.5 py-1.5 transition-colors hover:border-gray-200 hover:bg-gray-100 dark:hover:border-gray-700 dark:hover:bg-white/10"
+        className="flex cursor-pointer items-center text-gray-700 dark:text-gray-400"
       >
-        <Avatar size={32} style={{ backgroundColor: '#3C50E0' }}>
-          U
-        </Avatar>
-        <div className="hidden text-left lg:block">
-          <p className="text-sm font-medium text-black dark:text-white">User</p>
-          <p className="text-xs text-body dark:text-bodydark">Admin</p>
-        </div>
+        <span className="mr-3 h-11 w-11 overflow-hidden rounded-full">
+          <Avatar size={44} style={{ backgroundColor: '#3C50E0' }}>
+            U
+          </Avatar>
+        </span>
+        <span className="mr-1 block text-sm font-medium">User</span>
         <svg
-          className="hidden fill-current sm:block"
-          width="12"
-          height="8"
-          viewBox="0 0 12 8"
+          className={`stroke-gray-500 transition-transform duration-200 dark:stroke-gray-400 ${
+            open ? 'rotate-180' : ''
+          }`}
+          width="18"
+          height="20"
+          viewBox="0 0 18 20"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
-            fillRule="evenodd"
-            clipRule="evenodd"
-            d="M0.410744 0.910704C0.736181 0.585266 1.26382 0.585266 1.58926 0.910704L6 5.32145L10.4107 0.910704C10.7362 0.585266 11.2638 0.585266 11.5893 0.910704C11.9147 1.23614 11.9147 1.76378 11.5893 2.08922L6.58926 7.08922C6.26382 7.41466 5.73618 7.41466 5.41074 7.08922L0.410744 2.08922C0.085307 1.76378 0.085307 1.23614 0.410744 0.910704Z"
-            fill=""
+            d="M4.3125 8.65625L9 13.3437L13.6875 8.65625"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
       </button>
     </Dropdown>
   );
 }
-
