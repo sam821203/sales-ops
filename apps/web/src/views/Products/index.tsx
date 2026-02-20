@@ -37,12 +37,12 @@ import {
 } from '@/constants/pagination';
 import {
   getProducts,
-  getProductById,
   createProduct,
   updateProduct,
   deleteProduct,
   productKeys,
 } from '@/api/products';
+import { ProductEditModal } from '@/components/ProductEditModal';
 import { uploadProductImage } from '@/api/upload';
 import { formatPrice, formatPriceRange, formatKeyValuePairs } from '@/utils/format';
 import { getProductStatusClass, getStockStatusClass } from '@/utils/statusClasses';
@@ -128,12 +128,10 @@ export function ProductsPage() {
         ? ('descend' as const)
         : undefined;
   const searchQuery = searchParams?.q ?? '';
+  const editFromUrl = searchParams?.edit;
 
   const [searchInput, setSearchInput] = useState(searchQuery);
-  useEffect(() => {
-    setSearchInput(searchQuery);
-  }, [searchQuery]);
-
+  const [editModalProductId, setEditModalProductId] = useState<number | null>(null);
   const [categoryFilter, setCategoryFilter] = useState('');
   const [brandFilter, setBrandFilter] = useState('');
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
@@ -142,15 +140,26 @@ export function ProductsPage() {
   const [expandedRowKeys, setExpandedRowKeys] = useState<readonly number[]>([]);
   const [addSkuModalOpen, setAddSkuModalOpen] = useState(false);
   const [addSkuProduct, setAddSkuProduct] = useState<ProductRow | null>(null);
-  const [editModalProductId, setEditModalProductId] = useState<number | null>(null);
   const [addProductModalOpen, setAddProductModalOpen] = useState(false);
+
+  useEffect(() => {
+    setSearchInput(searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (editFromUrl != null) {
+      const id = Number(editFromUrl);
+      if (Number.isInteger(id) && id > 0) {
+        setEditModalProductId(id);
+      }
+    }
+  }, [editFromUrl]);
   const [addSkuForm] = Form.useForm<{
     price: number;
     stock: number;
     attributes: Record<string, string> | { key: string; value: string }[];
   }>();
   const [addProductForm] = Form.useForm<{ name: string; status: ProductStatus; imageUrl?: string }>();
-  const [editProductForm] = Form.useForm<{ name: string; status: ProductStatus; imageUrl?: string }>();
 
   const updateSearch = useCallback(
     (updates: Partial<Record<string, string | number | undefined>>) => {
@@ -161,6 +170,7 @@ export function ProductsPage() {
         sortBy: searchParams?.sortBy,
         sortOrder: searchParams?.sortOrder,
         q: searchParams?.q ?? '',
+        edit: searchParams?.edit,
         ...updates,
       };
       navigate({ to: '.', search: next as Record<string, unknown> });
@@ -194,25 +204,6 @@ export function ProductsPage() {
   /** Server-reported total count. Footer "of N" uses this. When client filter (category/brand) reduces rows, showingFrom/showingTo use displayedCount so "Showing X–Y" matches actual table rows. */
   const totalFromApi = listResponse?.total ?? 0;
 
-  const editProductQuery = useQuery({
-    queryKey: productKeys.detail(editModalProductId!),
-    queryFn: () => getProductById(editModalProductId!),
-    enabled: editModalProductId != null,
-  });
-
-  useEffect(() => {
-    if (
-      editModalProductId != null &&
-      editProductQuery.data &&
-      editProductQuery.data.id === editModalProductId
-    ) {
-      editProductForm.setFieldsValue({
-        name: editProductQuery.data.name,
-        status: editProductQuery.data.status,
-      });
-    }
-  }, [editModalProductId, editProductQuery.data, editProductForm]);
-
   const createProductMutation = useMutation({
     mutationFn: (body: CreateProductInput) => createProduct(body),
     onSuccess: () => {
@@ -224,18 +215,6 @@ export function ProductsPage() {
     onError: (e: Error) => message.error(e.message || 'Failed to create product'),
   });
 
-  const updateProductMutation = useMutation({
-    mutationFn: ({ id, body }: { id: number; body: UpdateProductInput }) => updateProduct(id, body),
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: productKeys.all });
-      queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
-      setEditModalProductId(null);
-      editProductForm.resetFields();
-      message.success('Product updated.');
-    },
-    onError: (e: Error) => message.error(e.message || 'Failed to update product'),
-  });
-
   const deleteProductMutation = useMutation({
     mutationFn: (id: number) => deleteProduct(id),
     onSuccess: () => {
@@ -243,6 +222,15 @@ export function ProductsPage() {
       message.success('Product removed.');
     },
     onError: (e: Error) => message.error(e.message || 'Failed to remove product'),
+  });
+
+  const updateProductMutation = useMutation({
+    mutationFn: ({ id, body }: { id: number; body: UpdateProductInput }) => updateProduct(id, body),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: productKeys.all });
+      queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
+    },
+    onError: (e: Error) => message.error(e.message || 'Failed to update product'),
   });
 
   /** Client-side category/brand filter on current page items. Table dataSource uses this; if it ever removes rows, footer "Showing X–Y" is derived from displayedCount so it stays consistent with visible rows. */
@@ -906,61 +894,14 @@ export function ProductsPage() {
         </div>
       </Card>
 
-      <Modal
-        title="Edit Product"
+      <ProductEditModal
         open={editModalProductId != null}
-        onCancel={() => {
+        productId={editModalProductId}
+        onClose={() => {
           setEditModalProductId(null);
-          editProductForm.resetFields();
+          updateSearch({ edit: undefined });
         }}
-        onOk={() => {
-          if (editModalProductId == null) return;
-          editProductForm.validateFields().then((values) => {
-            updateProductMutation.mutate({
-              id: editModalProductId,
-              body: {
-                name: values.name,
-                status: values.status,
-                ...(values.imageUrl !== undefined && { imageUrl: values.imageUrl }),
-              },
-            });
-          }).catch(() => {});
-        }}
-        okText="Save"
-        confirmLoading={updateProductMutation.isPending}
-        destroyOnHidden
-      >
-        {editModalProductId != null && editProductQuery.data && editProductQuery.data.id === editModalProductId && (
-          <Form
-            form={editProductForm}
-            layout="vertical"
-            className="mt-4"
-            initialValues={{
-              name: editProductQuery.data.name,
-              status: editProductQuery.data.status,
-              imageUrl: editProductQuery.data.imageUrl,
-            }}
-          >
-            <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Required' }]}>
-              <Input placeholder="Product name" maxLength={255} showCount />
-            </Form.Item>
-            <Form.Item name="status" label="Status" rules={[{ required: true }]}>
-              <Select
-                options={[
-                  { value: 'Draft', label: 'Draft' },
-                  { value: 'Active', label: 'Active' },
-                  { value: 'Inactive', label: 'Inactive' },
-                ]}
-              />
-            </Form.Item>
-            <Form.Item name="imageUrl" label="Product image">
-              <ProductImageUploadField form={editProductForm} />
-            </Form.Item>
-          </Form>
-        )}
-        {editModalProductId != null && editProductQuery.isLoading && <p className="text-body dark:text-bodydark2">Loading...</p>}
-        {editModalProductId != null && !editProductQuery.isLoading && !editProductQuery.data && <p className="text-body dark:text-bodydark2">Product not found.</p>}
-      </Modal>
+      />
 
       <Modal
         title="Add Product"

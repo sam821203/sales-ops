@@ -1,10 +1,12 @@
 import { Link, useParams, useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import type { SKU, AttributeDefinition } from '@salesops/shared';
 import { ArrowLeftOutlined, EditOutlined } from '@ant-design/icons';
 import { Avatar, Button, Spin, Table, Tag } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { Card } from '@/components/common/Card';
+import { ProductEditModal } from '@/components/ProductEditModal';
 import { getProductById, productKeys } from '@/api/products';
 import { formatPrice, formatKeyValuePairs } from '@/utils/format';
 import { getProductStatusClass, getStockStatusClass } from '@/utils/statusClasses';
@@ -18,6 +20,7 @@ const renderHeaderTitle = (label: string) => (
 export function ProductDetailPage() {
   const { productId } = useParams({ strict: false });
   const navigate = useNavigate();
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const id = productId != null ? Number(productId) : NaN;
   const isValidId = Number.isInteger(id) && id > 0;
 
@@ -60,9 +63,19 @@ export function ProductDetailPage() {
     return (
       <div className="flex min-h-0 flex-1 flex-col gap-6">
         <nav className="flex items-center gap-1.5 text-sm">
-          <Link to="/">Home</Link>
+          <Link
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            to="/"
+          >
+            Home
+          </Link>
           <span className="text-gray-400 dark:text-gray-500">/</span>
-          <Link to="/ecommerce/products">Products</Link>
+          <Link
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            to="/ecommerce/products"
+          >
+            Products
+          </Link>
           <span className="text-gray-400 dark:text-gray-500">/</span>
           <span className="text-gray-800 dark:text-white/90">…</span>
         </nav>
@@ -189,7 +202,7 @@ export function ProductDetailPage() {
           <Button
             type="default"
             icon={<EditOutlined />}
-            onClick={() => navigate({ to: '/ecommerce/products' })}
+            onClick={() => setEditModalOpen(true)}
             className="!inline-flex !items-center !gap-2 !border-amber-500 !bg-amber-500 !text-white hover:!border-amber-600 hover:!bg-amber-600"
           >
             Edit
@@ -197,16 +210,14 @@ export function ProductDetailPage() {
         }
       >
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
-          {product.imageUrl && (
-            <Avatar
-              src={product.imageUrl}
-              shape="square"
-              size={120}
-              className="shrink-0 !rounded-lg"
-            >
-              {product.name?.charAt(0) ?? '?'}
-            </Avatar>
-          )}
+          <Avatar
+            src={product.imageUrl}
+            shape="square"
+            size={120}
+            className="shrink-0 !rounded-lg"
+          >
+            {product.name?.charAt(0) ?? '?'}
+          </Avatar>
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">{product.name}</h2>
             <div className="flex flex-wrap items-center gap-2">
@@ -281,6 +292,12 @@ export function ProductDetailPage() {
           locale={{ emptyText: 'No SKUs.' }}
         />
       </Card>
+
+      <ProductEditModal
+        open={editModalOpen}
+        productId={isValidId ? id : null}
+        onClose={() => setEditModalOpen(false)}
+      />
     </div>
   );
 }

@@ -125,6 +125,8 @@ export const productsSearchSchema = z.object({
   status: z.enum(['all', 'Draft', 'Active', 'Inactive']).optional(),
   sortBy: z.enum(['name', 'status', 'createdAt', 'skuCount']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
+  /** When set, products list opens the Edit Product modal for this product ID (e.g. from product detail page). */
+  edit: z.coerce.number().int().positive().optional(),
 });
 
 export type ProductsSearchParams = z.infer<typeof productsSearchSchema>;
