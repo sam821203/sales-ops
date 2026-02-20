@@ -11,6 +11,10 @@
 }
 
 @layer components {
+  /* Dropdown overlay is inside #header-dropdown-root (pointer-events: none); restore clicks on menu */
+  #header-dropdown-root > * {
+    pointer-events: auto;
+  }
 }
 
 @layer utilities {

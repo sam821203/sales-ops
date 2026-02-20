@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type FC } from 'react';
 import { Link, useRouterState } from '@tanstack/react-router';
 import {
   CaretDownFilled,
   DashboardOutlined,
   DollarOutlined,
   FileSearchOutlined,
+  MenuOutlined,
   ShoppingCartOutlined,
 } from '@ant-design/icons';
+import { useSidebar } from '@/context/SidebarContext';
 import SidebarLinkGroup from './SidebarLinkGroup';
 
 const ecommercePaths = [
@@ -67,10 +69,9 @@ function GroupLinks(props: {
   );
 }
 
-export default function Sidebar(props: {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-}) {
+const Sidebar: FC = () => {
+  const { isExpanded, isMobileOpen, isMobile, isHovered, setIsHovered, toggleSidebar, toggleMobileSidebar } =
+    useSidebar();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isDashboardActive =
     pathname === '/' || pathname === '/dashboard' || pathname.startsWith('/dashboard/');
@@ -79,6 +80,10 @@ export default function Sidebar(props: {
 
   const trigger = useRef<HTMLButtonElement | null>(null);
   const sidebar = useRef<HTMLElement | null>(null);
+
+  const showWide = isExpanded || isHovered || isMobileOpen;
+  const sidebarVisible = isMobile ? isMobileOpen : true;
+  const sidebarCollapsed = !isMobile && !showWide;
 
   const [sidebarExpanded, setSidebarExpanded] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -90,29 +95,31 @@ export default function Sidebar(props: {
   });
 
   useEffect(() => {
+    if (!isMobile) return;
     const clickHandler = (e: MouseEvent) => {
       const target = e.target as Node | null;
       if (!sidebar.current || !trigger.current || !target) return;
       if (
-        !props.sidebarOpen ||
+        !isMobileOpen ||
         sidebar.current.contains(target) ||
         trigger.current.contains(target)
       )
         return;
-      props.setSidebarOpen(false);
+      toggleMobileSidebar();
     };
     document.addEventListener('click', clickHandler);
     return () => document.removeEventListener('click', clickHandler);
-  }, [props]);
+  }, [isMobile, isMobileOpen, toggleMobileSidebar]);
 
   useEffect(() => {
+    if (!isMobile) return;
     const keyHandler = (e: KeyboardEvent) => {
-      if (!props.sidebarOpen || e.key !== 'Escape') return;
-      props.setSidebarOpen(false);
+      if (!isMobileOpen || e.key !== 'Escape') return;
+      toggleMobileSidebar();
     };
     document.addEventListener('keydown', keyHandler);
     return () => document.removeEventListener('keydown', keyHandler);
-  }, [props]);
+  }, [isMobile, isMobileOpen, toggleMobileSidebar]);
 
   useEffect(() => {
     localStorage.setItem('sidebar-expanded', sidebarExpanded.toString());
@@ -123,25 +130,33 @@ export default function Sidebar(props: {
   return (
     <aside
       ref={sidebar}
-      className={`absolute left-0 top-0 z-9999 flex h-screen w-[290px] flex-col overflow-y-hidden border-r border-gray-200 bg-white/95 px-5 backdrop-blur-sm duration-300 ease-linear dark:border-gray-800 dark:bg-gray-900/95 lg:static lg:translate-x-0 ${
-        props.sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      }`}
+      className={`absolute left-0 top-0 z-9999 flex h-screen flex-col overflow-y-hidden border-r border-gray-200 bg-white/95 backdrop-blur-sm duration-300 ease-linear dark:border-gray-800 dark:bg-gray-900/95 ${
+        sidebarVisible ? 'translate-x-0' : '-translate-x-full'
+      } ${showWide ? 'w-[290px] px-5' : 'w-[290px] px-5 lg:w-[90px] lg:px-3'} lg:translate-x-0`}
+      onMouseEnter={() => !isMobile && !isExpanded && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="flex items-center justify-between py-5">
-        <Link to="/">
+      <div
+        className={`flex items-center justify-between py-5 ${
+          sidebarCollapsed ? 'lg:justify-center' : ''
+        }`}
+      >
+        <Link to="/" className={sidebarCollapsed ? 'lg:flex lg:justify-center' : ''}>
           <div className="flex items-center gap-3">
-            <img src="/logo.svg" alt="SalesOps" className="h-8 w-8" />
-            <span className="text-xl font-medium tracking-wide text-gray-900 dark:text-white">
-              Sales<span className="text-primary">Ops</span>
-            </span>
+            <img src="/logo.svg" alt="SalesOps" className="h-8 w-8 flex-shrink-0" />
+            {showWide && (
+              <span className="text-xl font-medium tracking-wide text-gray-900 dark:text-white">
+                Sales<span className="text-primary">Ops</span>
+              </span>
+            )}
           </div>
         </Link>
 
         <button
           ref={trigger}
-          onClick={() => props.setSidebarOpen(!props.sidebarOpen)}
+          onClick={toggleMobileSidebar}
           aria-controls="sidebar"
-          aria-expanded={props.sidebarOpen}
+          aria-expanded={isMobileOpen}
           className="block lg:hidden"
         >
           <svg
@@ -163,8 +178,12 @@ export default function Sidebar(props: {
       <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
         <nav className="mb-6">
           <div>
-            <h3 className="mb-3 flex text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
-              MENU
+            <h3
+              className={`mb-3 flex text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 ${
+                sidebarCollapsed ? 'lg:justify-center' : ''
+              }`}
+            >
+              {showWide ? 'MENU' : <MenuOutlined className="lg:block text-gray-400" aria-hidden />}
             </h3>
 
             <ul className="mb-6 flex flex-col gap-1">
@@ -173,7 +192,7 @@ export default function Sidebar(props: {
                   to="/dashboard/ecommerce"
                   className={`menu-item group ${
                     isDashboardActive ? 'menu-item-active' : 'menu-item-inactive'
-                  }`}
+                  } ${sidebarCollapsed ? 'lg:justify-center' : ''}`}
                 >
                   <span
                     className={`menu-item-icon-size ${
@@ -184,7 +203,7 @@ export default function Sidebar(props: {
                   >
                     <DashboardOutlined />
                   </span>
-                  <span className="font-medium">Dashboard</span>
+                  {showWide && <span className="font-medium">Dashboard</span>}
                 </Link>
               </li>
 
@@ -196,9 +215,10 @@ export default function Sidebar(props: {
                         type="button"
                         className={`menu-item group ${
                           isEcommerceActive ? 'menu-item-active' : 'menu-item-inactive'
-                        }`}
+                        } ${sidebarCollapsed ? 'lg:justify-center' : ''}`}
                         onClick={() => {
-                          if (sidebarExpanded) handleClick();
+                          if (sidebarCollapsed) toggleSidebar();
+                          else if (sidebarExpanded) handleClick();
                           else setSidebarExpanded(true);
                         }}
                       >
@@ -211,28 +231,32 @@ export default function Sidebar(props: {
                         >
                           <ShoppingCartOutlined />
                         </span>
-                        <span className="font-medium">E-commerce</span>
-                        <CaretDownFilled
-                          className={`ml-auto text-sm transition-transform duration-200 ${
-                            open
-                              ? 'rotate-180 text-brand-500 dark:text-brand-400'
-                              : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
-                          }`}
-                        />
+                        {showWide && <span className="font-medium">E-commerce</span>}
+                        {showWide && (
+                          <CaretDownFilled
+                            className={`ml-auto text-sm transition-transform duration-200 ${
+                              open
+                                ? 'rotate-180 text-brand-500 dark:text-brand-400'
+                                : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
+                            }`}
+                          />
+                        )}
                       </button>
-                      <GroupLinks
-                        open={open}
-                        pathname={pathname}
-                        links={[
-                          { to: '/ecommerce/products', label: 'Products' },
-                          { to: '/ecommerce/price-history', label: 'Price History' },
-                          { to: '/ecommerce/inventory-adjustment', label: 'Inventory' },
-                          { to: '/ecommerce/orders', label: 'Orders' },
-                          { to: '/ecommerce/order-status-history', label: 'Order History' },
-                          { to: '/ecommerce/promotions', label: 'Promotions' },
-                          { to: '/ecommerce/promotion-status', label: 'Promo Status' },
-                        ]}
-                      />
+                      {showWide && (
+                        <GroupLinks
+                          open={open}
+                          pathname={pathname}
+                          links={[
+                            { to: '/ecommerce/products', label: 'Products' },
+                            { to: '/ecommerce/price-history', label: 'Price History' },
+                            { to: '/ecommerce/inventory-adjustment', label: 'Inventory' },
+                            { to: '/ecommerce/orders', label: 'Orders' },
+                            { to: '/ecommerce/order-status-history', label: 'Order History' },
+                            { to: '/ecommerce/promotions', label: 'Promotions' },
+                            { to: '/ecommerce/promotion-status', label: 'Promo Status' },
+                          ]}
+                        />
+                      )}
                     </>
                   )}
                 </SidebarLinkGroup>
@@ -246,9 +270,10 @@ export default function Sidebar(props: {
                         type="button"
                         className={`menu-item group ${
                           isFinanceActive ? 'menu-item-active' : 'menu-item-inactive'
-                        }`}
+                        } ${sidebarCollapsed ? 'lg:justify-center' : ''}`}
                         onClick={() => {
-                          if (sidebarExpanded) handleClick();
+                          if (sidebarCollapsed) toggleSidebar();
+                          else if (sidebarExpanded) handleClick();
                           else setSidebarExpanded(true);
                         }}
                       >
@@ -261,24 +286,28 @@ export default function Sidebar(props: {
                         >
                           <DollarOutlined />
                         </span>
-                        <span className="font-medium">Finance</span>
-                        <CaretDownFilled
-                          className={`ml-auto text-sm transition-transform duration-200 ${
-                            open
-                              ? 'rotate-180 text-brand-500 dark:text-brand-400'
-                              : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
-                          }`}
-                        />
+                        {showWide && <span className="font-medium">Finance</span>}
+                        {showWide && (
+                          <CaretDownFilled
+                            className={`ml-auto text-sm transition-transform duration-200 ${
+                              open
+                                ? 'rotate-180 text-brand-500 dark:text-brand-400'
+                                : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:group-hover:text-gray-300'
+                            }`}
+                          />
+                        )}
                       </button>
-                      <GroupLinks
-                        open={open}
-                        pathname={pathname}
-                        links={[
-                          { to: '/finance/payment-transactions', label: 'Payments' },
-                          { to: '/finance/vendor-commission', label: 'Commissions' },
-                          { to: '/finance/refunds', label: 'Refunds' },
-                        ]}
-                      />
+                      {showWide && (
+                        <GroupLinks
+                          open={open}
+                          pathname={pathname}
+                          links={[
+                            { to: '/finance/payment-transactions', label: 'Payments' },
+                            { to: '/finance/vendor-commission', label: 'Commissions' },
+                            { to: '/finance/refunds', label: 'Refunds' },
+                          ]}
+                        />
+                      )}
                     </>
                   )}
                 </SidebarLinkGroup>
@@ -291,7 +320,7 @@ export default function Sidebar(props: {
                     pathname === '/audit-log'
                       ? 'menu-item-active'
                       : 'menu-item-inactive'
-                  }`}
+                  } ${sidebarCollapsed ? 'lg:justify-center' : ''}`}
                 >
                   <span
                     className={`menu-item-icon-size ${
@@ -302,7 +331,7 @@ export default function Sidebar(props: {
                   >
                     <FileSearchOutlined />
                   </span>
-                  <span className="font-medium">Audit Log</span>
+                  {showWide && <span className="font-medium">Audit Log</span>}
                 </Link>
               </li>
             </ul>
@@ -311,4 +340,6 @@ export default function Sidebar(props: {
       </div>
     </aside>
   );
-}
+};
+
+export default Sidebar;

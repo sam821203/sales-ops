@@ -1,26 +1,30 @@
-import { useState } from 'react';
 import { Outlet } from '@tanstack/react-router';
+import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
+import Backdrop from '@/components/Backdrop';
 
-export function DefaultLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+function LayoutContent() {
+  const { isExpanded, isHovered } = useSidebar();
+  const sidebarWide = isExpanded || isHovered;
 
   return (
     <div className="dark:bg-boxdark-2 dark:text-bodydark">
-      {/* <!-- ===== Page Wrapper Start ===== --> */}
       <div className="flex h-screen overflow-hidden">
-        {/* <!-- ===== Sidebar Start ===== --> */}
-        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        {/* <!-- ===== Sidebar End ===== --> */}
+        <Sidebar />
+        <Backdrop />
 
-        {/* <!-- ===== Content Area Start ===== --> */}
-        <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
-          {/* <!-- ===== Header Start ===== --> */}
-          <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-          {/* <!-- ===== Header End ===== --> */}
-
-          {/* <!-- ===== Main Content Start ===== --> */}
+        <div
+          className={`relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden transition-[margin] duration-300 ${
+            sidebarWide ? 'lg:ml-[290px]' : 'lg:ml-[90px]'
+          }`}
+        >
+          <div
+            id="header-dropdown-root"
+            className="pointer-events-none fixed inset-0 z-[100000]"
+            aria-hidden
+          />
+          <Header />
           <main className="flex-1 min-h-0">
             <div className="mx-auto flex h-full min-h-0 flex-col p-4 md:p-6">
               <div className="flex min-h-0 flex-1 flex-col">
@@ -28,12 +32,16 @@ export function DefaultLayout() {
               </div>
             </div>
           </main>
-          {/* <!-- ===== Main Content End ===== --> */}
         </div>
-        {/* <!-- ===== Content Area End ===== --> */}
       </div>
-      {/* <!-- ===== Page Wrapper End ===== --> */}
     </div>
   );
 }
 
+export function DefaultLayout() {
+  return (
+    <SidebarProvider>
+      <LayoutContent />
+    </SidebarProvider>
+  );
+}
