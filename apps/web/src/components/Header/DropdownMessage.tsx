@@ -4,7 +4,7 @@ const items = [{ key: '1', label: 'No new messages' }];
 
 export default function DropdownMessage() {
   return (
-    <div className="relative">
+    <li className="relative">
       <Dropdown
         menu={{ items }}
         trigger={['click']}
@@ -34,6 +34,6 @@ export default function DropdownMessage() {
           </svg>
         </button>
       </Dropdown>
-    </div>
+    </li>
   );
 }
