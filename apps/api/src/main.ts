@@ -7,6 +7,7 @@ import { env } from './config/index.js';
 import { errorHandler } from './common/filters/error-handler.js';
 import { requestLogger } from './common/interceptors/logging.js';
 import { healthController } from './modules/health/health.controller.js';
+import { skuPriceHistoryController } from './modules/ecommerce/sku-price-history.controller.js';
 import { productController } from './modules/ecommerce/product.controller.js';
 import { uploadController } from './modules/upload/upload.controller.js';
 import { userController } from './modules/user/user.controller.js';
@@ -22,6 +23,7 @@ const api = new Hono();
 
 // RESTful routes
 api.route('/health', healthController);
+api.route('/priceHistory', skuPriceHistoryController);
 api.route('/products', productController);
 api.route('/upload', uploadController);
 api.route('/users', userController);
@@ -36,6 +38,13 @@ api.get('/openapi.json', (c) => {
     paths: {
       '/health': {
         get: { summary: 'Health check', responses: { 200: { description: 'OK' } } },
+      },
+      '/priceHistory': {
+        get: { summary: 'List price history', description: 'Query: page, pageSize, q (optional search by product name or sku id). Returns { items, total }.', responses: { 200: { description: 'OK' } } },
+        post: { summary: 'Create SKU price change', description: 'Body: skuId, newPrice, effectiveDate? (optional), changedBy. Records history and updates Sku.price.', responses: { 201: { description: 'Created' } } },
+      },
+      '/priceHistory/{id}': {
+        get: { summary: 'Get price history by id', responses: { 200: { description: 'OK' }, 404: { description: 'Not Found' } } },
       },
       '/products': {
         get: { summary: 'List products', description: 'Query: page, pageSize, status (optional), sortBy, sortOrder, q (search). Returns { items, total }.', responses: { 200: { description: 'OK' } } },
