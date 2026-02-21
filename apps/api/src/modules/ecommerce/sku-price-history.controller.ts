@@ -5,7 +5,10 @@ import {
   listPriceHistoryQuerySchema,
   priceHistoryIdParamSchema,
 } from './dto/ecommerce.dto.js';
-import { SkuNotFoundError } from './sku-price-history.service.js';
+import {
+  PriceUnchangedError,
+  SkuNotFoundError,
+} from './sku-price-history.service.js';
 import { skuPriceHistoryService } from './sku-price-history.service.js';
 
 const priceHistory = new Hono();
@@ -34,7 +37,7 @@ priceHistory.post('/', zValidator('json', createSkuPriceHistorySchema), async (c
     const created = await skuPriceHistoryService.create(body);
     return c.json(created, 201);
   } catch (e) {
-    if (e instanceof SkuNotFoundError) {
+    if (e instanceof SkuNotFoundError || e instanceof PriceUnchangedError) {
       return c.json({ error: 'Bad Request', message: e.message }, 400);
     }
     throw e;

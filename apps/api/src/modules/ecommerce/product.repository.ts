@@ -4,11 +4,15 @@ import { prisma } from '../../lib/prisma.js';
 
 type ProductStatus = 'Draft' | 'Active' | 'Inactive';
 
+/** Product name search is case-insensitive (mode: 'insensitive'). On SQLite, if this does not work, fall back to a two-phase query with LOWER(). */
 function buildWhere(options: { status?: ProductStatus; q?: string }) {
-  const conditions: { status?: ProductStatus; name?: { contains: string } } = {};
+  const conditions: {
+    status?: ProductStatus;
+    name?: { contains: string; mode: 'insensitive' };
+  } = {};
   if (options.status !== undefined) conditions.status = options.status;
   if (options.q !== undefined && options.q.trim() !== '') {
-    conditions.name = { contains: options.q.trim() };
+    conditions.name = { contains: options.q.trim(), mode: 'insensitive' };
   }
   return Object.keys(conditions).length > 0 ? conditions : undefined;
 }

@@ -12,6 +12,13 @@ export class SkuNotFoundError extends Error {
   }
 }
 
+export class PriceUnchangedError extends Error {
+  constructor(message: string = 'Price unchanged') {
+    super(message);
+    this.name = 'PriceUnchangedError';
+  }
+}
+
 type PrismaRow = Awaited<
   ReturnType<typeof skuPriceHistoryRepository.findById>
 >;
@@ -59,6 +66,15 @@ export const skuPriceHistoryService = {
   },
 
   async create(data: CreateSkuPriceHistoryInput): Promise<SkuPriceHistoryListItem> {
+    const currentPrice = await skuPriceHistoryRepository.getSkuPrice(data.skuId);
+    if (currentPrice === null) {
+      throw new SkuNotFoundError(`SKU with ID ${data.skuId} does not exist.`);
+    }
+    if (currentPrice === data.newPrice) {
+      throw new PriceUnchangedError(
+        `SKU ${data.skuId} price is already ${data.newPrice}. No history record created.`
+      );
+    }
     const row = await skuPriceHistoryRepository.create(data);
     if (!row) {
       throw new SkuNotFoundError(`SKU with ID ${data.skuId} does not exist.`);

@@ -1,12 +1,14 @@
 import type { CreateSkuPriceHistoryInput } from './dto/ecommerce.dto.js';
 import { prisma } from '../../lib/prisma.js';
 
+/** Product name search is case-insensitive (mode: 'insensitive'). On SQLite, if this does not work, fall back to a two-phase query with LOWER(). */
 function buildWhere(q?: string) {
   const qTrim = q?.trim();
   if (!qTrim) return undefined;
   const or: Array<
-    { sku: { product: { name: { contains: string } } } } | { skuId: number }
-  > = [{ sku: { product: { name: { contains: qTrim } } } }];
+    | { sku: { product: { name: { contains: string; mode: 'insensitive' } } } }
+    | { skuId: number }
+  > = [{ sku: { product: { name: { contains: qTrim, mode: 'insensitive' } } } }];
   const id = /^\d+$/.test(qTrim) ? parseInt(qTrim, 10) : NaN;
   if (!Number.isNaN(id)) or.push({ skuId: id });
   return { OR: or };
@@ -43,6 +45,14 @@ export const skuPriceHistoryRepository = {
       where: { id },
       include: { sku: { include: { product: true } } },
     });
+  },
+
+  async getSkuPrice(skuId: number): Promise<number | null> {
+    const sku = await prisma.sku.findUnique({
+      where: { id: skuId },
+      select: { price: true },
+    });
+    return sku?.price ?? null;
   },
 
   async create(data: CreateSkuPriceHistoryInput) {

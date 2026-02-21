@@ -190,10 +190,20 @@ export function PriceHistoryPage() {
         render: (_: unknown, record: SkuPriceHistoryListItem) => {
           const diff = record.newPrice - record.oldPrice;
           const isIncrease = diff > 0;
+          const isUnchanged = diff === 0;
+          const formatted =
+            isUnchanged
+              ? formatPrice(0)
+              : isIncrease
+                ? `+${formatPrice(diff)}`
+                : `-${formatPrice(-diff)}`;
           return (
-            <Tag color={isIncrease ? 'red' : 'green'} className="flex items-center gap-1 w-fit">
-              {isIncrease ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-              {isIncrease ? '+' : ''}{formatPrice(diff)}
+            <Tag
+              color={isUnchanged ? 'default' : isIncrease ? 'red' : 'green'}
+              className="flex items-center gap-1 w-fit"
+            >
+              {isUnchanged ? null : isIncrease ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+              {formatted}
             </Tag>
           );
         },
