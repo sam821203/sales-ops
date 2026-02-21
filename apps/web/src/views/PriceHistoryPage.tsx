@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { SkuPriceHistoryListItem } from '@salesops/shared';
 import { ArrowDownOutlined, ArrowUpOutlined, EyeOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
@@ -63,15 +63,48 @@ export function PriceHistoryPage() {
   });
 
   const [addSkuId, setAddSkuId] = useState<number | undefined>(undefined);
+  const [addProductSearch, setAddProductSearch] = useState('');
+  const [addProductSearchDebounced, setAddProductSearchDebounced] = useState('');
+  const addProductSearchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [addForm] = Form.useForm<{
     productId: number;
     newPrice: number;
     changedBy: number;
   }>();
 
-  const { data: productsResponse } = useQuery({
-    queryKey: productKeys.list({ page: 1, pageSize: 100 }),
-    queryFn: () => getProducts({ page: 1, pageSize: 100 }),
+  useEffect(() => {
+    if (!addModalOpen) {
+      setAddProductSearch('');
+      setAddProductSearchDebounced('');
+      if (addProductSearchDebounceRef.current != null) {
+        clearTimeout(addProductSearchDebounceRef.current);
+        addProductSearchDebounceRef.current = null;
+      }
+      return;
+    }
+    addProductSearchDebounceRef.current = setTimeout(() => {
+      setAddProductSearchDebounced(addProductSearch);
+    }, 300);
+    return () => {
+      if (addProductSearchDebounceRef.current != null) {
+        clearTimeout(addProductSearchDebounceRef.current);
+        addProductSearchDebounceRef.current = null;
+      }
+    };
+  }, [addModalOpen, addProductSearch]);
+
+  const { data: productsResponse, isFetching: productsFetching } = useQuery({
+    queryKey: productKeys.list({
+      page: 1,
+      pageSize: 50,
+      q: addProductSearchDebounced.trim() || undefined,
+    }),
+    queryFn: () =>
+      getProducts({
+        page: 1,
+        pageSize: 50,
+        q: addProductSearchDebounced.trim() || undefined,
+      }),
     enabled: addModalOpen,
   });
 
@@ -92,7 +125,7 @@ export function PriceHistoryPage() {
       addForm.resetFields();
       message.success('Price change created.');
     },
-    onError: (e: Error) => message.error(e.message ?? 'Failed to create price change'),
+    onError: (e: Error) => message.error(e.message || 'Failed to create price change'),
   });
 
   const items = listResponse?.items ?? [];
@@ -126,8 +159,15 @@ export function PriceHistoryPage() {
 
   const productOptions = useMemo(() => {
     const list = productsResponse?.items ?? [];
-    return list.map((p) => ({ label: `${p.name} (P${p.id})`, value: p.id }));
-  }, [productsResponse?.items]);
+    const options = list.map((p) => ({ label: `${p.name} (P${p.id})`, value: p.id }));
+    if (selectedProduct && !list.some((p) => p.id === selectedProduct.id)) {
+      options.unshift({
+        label: `${selectedProduct.name} (P${selectedProduct.id})`,
+        value: selectedProduct.id,
+      });
+    }
+    return options;
+  }, [productsResponse?.items, selectedProduct]);
 
   const skuOptions = useMemo(() => {
     const skus = selectedProduct?.skus ?? [];
@@ -384,7 +424,12 @@ export function PriceHistoryPage() {
               Add Price Change
             </h5>
           </div>
-          <Form form={addForm} layout="vertical" onValuesChange={(changed) => { if ('productId' in changed) setAddSkuId(undefined); }}>
+          <Form form={addForm} layout="vertical" onValuesChange={(changed) => {
+              if ('productId' in changed) {
+                setAddSkuId(undefined);
+                setAddProductSearch('');
+              }
+            }}>
             <Form.Item
               name="productId"
               label={<span className="text-sm font-medium text-gray-700 dark:text-gray-400">Product</span>}
@@ -392,12 +437,13 @@ export function PriceHistoryPage() {
               className="!mb-5"
             >
               <Select
-                placeholder="Select product"
+                placeholder="Type to search products..."
                 options={productOptions}
                 showSearch
-                filterOption={(input, option) =>
-                  (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
-                }
+                filterOption={false}
+                onSearch={setAddProductSearch}
+                loading={productsFetching}
+                notFoundContent={productsFetching ? <Spin size="small" /> : 'No products found'}
                 className="!h-11"
               />
             </Form.Item>

@@ -1,18 +1,20 @@
 import type { CreateSkuPriceHistoryInput } from './dto/ecommerce.dto.js';
 import { prisma } from '../../lib/prisma.js';
 
-/** Product name search is case-insensitive (mode: 'insensitive'). On SQLite, if this does not work, fall back to a two-phase query with LOWER(). */
+/** Product name search uses contains; on SQLite, LIKE is case-sensitive. */
 function buildWhere(q?: string) {
   const qTrim = q?.trim();
   if (!qTrim) return undefined;
   const or: Array<
-    | { sku: { product: { name: { contains: string; mode: 'insensitive' } } } }
-    | { skuId: number }
-  > = [{ sku: { product: { name: { contains: qTrim, mode: 'insensitive' } } } }];
+    { sku: { product: { name: { contains: string } } } } | { skuId: number }
+  > = [{ sku: { product: { name: { contains: qTrim } } } }];
   const id = /^\d+$/.test(qTrim) ? parseInt(qTrim, 10) : NaN;
   if (!Number.isNaN(id)) or.push({ skuId: id });
   return { OR: or };
 }
+
+/** Sentinel returned by create() when SKU price equals newPrice (no-op). */
+export const PRICE_UNCHANGED = 'PRICE_UNCHANGED' as const;
 
 /**
  * Data access only. No business logic; all SQL/ORM here.
@@ -47,14 +49,6 @@ export const skuPriceHistoryRepository = {
     });
   },
 
-  async getSkuPrice(skuId: number): Promise<number | null> {
-    const sku = await prisma.sku.findUnique({
-      where: { id: skuId },
-      select: { price: true },
-    });
-    return sku?.price ?? null;
-  },
-
   async create(data: CreateSkuPriceHistoryInput) {
     const effectiveDate = data.effectiveDate ?? new Date();
     return prisma.$transaction(async (tx) => {
@@ -63,6 +57,7 @@ export const skuPriceHistoryRepository = {
         select: { id: true, price: true },
       });
       if (!sku) return null;
+      if (sku.price === data.newPrice) return PRICE_UNCHANGED;
       const oldPrice = sku.price;
       const row = await tx.skuPriceHistory.create({
         data: {

@@ -3,7 +3,10 @@ import type {
   ListPriceHistoryResponse,
   SkuPriceHistoryListItem,
 } from '@salesops/shared';
-import { skuPriceHistoryRepository } from './sku-price-history.repository.js';
+import {
+  PRICE_UNCHANGED,
+  skuPriceHistoryRepository,
+} from './sku-price-history.repository.js';
 
 export class SkuNotFoundError extends Error {
   constructor(message: string = 'SKU not found') {
@@ -66,18 +69,12 @@ export const skuPriceHistoryService = {
   },
 
   async create(data: CreateSkuPriceHistoryInput): Promise<SkuPriceHistoryListItem> {
-    const currentPrice = await skuPriceHistoryRepository.getSkuPrice(data.skuId);
-    if (currentPrice === null) {
-      throw new SkuNotFoundError(`SKU with ID ${data.skuId} does not exist.`);
-    }
-    if (currentPrice === data.newPrice) {
+    const row = await skuPriceHistoryRepository.create(data);
+    if (row === null) throw new SkuNotFoundError(`SKU with ID ${data.skuId} does not exist.`);
+    if (row === PRICE_UNCHANGED) {
       throw new PriceUnchangedError(
         `SKU ${data.skuId} price is already ${data.newPrice}. No history record created.`
       );
-    }
-    const row = await skuPriceHistoryRepository.create(data);
-    if (!row) {
-      throw new SkuNotFoundError(`SKU with ID ${data.skuId} does not exist.`);
     }
     return toListItem(row);
   },
