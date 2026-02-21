@@ -167,12 +167,36 @@ export type Payment = {
   requestId: string;
 };
 
-export type ProductPriceHistory = {
+export type SkuPriceHistory = {
   id: number;
-  productId: number;
+  skuId: number;
   oldPrice: number;
   newPrice: number;
   effectiveDate: Date;
+  changedBy: number;
+};
+
+export type SkuPriceHistoryListItem = SkuPriceHistory & {
+  productName: string;
+  productId: number;
+  skuAttributes: Record<string, string>;
+};
+
+export type ListPriceHistoryQuery = {
+  page: number;
+  pageSize: number;
+  q?: string;
+};
+
+export type ListPriceHistoryResponse = {
+  items: SkuPriceHistoryListItem[];
+  total: number;
+};
+
+export type CreateSkuPriceHistoryInput = {
+  skuId: number;
+  newPrice: number;
+  effectiveDate?: Date;
   changedBy: number;
 };
 
