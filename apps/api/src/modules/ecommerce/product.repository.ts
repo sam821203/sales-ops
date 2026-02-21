@@ -4,6 +4,7 @@ import { prisma } from '../../lib/prisma.js';
 
 type ProductStatus = 'Draft' | 'Active' | 'Inactive';
 
+/** Product name search uses contains; on SQLite, LIKE is case-sensitive. */
 function buildWhere(options: { status?: ProductStatus; q?: string }) {
   const conditions: { status?: ProductStatus; name?: { contains: string } } = {};
   if (options.status !== undefined) conditions.status = options.status;
