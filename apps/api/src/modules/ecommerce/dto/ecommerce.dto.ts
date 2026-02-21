@@ -101,6 +101,23 @@ export const createRefundSchema = z.object({
   processedAt: z.coerce.date().optional(),
 });
 
+export const listPriceHistoryQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(10),
+  q: z.string().optional(),
+});
+
+export const createSkuPriceHistorySchema = z.object({
+  skuId: z.number().int().positive(),
+  newPrice: z.number().nonnegative(),
+  effectiveDate: z.coerce.date().optional(),
+  changedBy: z.number().int().positive(),
+});
+
+export const priceHistoryIdParamSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
+
 export type {
   CreateSkuInput,
   CreateProductInput,
@@ -117,3 +134,6 @@ export type CreatePaymentInput = z.infer<typeof createPaymentSchema>;
 export type CreatePaymentTransactionInput = z.infer<typeof createPaymentTransactionSchema>;
 export type CreatePromotionStatusInput = z.infer<typeof createPromotionStatusSchema>;
 export type CreateRefundInput = z.infer<typeof createRefundSchema>;
+export type ListPriceHistoryQuery = z.infer<typeof listPriceHistoryQuerySchema>;
+export type CreateSkuPriceHistoryInput = z.infer<typeof createSkuPriceHistorySchema>;
+export type PriceHistoryIdParam = z.infer<typeof priceHistoryIdParamSchema>;
