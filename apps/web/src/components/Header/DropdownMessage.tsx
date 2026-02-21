@@ -4,7 +4,7 @@ const items = [{ key: '1', label: 'No new messages' }];
 
 export default function DropdownMessage() {
   return (
-    <li className="relative">
+    <li className="relative list-none">
       <Dropdown
         menu={{ items }}
         trigger={['click']}
