@@ -1,0 +1,30 @@
+---
+description: Standards for image management, transformations, and uploads using Cloudinary
+globs: apps/api/src/**/*.{ts}
+alwaysApply: false
+---
+# Cloudinary Implementation Standards
+
+This rule ensures all media assets are optimized, secure, and consistently handled across the SalesOps project.
+
+## 1. Image Delivery & Optimization
+Always prioritize performance and cost-efficiency by using automatic formatting and quality.
+
+- **Mandatory Transformations**: Every image URL or component must include:
+  - `f_auto`: Automatically deliver the best format (WebP/AVIF) based on the browser.
+  - `q_auto`: Automatically adjust compression level to balance quality and file size.
+- **Sizing**: Never serve raw, full-resolution images. Always specify width (`w_`) and height (`h_`) using `c_fill` or `c_limit`.
+
+## 2. Component Usage (React/Next.js)
+When using Cloudinary in the frontend:
+- Use the `@cloudinary/react` library instead of plain `<img>` tags where possible.
+- **Placeholder**: Always provide a `blur` or `pixelate` placeholder for a better LCP (Largest Contentful Paint) experience.
+
+Example:
+```tsx
+import { AdvancedImage } from '@cloudinary/react';
+import { fill } from "@cloudinary/url-gen/actions/resize";
+
+// Standard implementation
+const myImage = cld.image('sample_id').resize(fill().width(400).height(300));
+<AdvancedImage cldImg={myImage} />
