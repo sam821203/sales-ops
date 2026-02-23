@@ -10,6 +10,9 @@ export default {
   darkMode: 'class',
   theme: {
     fontFamily: {
+      sans: ['Outfit', 'sans-serif'],
+      serif: ['Outfit', 'sans-serif'],
+      mono: ['Outfit', 'sans-serif'],
       outfit: ['Outfit', 'sans-serif'],
     },
     screens: {

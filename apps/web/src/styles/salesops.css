@@ -2,7 +2,7 @@
 
 @layer base {
   body {
-    @apply font-normal text-base text-body bg-gray-50 relative z-1;
+    @apply font-sans font-normal text-base text-body bg-gray-50 relative z-1;
   }
 
   .ant-app {
