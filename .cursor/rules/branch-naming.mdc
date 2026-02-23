@@ -1,0 +1,71 @@
+---
+description: Branch naming conventions when creating new branches from develop; use when creating or suggesting branch names
+---
+
+# Branch Naming Rule
+
+New branches created from `develop` must follow the naming convention enforced by [.github/workflows/branch-name-check.yml](mdc:.github/workflows/branch-name-check.yml). Invalid names will fail the branch name check on pull requests.
+
+## Format
+
+Use a **prefix** followed by a **slug**:
+
+```
+<prefix>/<slug>
+```
+
+- **Prefix**: One of the allowed prefixes below.
+- **Slug**: Lowercase letters and digits only, separated by `-` or `/`. No spaces or underscores.
+
+## Allowed prefixes
+
+| Prefix     | Use for |
+|-----------|---------|
+| `feature` | New features |
+| `bugfix`  | Bug fixes |
+| `hotfix`  | Urgent production fixes |
+| `release` | Release preparation |
+| `chore`   | Maintenance, tooling, config |
+| `docs`    | Documentation only |
+| `refactor`| Code refactoring (no new feature or bug fix) |
+| `test`    | Adding or updating tests |
+
+## Protected / special branches
+
+These names are allowed as-is (no prefix/slug):
+
+- `main`
+- `master`
+- `develop`
+
+Bot branches (automated): `dependabot/*`, `renovate/*`.
+
+## Valid pattern (regex)
+
+Branch names must match:
+
+```
+^(main|master|develop|dependabot\/.+|renovate\/.+|(feature|bugfix|hotfix|release|chore|docs|refactor|test)\/[a-z0-9]+([-/][a-z0-9]+)*)$
+```
+
+## Examples
+
+**Valid:**
+
+- `feature/add-login`
+- `feature/sku-price-history`
+- `bugfix/fix-null-pointer`
+- `hotfix/cart-checkout-race`
+- `chore/update-deps`
+- `docs/api-readme`
+- `refactor/simplify-cart-store`
+- `test/e2e-checkout`
+
+**Invalid:**
+
+- `Feature/add-login` — use lowercase prefix
+- `feature/Add_Login` — slug must be lowercase, use `-` not `_`
+- `add-login` — missing prefix (e.g. `feature/add-login`)
+- `feat/add-login` — use `feature`, not `feat`
+
+When creating or suggesting a new branch from `develop`, use this format so the branch passes the CI check on PR.
