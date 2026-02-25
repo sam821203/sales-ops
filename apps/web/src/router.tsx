@@ -17,6 +17,7 @@ import { ButtonsPage } from '@/views/ButtonsPage';
 import { FormElementsPage } from '@/views/FormElementsPage';
 import { FormLayoutPage } from '@/views/FormLayoutPage';
 import { SignInPage } from '@/views/SignInPage';
+import { LoginPage } from '@/views/LoginPage';
 import { SignUpPage } from '@/views/SignUpPage';
 import { ProductsPage } from '@/views/Products';
 import { ProductDetailPage } from '@/views/ProductDetailPage';
@@ -143,6 +144,12 @@ const signInRoute = createRoute({
   component: SignInPage,
 });
 
+const loginRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/login',
+  component: LoginPage,
+});
+
 const signUpRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/signup',
@@ -250,6 +257,7 @@ const routeTree = rootRoute.addChildren([
   formElementsRoute,
   formLayoutRoute,
   signInRoute,
+  loginRoute,
   signUpRoute,
   ecommerceRoute.addChildren([
     productsRoute,
