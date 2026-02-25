@@ -149,7 +149,6 @@ export default function Header() {
             <div className="flex items-center gap-2">
               <SignedIn>
                 <UserButton
-                  afterSignOutUrl="/login"
                   appearance={{
                     elements: {
                       userButtonAvatarBox: 'h-10 w-10',

@@ -1,5 +1,6 @@
 import { SignIn, useAuth } from '@clerk/clerk-react';
-import { Link } from '@tanstack/react-router';
+import { useEffect } from 'react';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { AuthPageShell } from '@/components/AuthPageShell';
 
 const LoadingState = () => (
@@ -11,8 +12,17 @@ const LoadingState = () => (
   </div>
 );
 
+const AUTHENTICATED_REDIRECT = '/dashboard/ecommerce';
+
 export function LoginPage() {
   const { isLoaded, isSignedIn } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      navigate({ to: AUTHENTICATED_REDIRECT });
+    }
+  }, [isLoaded, isSignedIn, navigate]);
 
   if (!isLoaded || isSignedIn) {
     return <LoadingState />;
