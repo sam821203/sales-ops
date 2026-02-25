@@ -4,3 +4,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Center Clerk sign-in/sign-out modal in viewport */
+[data-clerk-modal-scope] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}

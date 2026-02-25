@@ -1,23 +1,42 @@
-import { Button, Card, Form, Input } from 'antd';
+import { SignUp } from '@clerk/clerk-react';
+import { Link } from '@tanstack/react-router';
+import { AuthPageShell } from '@/components/AuthPageShell';
 
 export function SignUpPage() {
   return (
-    <div className="mx-auto max-w-xl space-y-6">
-      <h1 className="text-title-md2 font-semibold text-black dark:text-white">Sign Up</h1>
-      <Card className="shadow-1">
-        <Form layout="vertical">
-          <Form.Item label="Email" name="email">
-            <Input placeholder="you@example.com" />
-          </Form.Item>
-          <Form.Item label="Password" name="password">
-            <Input.Password placeholder="••••••••" />
-          </Form.Item>
-          <Button type="primary" htmlType="submit">
-            Create account
-          </Button>
-        </Form>
-      </Card>
-    </div>
+    <AuthPageShell
+      footer={
+        <>
+          Already have an account?{' '}
+          <Link
+            to="/login"
+            className="font-medium text-brand-600 hover:text-brand-500 dark:text-brand-400"
+          >
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      <Link
+        to="/"
+        className="flex justify-center transition-opacity hover:opacity-90"
+      >
+        <img src="/logo.svg" alt="SalesOps" className="h-10" />
+      </Link>
+      <div className="flex flex-col items-center justify-center">
+        <SignUp
+          appearance={{
+            elements: {
+              rootBox: 'w-full',
+              card: 'w-full shadow-none',
+              cardBox: 'w-full',
+            },
+          }}
+          signInUrl="/login"
+          forceRedirectUrl="/dashboard/ecommerce"
+          fallbackRedirectUrl="/dashboard/ecommerce"
+        />
+      </div>
+    </AuthPageShell>
   );
 }
-

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from '@tanstack/react-router';
+import { SignedIn, SignedOut, UserButton } from '@clerk/clerk-react';
 import { useSidebar } from '@/context/SidebarContext';
 import DropdownMessage from './DropdownMessage';
 import DropdownNotification from './DropdownNotification';
-import DropdownUser from './DropdownUser';
 import DarkModeSwitcher from './DarkModeSwitcher';
 
 export default function Header() {
@@ -31,7 +31,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-99999 flex w-full border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 lg:border-b">
+    <header className="sticky top-0 z-50 flex w-full border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 lg:border-b">
       <div className="flex flex-col grow items-center justify-between lg:flex-row lg:px-6">
         <div className="flex w-full items-center justify-between gap-2 border-b border-gray-200 px-3 py-3 dark:border-gray-800 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
           <button
@@ -146,8 +146,26 @@ export default function Header() {
             <DarkModeSwitcher />
             <DropdownNotification />
             <DropdownMessage />
+            <div className="flex items-center gap-2">
+              <SignedIn>
+                <UserButton
+                  appearance={{
+                    elements: {
+                      userButtonAvatarBox: 'h-10 w-10',
+                    },
+                  }}
+                />
+              </SignedIn>
+              <SignedOut>
+                <Link
+                  to="/login"
+                  className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-300 dark:hover:bg-white/10"
+                >
+                  Log in
+                </Link>
+              </SignedOut>
+            </div>
           </div>
-          <DropdownUser />
         </div>
       </div>
     </header>

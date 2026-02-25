@@ -14,7 +14,7 @@ const LoadingState = () => (
 
 const AUTHENTICATED_REDIRECT = '/dashboard/ecommerce';
 
-export function SignInPage() {
+export function LoginPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const navigate = useNavigate();
 
