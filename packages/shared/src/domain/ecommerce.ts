@@ -210,6 +210,31 @@ export type InventoryAdjustment = {
   createdAt: Date;
 };
 
+export type InventoryAdjustmentListItem = InventoryAdjustment & {
+  productName: string;
+  productId: number;
+  skuAttributes: Record<string, string>;
+};
+
+export type ListInventoryAdjustmentsQuery = {
+  page: number;
+  pageSize: number;
+  q?: string;
+};
+
+export type ListInventoryAdjustmentsResponse = {
+  items: InventoryAdjustmentListItem[];
+  total: number;
+};
+
+export type CreateInventoryAdjustmentInput = {
+  skuId: number;
+  adjustmentType: InventoryAdjustmentType;
+  quantity: number;
+  reason: string;
+  adjustedBy: number;
+};
+
 export type OrderStatusHistory = {
   id: number;
   orderId: number;

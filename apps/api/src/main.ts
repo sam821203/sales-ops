@@ -8,6 +8,7 @@ import { errorHandler } from './common/filters/error-handler.js';
 import { requestLogger } from './common/interceptors/logging.js';
 import { healthController } from './modules/health/health.controller.js';
 import { skuPriceHistoryController } from './modules/ecommerce/sku-price-history.controller.js';
+import { inventoryAdjustmentController } from './modules/ecommerce/inventory-adjustment.controller.js';
 import { productController } from './modules/ecommerce/product.controller.js';
 import { uploadController } from './modules/upload/upload.controller.js';
 import { userController } from './modules/user/user.controller.js';
@@ -24,6 +25,7 @@ const api = new Hono();
 // RESTful routes
 api.route('/health', healthController);
 api.route('/priceHistory', skuPriceHistoryController);
+api.route('/inventoryAdjustments', inventoryAdjustmentController);
 api.route('/products', productController);
 api.route('/upload', uploadController);
 api.route('/users', userController);
@@ -45,6 +47,13 @@ api.get('/openapi.json', (c) => {
       },
       '/priceHistory/{id}': {
         get: { summary: 'Get price history by id', responses: { 200: { description: 'OK' }, 404: { description: 'Not Found' } } },
+      },
+      '/inventoryAdjustments': {
+        get: { summary: 'List inventory adjustments', description: 'Query: page, pageSize, q (optional search by product name or sku id). Returns { items, total }.', responses: { 200: { description: 'OK' } } },
+        post: { summary: 'Create inventory adjustment', description: 'Body: skuId, adjustmentType, quantity, reason, adjustedBy. Creates record and updates Sku.stock.', responses: { 201: { description: 'Created' }, 400: { description: 'Bad Request (SKU not found or insufficient stock)' } } },
+      },
+      '/inventoryAdjustments/{id}': {
+        get: { summary: 'Get inventory adjustment by id', responses: { 200: { description: 'OK' }, 404: { description: 'Not Found' } } },
       },
       '/products': {
         get: { summary: 'List products', description: 'Query: page, pageSize, status (optional), sortBy, sortOrder, q (search). Returns { items, total }.', responses: { 200: { description: 'OK' } } },
