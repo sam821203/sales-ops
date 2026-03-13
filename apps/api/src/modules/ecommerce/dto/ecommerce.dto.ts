@@ -1,5 +1,6 @@
 import {
   discountTypeValues,
+  inventoryAdjustmentTypeValues,
   orderProcessingStatusValues,
   paymentMethodValues,
   paymentStatusValues,
@@ -118,6 +119,24 @@ export const priceHistoryIdParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
+export const listInventoryAdjustmentsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  pageSize: z.coerce.number().int().min(1).max(100).default(10),
+  q: z.string().optional(),
+});
+
+export const createInventoryAdjustmentSchema = z.object({
+  skuId: z.number().int().positive(),
+  adjustmentType: z.enum(inventoryAdjustmentTypeValues),
+  quantity: z.number().int().positive(),
+  reason: z.string().min(1).max(500),
+  adjustedBy: z.number().int().positive(),
+});
+
+export const inventoryAdjustmentIdParamSchema = z.object({
+  id: z.coerce.number().int().positive(),
+});
+
 export type {
   CreateSkuInput,
   CreateProductInput,
@@ -137,3 +156,6 @@ export type CreateRefundInput = z.infer<typeof createRefundSchema>;
 export type ListPriceHistoryQuery = z.infer<typeof listPriceHistoryQuerySchema>;
 export type CreateSkuPriceHistoryInput = z.infer<typeof createSkuPriceHistorySchema>;
 export type PriceHistoryIdParam = z.infer<typeof priceHistoryIdParamSchema>;
+export type ListInventoryAdjustmentsQuery = z.infer<typeof listInventoryAdjustmentsQuerySchema>;
+export type CreateInventoryAdjustmentInput = z.infer<typeof createInventoryAdjustmentSchema>;
+export type InventoryAdjustmentIdParam = z.infer<typeof inventoryAdjustmentIdParamSchema>;
