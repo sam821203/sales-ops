@@ -1,0 +1,43 @@
+---
+description: Guidance for defining and consuming Hono RPC client-derived types in the web app
+globs: apps/web/src/api/**/*.ts
+alwaysApply: false
+---
+
+# Hono RPC client type conventions (web)
+
+- **Centralize RPC-derived types**
+  - Define all response types that use `InferResponseType` from the Hono RPC client in a small number of dedicated modules (for example `apps/web/src/api/types.ts`).
+  - Do **not** spread `InferResponseType<typeof apiClient...>` across many files; keep it close to the API client so refactors are localized.
+
+- **Use the value type of the client**
+  - When inferring types from the Hono client, prefer a local alias based on the value:
+
+    ```ts
+    import { apiClient } from '@/api/client';
+    import type { InferResponseType } from 'hono/client';
+
+    type Client = typeof apiClient;
+    ```
+
+  - Use `Client[...]` when passing methods to `InferResponseType`, e.g.:
+
+    ```ts
+    export type ProductsListResponse = InferResponseType<
+      Client['products']['$get']
+    >;
+    ```
+
+- **Consumers must use `import type`**
+  - When other modules consume these RPC-derived types, they should always import them with `import type` to avoid pulling the runtime `apiClient` into their bundles:
+
+    ```ts
+    import type { ProductsListResponse } from '@/api/types';
+    ```
+
+  - Avoid importing `apiClient` directly just to access its type in consumer modules; instead, rely on the exported type aliases from the centralized types module.
+
+- **Avoid re-indexing `RpcClient` in many places**
+  - Do **not** write `RpcClient['products']['$get']` in multiple files.
+  - If you need a new RPC-derived type, add it to the centralized types file (using `Client = typeof apiClient`) and export the alias from there.
+

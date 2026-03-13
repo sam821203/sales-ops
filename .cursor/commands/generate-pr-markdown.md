@@ -72,9 +72,10 @@ Select one (aligns with `commitlint.config.cjs` scopes):
 - **Scope**: Pre-check the **one** scope that best matches the work (replace `- [ ]` with `- [x]` for that scope). If multiple scopes apply, pick the primary one or leave one checked and mention the other in Summary/Changes.
 - Leave **Screenshots / Recording**, **Test plan**, **Checklist**, and **Related** as in the template (user fills these).
 
-## 4. Output for copying
+## 4. Output for copying (click-to-copy format)
 
-- **Lead with the PR markdown.** Do not add a preamble (e.g. “Here is the PR…”). Start the reply with the first line of the PR body (e.g. `## Summary`).
-- Output **only** the PR markdown (the content that matches the template above). Do **not** wrap it in a code fence (no ` ```markdown `). Output raw markdown so the user can select-all and paste into GitHub.
-- Write in clear, professional English; keep Summary and Changes concise.
+- **Wrap the PR markdown in a markdown code fence** so the chat UI shows a **Copy** button for one-click copy: start the reply with a line of triple backticks + `markdown`, then the full PR body, then a closing line of triple backticks (i.e. output in a fenced code block so the chat shows a Copy button).
+- You may add one short line before the code block (e.g. "Click the copy button above to copy.").
+- Write the content inside the fence in clear, professional English; keep Summary and Changes concise.
 - Optionally add under **Related** or at the very end: `Branch: <branch-name>` so the PR is traceable.
+- The user will click copy on the code block, then paste into GitHub.

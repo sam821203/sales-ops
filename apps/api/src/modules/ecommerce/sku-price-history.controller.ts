@@ -1,5 +1,5 @@
-import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
+import type { Context } from 'hono';
+import type { z } from 'zod';
 import {
   createSkuPriceHistorySchema,
   listPriceHistoryQuerySchema,
@@ -11,27 +11,32 @@ import {
 } from './sku-price-history.service.js';
 import { skuPriceHistoryService } from './sku-price-history.service.js';
 
-const priceHistory = new Hono();
+export {
+  createSkuPriceHistorySchema,
+  listPriceHistoryQuerySchema,
+  priceHistoryIdParamSchema,
+};
 
-// GET /priceHistory
-priceHistory.get('/', zValidator('query', listPriceHistoryQuerySchema), async (c) => {
+type ListQuery = z.infer<typeof listPriceHistoryQuerySchema>;
+type ParamId = z.infer<typeof priceHistoryIdParamSchema>;
+type CreateBody = z.infer<typeof createSkuPriceHistorySchema>;
+
+export async function listPriceHistoryHandler(c: Context<object, string, { out: { query: ListQuery } }>) {
   const { page, pageSize, q } = c.req.valid('query');
   const list = await skuPriceHistoryService.getList(page, pageSize, { q });
   return c.json(list);
-});
+}
 
-// GET /priceHistory/:id
-priceHistory.get('/:id', zValidator('param', priceHistoryIdParamSchema), async (c) => {
+export async function getPriceHistoryByIdHandler(c: Context<object, string, { out: { param: ParamId } }>) {
   const { id } = c.req.valid('param');
   const item = await skuPriceHistoryService.getById(id);
   if (!item) {
     return c.json({ error: 'Not Found', message: 'Price history not found' }, 404);
   }
   return c.json(item);
-});
+}
 
-// POST /priceHistory
-priceHistory.post('/', zValidator('json', createSkuPriceHistorySchema), async (c) => {
+export async function createPriceHistoryHandler(c: Context<object, string, { out: { json: CreateBody } }>) {
   try {
     const body = c.req.valid('json');
     const created = await skuPriceHistoryService.create(body);
@@ -42,6 +47,4 @@ priceHistory.post('/', zValidator('json', createSkuPriceHistorySchema), async (c
     }
     throw e;
   }
-});
-
-export { priceHistory as skuPriceHistoryController };
+}

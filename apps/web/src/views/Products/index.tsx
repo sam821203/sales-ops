@@ -4,7 +4,6 @@ import { useSearch, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
   SKU,
-  Product,
   ProductStatus,
   AttributeDefinition,
   CreateProductInput,
@@ -13,6 +12,7 @@ import type {
   UpdateProductInput,
 } from '@salesops/shared';
 import type { StatusFilter, ProductRow } from './types';
+import type { ProductsListResponse } from '@/api/types';
 import {
   DeleteOutlined,
   DownloadOutlined,
@@ -196,7 +196,7 @@ export function ProductsPage() {
     isLoading: listLoading,
     isError: listError,
     error: listErrorDetail,
-  } = useQuery({
+  } = useQuery<ProductsListResponse>({
     queryKey: productKeys.list(listParams),
     queryFn: () => getProducts(listParams),
   });
@@ -238,7 +238,7 @@ export function ProductsPage() {
     const items = listResponse?.items ?? [];
     const categoryFilterLower = categoryFilter.trim().toLowerCase();
     const brandFilterLower = brandFilter.trim().toLowerCase();
-    return items.filter((product: Product) => {
+    return items.filter((product) => {
       const categoryName = product.categoryId != null ? '' : '—';
       const brandName = product.brandId != null ? '' : '—';
       const matchCategory = !categoryFilterLower || categoryName.toLowerCase().includes(categoryFilterLower);
@@ -327,11 +327,11 @@ export function ProductsPage() {
   );
 
   const tableRows = useMemo(() => {
-    return filteredProducts.map((product: Product): ProductRow => {
-      const prices = product.skus.map((sku: SKU) => sku.price);
+    return filteredProducts.map((product): ProductRow => {
+      const prices = product.skus.map((sku) => sku.price);
       const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
       const maxPrice = prices.length > 0 ? Math.max(...prices) : 0;
-      const totalStock = product.skus.reduce((sum: number, sku: SKU) => sum + sku.stock, 0);
+      const totalStock = product.skus.reduce((sum, sku) => sum + sku.stock, 0);
       return {
         ...product,
         key: product.id,

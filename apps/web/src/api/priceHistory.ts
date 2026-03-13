@@ -1,10 +1,12 @@
 import type {
   CreateSkuPriceHistoryInput,
   ListPriceHistoryQuery,
-  ListPriceHistoryResponse,
-  SkuPriceHistoryListItem,
 } from '@salesops/shared';
-import { apiFetch } from '@/api/client';
+import { apiClient } from '@/api/client';
+import type {
+  PriceHistoryDetailResponse,
+  PriceHistoryListResponse,
+} from '@/api/types';
 
 export const priceHistoryKeys = {
   all: ['price-history'] as const,
@@ -15,31 +17,32 @@ export const priceHistoryKeys = {
 
 export async function getPriceHistoryList(
   params: ListPriceHistoryQuery
-): Promise<ListPriceHistoryResponse> {
-  const search = new URLSearchParams();
-  search.set('page', String(params.page));
-  search.set('pageSize', String(params.pageSize));
-  if (params.q != null && params.q.trim() !== '') {
-    search.set('q', params.q.trim());
-  }
-  return apiFetch<ListPriceHistoryResponse>(`/priceHistory?${search.toString()}`);
+): Promise<PriceHistoryListResponse> {
+  const res = await apiClient.priceHistory.$get({
+    query: {
+      page: String(params.page),
+      pageSize: String(params.pageSize),
+      ...(params.q != null && params.q.trim() !== '' ? { q: params.q.trim() } : {}),
+    },
+  });
+  return res.json();
 }
 
 export async function getPriceHistoryById(
   id: number
-): Promise<SkuPriceHistoryListItem | null> {
-  try {
-    return await apiFetch<SkuPriceHistoryListItem>(`/priceHistory/${id}`);
-  } catch (e) {
-    const err = e as Error & { status?: number };
-    if (err.status === 404) return null;
-    throw e;
+): Promise<PriceHistoryDetailResponse | null> {
+  const res = await apiClient.priceHistory[':id'].$get({
+    param: { id: String(id) },
+  });
+  if (res.status === 404) {
+    return null;
   }
+  return res.json();
 }
 
 export async function createPriceHistory(
   body: CreateSkuPriceHistoryInput
-): Promise<SkuPriceHistoryListItem> {
+): Promise<PriceHistoryDetailResponse> {
   const payload: Record<string, unknown> = {
     skuId: body.skuId,
     newPrice: body.newPrice,
@@ -51,8 +54,16 @@ export async function createPriceHistory(
         ? body.effectiveDate.toISOString()
         : body.effectiveDate;
   }
-  return apiFetch<SkuPriceHistoryListItem>('/priceHistory', {
-    method: 'POST',
-    body: JSON.stringify(payload),
+  const res = await apiClient.priceHistory.$post({
+    json: payload,
   });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      typeof data === 'object' && data !== null && 'message' in data && typeof (data as { message: unknown }).message === 'string'
+        ? (data as { message: string }).message
+        : 'Failed to create price history'
+    );
+  }
+  return data as PriceHistoryDetailResponse;
 }

@@ -1,5 +1,5 @@
-import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
+import type { Context } from 'hono';
+import type { z } from 'zod';
 import {
   createProductSchema,
   listProductsQuerySchema,
@@ -8,10 +8,14 @@ import {
 } from './dto/ecommerce.dto.js';
 import { productService } from './product.service.js';
 
-const products = new Hono();
+export { createProductSchema, listProductsQuerySchema, productIdParamSchema, updateProductSchema };
 
-// GET /products
-products.get('/', zValidator('query', listProductsQuerySchema), async (c) => {
+type ListQuery = z.infer<typeof listProductsQuerySchema>;
+type ParamId = z.infer<typeof productIdParamSchema>;
+type CreateBody = z.infer<typeof createProductSchema>;
+type UpdateBody = z.infer<typeof updateProductSchema>;
+
+export async function listProductsHandler(c: Context<object, string, { out: { query: ListQuery } }>) {
   const { page, pageSize, status, sortBy, sortOrder, q } = c.req.valid('query');
   const list = await productService.getProducts(page, pageSize, {
     status,
@@ -20,46 +24,35 @@ products.get('/', zValidator('query', listProductsQuerySchema), async (c) => {
     q,
   });
   return c.json(list);
-});
+}
 
-// GET /products/:id
-products.get('/:id', zValidator('param', productIdParamSchema), async (c) => {
+export async function getProductByIdHandler(c: Context<object, string, { out: { param: ParamId } }>) {
   const { id } = c.req.valid('param');
   const product = await productService.getProductById(id);
   if (!product) {
     return c.json({ error: 'Not Found', message: 'Product not found' }, 404);
   }
   return c.json(product);
-});
+}
 
-// POST /products
-products.post('/', zValidator('json', createProductSchema), async (c) => {
+export async function createProductHandler(c: Context<object, string, { out: { json: CreateBody } }>) {
   const body = c.req.valid('json');
   const created = await productService.createProduct(body);
   return c.json(created, 201);
-});
+}
 
-// PATCH /products/:id
-products.patch(
-  '/:id',
-  zValidator('param', productIdParamSchema),
-  zValidator('json', updateProductSchema),
-  async (c) => {
-    const { id } = c.req.valid('param');
-    const body = c.req.valid('json');
-    const updated = await productService.updateProduct(id, body);
-    if (!updated) {
-      return c.json({ error: 'Not Found', message: 'Product not found' }, 404);
-    }
-    return c.json(updated);
-  },
-);
+export async function updateProductHandler(c: Context<object, string, { out: { param: ParamId; json: UpdateBody } }>) {
+  const { id } = c.req.valid('param');
+  const body = c.req.valid('json');
+  const updated = await productService.updateProduct(id, body);
+  if (!updated) {
+    return c.json({ error: 'Not Found', message: 'Product not found' }, 404);
+  }
+  return c.json(updated);
+}
 
-// DELETE /products/:id
-products.delete('/:id', zValidator('param', productIdParamSchema), async (c) => {
+export async function deleteProductHandler(c: Context<object, string, { out: { param: ParamId } }>) {
   const { id } = c.req.valid('param');
   await productService.deleteProduct(id);
   return c.body(null, 204);
-});
-
-export { products as productController };
+}
