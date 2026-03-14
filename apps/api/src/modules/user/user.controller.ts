@@ -1,12 +1,13 @@
 import type { Context } from 'hono';
 import type { z } from 'zod';
-import { createUserSchema } from './dto/create-user.dto.js';
+import { createUserSchema, updateUserSchema } from './dto/create-user.dto.js';
 import { userService } from './user.service.js';
 
-export { createUserSchema };
+export { createUserSchema, updateUserSchema };
 
 type CreateBody = z.infer<typeof createUserSchema>;
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types -- return type inferred from Hono TypedResponse
 export async function listUsersHandler(c: Context) {
   const limit = Number(c.req.query('limit')) || 50;
   const offset = Number(c.req.query('offset')) || 0;
@@ -14,6 +15,7 @@ export async function listUsersHandler(c: Context) {
   return c.json(list);
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types -- return type inferred from Hono TypedResponse
 export async function getUserByIdHandler(c: Context) {
   const id = c.req.param('id');
   const userEntity = await userService.getUserById(id);
@@ -23,15 +25,19 @@ export async function getUserByIdHandler(c: Context) {
   return c.json(userEntity);
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types -- return type inferred from Hono TypedResponse
 export async function createUserHandler(c: Context<object, string, { out: { json: CreateBody } }>) {
   const body = c.req.valid('json');
   const created = await userService.createUser(body);
   return c.json(created, 201);
 }
 
-export async function updateUserHandler(c: Context) {
-  const id = c.req.param('id');
-  const body = await c.req.json<{ name?: string }>().catch(() => ({}));
+type UpdateBody = z.infer<typeof updateUserSchema>;
+
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types -- return type inferred from Hono TypedResponse
+export async function updateUserHandler(c: Context<object, string, { out: { param: { id: string }; json: UpdateBody } }>) {
+  const { id } = c.req.valid('param');
+  const body = c.req.valid('json');
   const name = 'name' in body ? body.name : undefined;
   const updated = await userService.updateUser(id, { name });
   if (!updated) {
@@ -40,6 +46,7 @@ export async function updateUserHandler(c: Context) {
   return c.json(updated);
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type, @typescript-eslint/explicit-module-boundary-types -- return type inferred from Hono TypedResponse
 export async function deleteUserHandler(c: Context) {
   const id = c.req.param('id');
   await userService.deleteUser(id);

@@ -43,6 +43,7 @@ import {
 } from './modules/user/dto/user-response.dto.js';
 import {
   createUserSchema,
+  updateUserSchema,
   listUsersHandler,
   getUserByIdHandler,
   createUserHandler,
@@ -184,7 +185,7 @@ const createUserRoute = createRoute({
 const updateUserRoute = createRoute({
   method: 'patch',
   path: '/users/{id}',
-  request: { params: userIdParamSchema },
+  request: { params: userIdParamSchema, body: { content: { 'application/json': { schema: updateUserSchema } } } },
   responses: {
     200: { description: 'OK', content: { 'application/json': { schema: userResponseSchema } } },
     404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
