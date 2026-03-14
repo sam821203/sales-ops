@@ -1,36 +1,7 @@
-import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
+import { createLazyRoute, createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router';
 import { zodValidator } from '@tanstack/zod-adapter';
 import { productsSearchSchema } from '@/schemas/productsSearch';
 import App from '@/App';
-import { ECommercePage } from '@/views/ECommercePage';
-import { DashboardAnalyticsPage } from '@/views/DashboardAnalyticsPage';
-import { DashboardCrmPage } from '@/views/DashboardCrmPage';
-import { DashboardSalesPage } from '@/views/DashboardSalesPage';
-import { DashboardReportsPage } from '@/views/DashboardReportsPage';
-import { CalendarPage } from '@/views/CalendarPage';
-import { ProfilePage } from '@/views/ProfilePage';
-import { SettingsPage } from '@/views/SettingsPage';
-import { TablesPage } from '@/views/TablesPage';
-import { ChartPage } from '@/views/ChartPage';
-import { AlertsPage } from '@/views/AlertsPage';
-import { ButtonsPage } from '@/views/ButtonsPage';
-import { FormElementsPage } from '@/views/FormElementsPage';
-import { FormLayoutPage } from '@/views/FormLayoutPage';
-import { SignInPage } from '@/views/SignInPage';
-import { LoginPage } from '@/views/LoginPage';
-import { SignUpPage } from '@/views/SignUpPage';
-import { ProductsPage } from '@/views/Products';
-import { ProductDetailPage } from '@/views/ProductDetailPage';
-import { PriceHistoryPage } from '@/views/PriceHistoryPage';
-import { InventoryAdjustmentPage } from '@/views/InventoryAdjustmentPage';
-import { OrdersPage } from '@/views/OrdersPage';
-import { OrderStatusHistoryPage } from '@/views/OrderStatusHistoryPage';
-import { PromotionsPage } from '@/views/PromotionsPage';
-import { PromotionStatusPage } from '@/views/PromotionStatusPage';
-import { PaymentTransactionsPage } from '@/views/PaymentTransactionsPage';
-import { VendorCommissionPage } from '@/views/VendorCommissionPage';
-import { RefundsPage } from '@/views/RefundsPage';
-import { AuditLogPage } from '@/views/AuditLogPage';
 
 const rootRoute = createRootRoute({
   component: App,
@@ -57,104 +28,87 @@ const dashboardIndexRoute = createRoute({
 const dashboardECommerceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/dashboard/ecommerce',
-  component: ECommercePage,
-});
+}).lazy(() => import('@/views/ECommercePage').then((m) => createLazyRoute('/dashboard/ecommerce')({ component: m.ECommercePage })));
 
 const dashboardAnalyticsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/dashboard/analytics',
-  component: DashboardAnalyticsPage,
-});
+}).lazy(() => import('@/views/DashboardAnalyticsPage').then((m) => createLazyRoute('/dashboard/analytics')({ component: m.DashboardAnalyticsPage })));
 
 const dashboardCrmRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/dashboard/crm',
-  component: DashboardCrmPage,
-});
+}).lazy(() => import('@/views/DashboardCrmPage').then((m) => createLazyRoute('/dashboard/crm')({ component: m.DashboardCrmPage })));
 
 const dashboardSalesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/dashboard/sales',
-  component: DashboardSalesPage,
-});
+}).lazy(() => import('@/views/DashboardSalesPage').then((m) => createLazyRoute('/dashboard/sales')({ component: m.DashboardSalesPage })));
 
 const dashboardReportsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/dashboard/reports',
-  component: DashboardReportsPage,
-});
+}).lazy(() => import('@/views/DashboardReportsPage').then((m) => createLazyRoute('/dashboard/reports')({ component: m.DashboardReportsPage })));
 
 const calendarRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/calendar',
-  component: CalendarPage,
-});
+}).lazy(() => import('@/views/CalendarPage').then((m) => createLazyRoute('/calendar')({ component: m.CalendarPage })));
 
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/profile',
-  component: ProfilePage,
-});
+}).lazy(() => import('@/views/ProfilePage').then((m) => createLazyRoute('/profile')({ component: m.ProfilePage })));
 
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/settings',
-  component: SettingsPage,
-});
+}).lazy(() => import('@/views/SettingsPage').then((m) => createLazyRoute('/settings')({ component: m.SettingsPage })));
 
 const tablesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/tables',
-  component: TablesPage,
-});
+}).lazy(() => import('@/views/TablesPage').then((m) => createLazyRoute('/tables')({ component: m.TablesPage })));
 
 const chartRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/chart',
-  component: ChartPage,
-});
+}).lazy(() => import('@/views/ChartPage').then((m) => createLazyRoute('/chart')({ component: m.ChartPage })));
 
 const alertsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/ui/alerts',
-  component: AlertsPage,
-});
+}).lazy(() => import('@/views/AlertsPage').then((m) => createLazyRoute('/ui/alerts')({ component: m.AlertsPage })));
 
 const buttonsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/ui/buttons',
-  component: ButtonsPage,
-});
+}).lazy(() => import('@/views/ButtonsPage').then((m) => createLazyRoute('/ui/buttons')({ component: m.ButtonsPage })));
 
 const formElementsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/forms/form-elements',
-  component: FormElementsPage,
-});
+}).lazy(() => import('@/views/FormElementsPage').then((m) => createLazyRoute('/forms/form-elements')({ component: m.FormElementsPage })));
 
 const formLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/forms/form-layout',
-  component: FormLayoutPage,
-});
+}).lazy(() => import('@/views/FormLayoutPage').then((m) => createLazyRoute('/forms/form-layout')({ component: m.FormLayoutPage })));
 
 const signInRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/signin',
-  component: SignInPage,
-});
+}).lazy(() => import('@/views/SignInPage').then((m) => createLazyRoute('/auth/signin')({ component: m.SignInPage })));
 
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
-  component: LoginPage,
-});
+}).lazy(() => import('@/views/LoginPage').then((m) => createLazyRoute('/login')({ component: m.LoginPage })));
 
 const signUpRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/auth/signup',
-  component: SignUpPage,
-});
+}).lazy(() => import('@/views/SignUpPage').then((m) => createLazyRoute('/auth/signup')({ component: m.SignUpPage })));
 
 const ecommerceRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -164,51 +118,43 @@ const ecommerceRoute = createRoute({
 const productsRoute = createRoute({
   getParentRoute: () => ecommerceRoute,
   path: 'products',
-  component: ProductsPage,
   validateSearch: zodValidator(productsSearchSchema),
-});
+}).lazy(() => import('@/views/Products').then((m) => createLazyRoute('/ecommerce/products')({ component: m.ProductsPage })));
 
 const productDetailRoute = createRoute({
   getParentRoute: () => ecommerceRoute,
   path: 'product/$productId',
-  component: ProductDetailPage,
-});
+}).lazy(() => import('@/views/ProductDetailPage').then((m) => createLazyRoute('/ecommerce/product/$productId')({ component: m.ProductDetailPage })));
 
 const priceHistoryRoute = createRoute({
   getParentRoute: () => ecommerceRoute,
   path: 'price-history',
-  component: PriceHistoryPage,
-});
+}).lazy(() => import('@/views/PriceHistoryPage').then((m) => createLazyRoute('/ecommerce/price-history')({ component: m.PriceHistoryPage })));
 
 const inventoryAdjustmentRoute = createRoute({
   getParentRoute: () => ecommerceRoute,
   path: 'inventory-adjustment',
-  component: InventoryAdjustmentPage,
-});
+}).lazy(() => import('@/views/InventoryAdjustmentPage').then((m) => createLazyRoute('/ecommerce/inventory-adjustment')({ component: m.InventoryAdjustmentPage })));
 
 const ordersRoute = createRoute({
   getParentRoute: () => ecommerceRoute,
   path: 'orders',
-  component: OrdersPage,
-});
+}).lazy(() => import('@/views/OrdersPage').then((m) => createLazyRoute('/ecommerce/orders')({ component: m.OrdersPage })));
 
 const orderStatusHistoryRoute = createRoute({
   getParentRoute: () => ecommerceRoute,
   path: 'order-status-history',
-  component: OrderStatusHistoryPage,
-});
+}).lazy(() => import('@/views/OrderStatusHistoryPage').then((m) => createLazyRoute('/ecommerce/order-status-history')({ component: m.OrderStatusHistoryPage })));
 
 const promotionsRoute = createRoute({
   getParentRoute: () => ecommerceRoute,
   path: 'promotions',
-  component: PromotionsPage,
-});
+}).lazy(() => import('@/views/PromotionsPage').then((m) => createLazyRoute('/ecommerce/promotions')({ component: m.PromotionsPage })));
 
 const promotionStatusRoute = createRoute({
   getParentRoute: () => ecommerceRoute,
   path: 'promotion-status',
-  component: PromotionStatusPage,
-});
+}).lazy(() => import('@/views/PromotionStatusPage').then((m) => createLazyRoute('/ecommerce/promotion-status')({ component: m.PromotionStatusPage })));
 
 const financeRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -218,26 +164,22 @@ const financeRoute = createRoute({
 const paymentTransactionsRoute = createRoute({
   getParentRoute: () => financeRoute,
   path: 'payment-transactions',
-  component: PaymentTransactionsPage,
-});
+}).lazy(() => import('@/views/PaymentTransactionsPage').then((m) => createLazyRoute('/finance/payment-transactions')({ component: m.PaymentTransactionsPage })));
 
 const vendorCommissionRoute = createRoute({
   getParentRoute: () => financeRoute,
   path: 'vendor-commission',
-  component: VendorCommissionPage,
-});
+}).lazy(() => import('@/views/VendorCommissionPage').then((m) => createLazyRoute('/finance/vendor-commission')({ component: m.VendorCommissionPage })));
 
 const refundsRoute = createRoute({
   getParentRoute: () => financeRoute,
   path: 'refunds',
-  component: RefundsPage,
-});
+}).lazy(() => import('@/views/RefundsPage').then((m) => createLazyRoute('/finance/refunds')({ component: m.RefundsPage })));
 
 const auditLogRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/audit-log',
-  component: AuditLogPage,
-});
+}).lazy(() => import('@/views/AuditLogPage').then((m) => createLazyRoute('/audit-log')({ component: m.AuditLogPage })));
 
 const routeTree = rootRoute.addChildren([
   indexRoute,
