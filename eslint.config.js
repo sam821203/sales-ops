@@ -95,35 +95,9 @@ export default defineConfig(
       '@typescript-eslint/consistent-type-assertions': 'off',
     },
   },
-  // api route handlers: return type must be inferred (Hono TypedResponse); explicit Promise<Response> breaks app.ts
-  {
-    files: [
-      'apps/api/src/modules/ecommerce/inventory-adjustment.controller.ts',
-      'apps/api/src/modules/ecommerce/product.controller.ts',
-      'apps/api/src/modules/ecommerce/sku-price-history.controller.ts',
-      'apps/api/src/modules/health/health.controller.ts',
-      'apps/api/src/modules/upload/upload.controller.ts',
-      'apps/api/src/modules/user/user.controller.ts',
-    ],
-    rules: {
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
-    },
-  },
-  // ecommerce services: Prisma-inferred types with include trigger no-unsafe-* (row.sku, row.skus)
-  {
-    files: [
-      'apps/api/src/modules/ecommerce/inventory-adjustment.service.ts',
-      'apps/api/src/modules/ecommerce/product.service.ts',
-      'apps/api/src/modules/ecommerce/sku-price-history.service.ts',
-    ],
-    rules: {
-      '@typescript-eslint/no-unsafe-assignment': 'off',
-      '@typescript-eslint/no-unsafe-member-access': 'off',
-      '@typescript-eslint/no-unsafe-call': 'off',
-      '@typescript-eslint/no-unsafe-return': 'off',
-    },
-  },
+  // Ecommerce: repository layer uses explicit Prisma GetPayload<{ include: ... }> return types
+  // (see inventory-adjustment.repository, product.repository, sku-price-history.repository)
+  // so services get fully typed rows and no file-level no-unsafe-* disables are needed.
   // Web: allow type assertions / unsafe assignment where necessary (env, API response, form attrs)
   {
     files: [
