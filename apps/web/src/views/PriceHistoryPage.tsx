@@ -345,8 +345,8 @@ export function PriceHistoryPage(): React.ReactElement {
         </div>
         <div className="min-h-0 flex-1 overflow-auto">
           <DataBoundary
-            isLoading={listLoading}
-            isError={listError}
+            isLoading={listLoading && listResponse == null}
+            isError={listError && listResponse == null}
             error={listErrorDetail}
             fallbackMessage="Failed to load price history"
             variant="inline"
