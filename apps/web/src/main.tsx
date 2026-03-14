@@ -14,7 +14,6 @@ import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
 import { store } from '@/store';
 import { router } from '@/router';
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Vite env
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 if (!PUBLISHABLE_KEY) {
   throw new Error('Missing Clerk Publishable Key');

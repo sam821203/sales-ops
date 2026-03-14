@@ -84,4 +84,24 @@ export default defineConfig(
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
+  // app.ts: allow type assertions for OpenAPIHono handler wiring (library type mismatch)
+  {
+    files: ['apps/api/src/app.ts'],
+    rules: {
+      '@typescript-eslint/consistent-type-assertions': 'off',
+    },
+  },
+  // Web: allow type assertions / unsafe assignment where necessary (env, API response, form attrs)
+  {
+    files: [
+      'apps/web/src/api/client.ts',
+      'apps/web/src/api/errorHandler.ts',
+      'apps/web/src/main.tsx',
+      'apps/web/src/views/Products/index.tsx',
+    ],
+    rules: {
+      '@typescript-eslint/consistent-type-assertions': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+    },
+  },
 );

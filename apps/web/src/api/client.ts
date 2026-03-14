@@ -7,8 +7,7 @@ function getApiBaseUrl(): string {
     const env = import.meta.env;
     const v =
       env && typeof env === 'object' && 'VITE_API_URL' in env
-        ? // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- Vite env shape
-          (env as { VITE_API_URL?: string }).VITE_API_URL
+        ? (env as { VITE_API_URL?: string }).VITE_API_URL
         : undefined;
     if (typeof v === 'string' && v.trim() !== '') return v;
   } catch {
@@ -45,12 +44,10 @@ export async function request<T>(
   }
 
   if (res.status === 204) {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- 204 No Content
     return undefined as T;
   }
 
   try {
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- API response
     return (text ? JSON.parse(text) : undefined) as T;
   } catch {
     throw new Error('Invalid JSON response');
