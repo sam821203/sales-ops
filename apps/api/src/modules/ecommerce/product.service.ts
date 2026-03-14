@@ -5,6 +5,7 @@ import type {
   ProductSortBy,
   UpdateProductInput,
 } from './dto/ecommerce.dto.js';
+import { toOptimizedImageUrl } from '../../lib/cloudinary.js';
 import { toSharedProductStatus } from './mappers/enum.mapper.js';
 import { productRepository } from './product.repository.js';
 
@@ -25,7 +26,7 @@ const toProduct = (row: PrismaProductWithSkusNonNull): Product => ({
     stock: sku.stock,
     attributes: isStringRecord(sku.attributes) ? sku.attributes : {},
   })),
-  imageUrl: row.imageUrl || undefined,
+  imageUrl: toOptimizedImageUrl(row.imageUrl),
 });
 
 type ProductStatus = 'Draft' | 'Active' | 'Inactive';
