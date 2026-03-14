@@ -11,21 +11,22 @@ import { productRepository } from './product.repository.js';
 type PrismaProductWithSkus = Awaited<ReturnType<typeof productRepository.findById>>;
 type PrismaProductWithSkusNonNull = NonNullable<PrismaProductWithSkus>;
 
-function toProduct(row: PrismaProductWithSkusNonNull): Product {
-  return {
-    id: row.id,
-    name: row.name,
-    status: toSharedProductStatus(row.status),
-    skus: row.skus.map((sku) => ({
-      id: sku.id,
-      productId: sku.productId,
-      price: sku.price,
-      stock: sku.stock,
-      attributes: sku.attributes as Record<string, string>,
-    })),
-    imageUrl: row.imageUrl || undefined,
-  };
-}
+const isStringRecord = (v: unknown): v is Record<string, string> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v) && Object.values(v).every((x) => typeof x === 'string');
+
+const toProduct = (row: PrismaProductWithSkusNonNull): Product => ({
+  id: row.id,
+  name: row.name,
+  status: toSharedProductStatus(row.status),
+  skus: row.skus.map((sku) => ({
+    id: sku.id,
+    productId: sku.productId,
+    price: sku.price,
+    stock: sku.stock,
+    attributes: isStringRecord(sku.attributes) ? sku.attributes : {},
+  })),
+  imageUrl: row.imageUrl || undefined,
+});
 
 type ProductStatus = 'Draft' | 'Active' | 'Inactive';
 

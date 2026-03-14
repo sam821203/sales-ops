@@ -23,7 +23,7 @@ import { inventoryAdjustmentTypeValues } from '@/constants/inventoryAdjustment';
 import { DEFAULT_TABLE_PAGE_SIZE, DEFAULT_TABLE_PAGE_SIZE_OPTIONS } from '@/constants/pagination';
 import { formatKeyValuePairs } from '@/utils/format';
 
-function formatDateTime(date: Date | string): string {
+const formatDateTime = (date: Date | string): string => {
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleDateString('en-US', {
     month: 'short',
@@ -32,7 +32,7 @@ function formatDateTime(date: Date | string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
+};
 
 export function InventoryAdjustmentPage(): React.ReactElement {
   const notification = useNotification();

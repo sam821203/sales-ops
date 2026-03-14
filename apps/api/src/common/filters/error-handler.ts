@@ -7,7 +7,7 @@ type ErrorLike = Error & { code?: string; statusCode?: number };
 /**
  * Central error handler. Masks internal details in production.
  */
-export function errorHandler(err: ErrorLike, c: Context): Response {
+export const errorHandler = (err: ErrorLike, c: Context): Response => {
   // Log server-side (never expose stack to client in production)
   console.error('[Error]', err.message, env.NODE_ENV === 'development' ? err.stack : '');
 
@@ -29,4 +29,4 @@ export function errorHandler(err: ErrorLike, c: Context): Response {
       : err.message;
 
   return c.json({ error: 'Internal Server Error', message }, 500);
-}
+};

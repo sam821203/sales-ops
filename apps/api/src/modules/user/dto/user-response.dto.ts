@@ -12,11 +12,9 @@ export const listUsersResponseSchema = z.array(userResponseSchema);
 
 export type UserResponse = z.infer<typeof userResponseSchema>;
 
-export function toUserResponse(user: User): UserResponse {
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    createdAt: user.createdAt.toISOString(),
-  };
-}
+export const toUserResponse = (user: User): UserResponse => ({
+  id: user.id,
+  email: user.email,
+  name: user.name,
+  createdAt: user.createdAt.toISOString(),
+});

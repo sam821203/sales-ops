@@ -1,0 +1,37 @@
+---
+description: Function style convention — arrow functions for non-components, function declarations for React components; use when writing or reviewing TS/TSX
+globs: "*.ts,*.tsx"
+alwaysApply: false
+---
+
+# Function Style Convention
+
+Unify function style across the codebase:
+
+## Use arrow functions
+
+For **all non-component code** (helpers, API functions, handlers, mappers, hooks, async functions, etc.):
+
+- **Format**: `const name = (params): ReturnType => { ... }` or `export const name = (params): ReturnType => { ... }`
+- **Async**: `export const name = async (params): Promise<ReturnType> => { ... }`
+- **Single expression**: `const name = (x: T): R => expression;` when the body is a single return.
+
+Examples: `mapHttpError`, `getApiUrl`, `request`, `buildProductsQuery`, `getProducts`, `toUserResponse`, `toListItem`, `healthHandler`, `useNotification`, `useLocalStorage`, `getErrorMessage`, `formatDateTime`, `notifyError`.
+
+## Use `function` declarations
+
+For **React components** (anything that returns JSX or is used as `<Component />`):
+
+- **Format**: `export function ComponentName(props): React.ReactElement` or `function ComponentName(props) { ... }`
+- Keep subcomponents (e.g. `ProductImageUploadField`, `LayoutContent`, `GroupLinks`) and providers (e.g. `NotificationProvider`, `DataBoundary`) as `function` as well.
+
+Examples: `ProductsPage`, `ProductDetailPage`, `DataBoundary`, `ProductEditModal`, `NotificationProvider`, `DefaultLayout`, `AuthGuard`, `SidebarProvider`.
+
+## Summary
+
+| Kind | Style |
+|------|--------|
+| React component / returns JSX | `function Name()` |
+| Everything else (utils, API, handlers, hooks, mappers) | `const name = () =>` |
+
+Preserve existing explicit return types and type annotations when converting.

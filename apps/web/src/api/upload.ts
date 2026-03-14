@@ -1,7 +1,7 @@
 import { getApiUrl, request } from '@/api/client';
 import type { UploadResponse } from '@/api/types';
 
-export async function uploadProductImage(file: File): Promise<UploadResponse> {
+export const uploadProductImage = async (file: File): Promise<UploadResponse> => {
   const formData = new FormData();
   formData.append('file', file);
   const url = getApiUrl('/upload');
@@ -9,4 +9,4 @@ export async function uploadProductImage(file: File): Promise<UploadResponse> {
     method: 'POST',
     body: formData,
   });
-}
+};

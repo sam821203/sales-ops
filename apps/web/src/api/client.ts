@@ -2,7 +2,7 @@ import { hc } from 'hono/client';
 import type { AppType } from '@salesops/api/app';
 import { mapHttpError } from '@/api/errorHandler';
 
-function getApiBaseUrl(): string {
+const getApiBaseUrl = (): string => {
   try {
     const env = import.meta.env;
     const v =
@@ -14,22 +14,22 @@ function getApiBaseUrl(): string {
     // ignore
   }
   return 'http://localhost:3000';
-}
+};
 const apiBaseUrl = getApiBaseUrl();
 
-export function getApiUrl(path: string): string {
+export const getApiUrl = (path: string): string => {
   const normalized = path.startsWith('/') ? path : `/${path}`;
   return `${apiBaseUrl}/api${normalized}`;
-}
+};
 
 /**
  * Centralized fetch wrapper. Uses res.ok to throw on 4xx/5xx so TanStack Query
  * receives errors. Parses JSON safely; treats 204 as success with undefined.
  */
-export async function request<T>(
+export const request = async <T>(
   input: RequestInfo,
   init?: RequestInit
-): Promise<T> {
+): Promise<T> => {
   const res = await fetch(input, init);
   const text = await res.text();
 
@@ -52,7 +52,7 @@ export async function request<T>(
   } catch {
     throw new Error('Invalid JSON response');
   }
-}
+};
 
 /** Type-only: RPC client shape for InferResponseType in types.ts. Do not use for network calls. */
 export type RpcClient = ReturnType<typeof hc<AppType>>;

@@ -21,7 +21,7 @@ import { getProductById, getProducts, productKeys } from '@/api/products';
 import { DEFAULT_TABLE_PAGE_SIZE, DEFAULT_TABLE_PAGE_SIZE_OPTIONS } from '@/constants/pagination';
 import { formatPrice, formatKeyValuePairs } from '@/utils/format';
 
-function formatDateTime(date: Date | string): string {
+const formatDateTime = (date: Date | string): string => {
   const d = typeof date === 'string' ? new Date(date) : date;
   return d.toLocaleDateString('en-US', {
     month: 'short',
@@ -30,7 +30,7 @@ function formatDateTime(date: Date | string): string {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
+};
 
 export function PriceHistoryPage(): React.ReactElement {
   const notification = useNotification();

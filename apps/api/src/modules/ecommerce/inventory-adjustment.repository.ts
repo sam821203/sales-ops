@@ -1,7 +1,12 @@
 import type { CreateInventoryAdjustmentInput } from './dto/ecommerce.dto.js';
 import { prisma } from '../../lib/prisma.js';
 
-function buildWhere(q?: string) {
+type OrCondition =
+  | { sku: { product: { name: { contains: string } } } }
+  | { skuId: number };
+type WhereClause = { OR: OrCondition[] };
+
+const buildWhere = (q?: string): WhereClause | undefined => {
   const qTrim = q?.trim();
   if (!qTrim) return undefined;
   const or: Array<
@@ -10,7 +15,7 @@ function buildWhere(q?: string) {
   const id = /^\d+$/.test(qTrim) ? parseInt(qTrim, 10) : NaN;
   if (!Number.isNaN(id)) or.push({ skuId: id });
   return { OR: or };
-}
+};
 
 /** Sentinel returned by create() when Decrease would make stock negative. */
 export const INSUFFICIENT_STOCK = 'INSUFFICIENT_STOCK' as const;
@@ -19,6 +24,7 @@ export const INSUFFICIENT_STOCK = 'INSUFFICIENT_STOCK' as const;
  * Data access only. No business logic; all SQL/ORM here.
  */
 export const inventoryAdjustmentRepository = {
+  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma include */
   async findManyAndCount(
     page: number,
     pageSize: number,
@@ -41,6 +47,7 @@ export const inventoryAdjustmentRepository = {
     });
   },
 
+  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma include */
   async findById(id: number) {
     return prisma.inventoryAdjustment.findUnique({
       where: { id },
@@ -48,6 +55,7 @@ export const inventoryAdjustmentRepository = {
     });
   },
 
+  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma */
   async create(data: CreateInventoryAdjustmentInput) {
     return prisma.$transaction(async (tx) => {
       const sku = await tx.sku.findUnique({

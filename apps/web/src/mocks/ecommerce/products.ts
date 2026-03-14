@@ -2,11 +2,10 @@ import type { ProductListItem, Category, Brand } from '@/api/types';
 import { STANDARD_ATTRIBUTE_DEFINITIONS } from '@/constants/attributeDefinitions';
 import type { AttributeDefinition } from '@/constants/attributeDefinitions';
 
-function pickAttributeDefinitions(keys: string[]): AttributeDefinition[] {
-  return keys
+const pickAttributeDefinitions = (keys: string[]): AttributeDefinition[] =>
+  keys
     .map((key) => STANDARD_ATTRIBUTE_DEFINITIONS.find((d) => d.key === key))
-    .filter(Boolean) as AttributeDefinition[];
-}
+    .filter((d): d is AttributeDefinition => d != null);
 
 export const categoryMocks: Category[] = [
   { id: 1, name: 'Audio' },

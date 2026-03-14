@@ -15,9 +15,8 @@ export interface DataBoundaryProps {
   className?: string;
 }
 
-function getErrorMessage(error: unknown, fallback: string): string {
-  return error instanceof Error ? error.message : fallback;
-}
+const getErrorMessage = (error: unknown, fallback: string): string =>
+  error instanceof Error ? error.message : fallback;
 
 export function DataBoundary({
   isLoading,

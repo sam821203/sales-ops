@@ -2,7 +2,12 @@ import type { CreateSkuPriceHistoryInput } from './dto/ecommerce.dto.js';
 import { prisma } from '../../lib/prisma.js';
 
 /** Product name search uses contains; on SQLite, LIKE is case-sensitive. */
-function buildWhere(q?: string) {
+type OrCondition =
+  | { sku: { product: { name: { contains: string } } } }
+  | { skuId: number };
+type WhereClause = { OR: OrCondition[] };
+
+const buildWhere = (q?: string): WhereClause | undefined => {
   const qTrim = q?.trim();
   if (!qTrim) return undefined;
   const or: Array<
@@ -11,7 +16,7 @@ function buildWhere(q?: string) {
   const id = /^\d+$/.test(qTrim) ? parseInt(qTrim, 10) : NaN;
   if (!Number.isNaN(id)) or.push({ skuId: id });
   return { OR: or };
-}
+};
 
 /** Sentinel returned by create() when SKU price equals newPrice (no-op). */
 export const PRICE_UNCHANGED = 'PRICE_UNCHANGED' as const;
@@ -20,6 +25,7 @@ export const PRICE_UNCHANGED = 'PRICE_UNCHANGED' as const;
  * Data access only. No business logic; all SQL/ORM here.
  */
 export const skuPriceHistoryRepository = {
+  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma include */
   async findManyAndCount(
     page: number,
     pageSize: number,
@@ -42,6 +48,7 @@ export const skuPriceHistoryRepository = {
     });
   },
 
+  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma include */
   async findById(id: number) {
     return prisma.skuPriceHistory.findUnique({
       where: { id },
@@ -49,6 +56,7 @@ export const skuPriceHistoryRepository = {
     });
   },
 
+  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma */
   async create(data: CreateSkuPriceHistoryInput) {
     const effectiveDate = data.effectiveDate ?? new Date();
     return prisma.$transaction(async (tx) => {

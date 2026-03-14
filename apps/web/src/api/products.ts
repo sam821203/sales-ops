@@ -14,7 +14,7 @@ export const productKeys = {
   detail: (id: number) => [...productKeys.all, 'detail', id] as const,
 };
 
-function buildProductsQuery(params: ListProductsQuery): string {
+const buildProductsQuery = (params: ListProductsQuery): string => {
   const search = new URLSearchParams();
   search.set('page', String(params.page));
   search.set('pageSize', String(params.pageSize));
@@ -24,25 +24,25 @@ function buildProductsQuery(params: ListProductsQuery): string {
   if (params.q != null && params.q.trim() !== '') search.set('q', params.q.trim());
   const qs = search.toString();
   return qs ? `?${qs}` : '';
-}
+};
 
-export async function getProducts(
+export const getProducts = async (
   params: ListProductsQuery
-): Promise<ProductsListResponse> {
+): Promise<ProductsListResponse> => {
   const url = getApiUrl('/products') + buildProductsQuery(params);
   return request<ProductsListResponse>(url);
-}
+};
 
-export async function getProductById(
+export const getProductById = async (
   id: number
-): Promise<ProductsDetailResponse> {
+): Promise<ProductsDetailResponse> => {
   const url = getApiUrl(`/products/${id}`);
   return request<ProductsDetailResponse>(url);
-}
+};
 
-export async function createProduct(
+export const createProduct = async (
   body: CreateProductInput
-): Promise<ProductsDetailResponse> {
+): Promise<ProductsDetailResponse> => {
   const url = getApiUrl('/products');
   return request<ProductsDetailResponse>(url, {
     method: 'POST',
@@ -54,12 +54,12 @@ export async function createProduct(
       ...(body.imageUrl != null && body.imageUrl !== '' && { imageUrl: body.imageUrl }),
     }),
   });
-}
+};
 
-export async function updateProduct(
+export const updateProduct = async (
   id: number,
   body: UpdateProductInput
-): Promise<ProductsDetailResponse> {
+): Promise<ProductsDetailResponse> => {
   const payload: Record<string, unknown> = {};
   if (body.name !== undefined) payload.name = body.name;
   if (body.status !== undefined) payload.status = body.status;
@@ -77,9 +77,9 @@ export async function updateProduct(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-}
+};
 
-export async function deleteProduct(id: number): Promise<void> {
+export const deleteProduct = async (id: number): Promise<void> => {
   const url = getApiUrl(`/products/${id}`);
   await request<void>(url, { method: 'DELETE' });
-}
+};
