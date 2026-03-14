@@ -1,6 +1,6 @@
 # Generate English issue markdown
 
-When I run this command, generate a **single, copyable English issue** in Markdown format that I can paste into GitHub, GitLab, Jira, or similar. The issue must be **based on the current branch and all commits on that branch**.
+When I run this command, generate a **single, copyable English issue** in Markdown format that I can paste into GitHub, GitLab, Jira, or similar. Output it inside a **fenced code block** (language: `markdown`) so I can **click the copy button** on the block to copy in one go. The issue must be **based on the current branch and all commits on that branch**.
 
 ## 1. Analyze current branch and its commits
 
@@ -44,10 +44,21 @@ Use this structure (adapt section names if the user prefers GitHub/GitLab style)
 ...
 ```
 
-## 3. Output for copying
+## 3. Output for click-to-copy
 
-- **Lead with the issue markdown.** Do not add a preamble (e.g. "Here is the issue..." or "Based on the branch..."). Start the reply with the first line of the issue (e.g. `## Title`).
-- Output **only** the issue markdown (the content inside the code block in section 2), so the user can select-all and copy in one go.
-- Do **not** wrap the issue in a code fence (no ` ```markdown `). Output raw markdown so paste into GitHub/GitLab/Jira works directly.
+- **Lead with the issue.** Do not add a preamble (e.g. "Here is the issue..." or "Based on the branch..."). Start the reply with a code fence so the user can use the **copy button** on the code block.
+- Wrap the **entire** issue markdown in a **single fenced code block** with language `markdown`:
+
+  ````markdown
+  ```markdown
+  ## Title
+  ...
+
+  ## Description
+  ...
+  ```
+  ````
+
+  This way the rendered reply shows a code block with a copy button (click to copy the full markdown in one go). Pasting into GitHub/GitLab/Jira will preserve the markdown.
 - Write in clear, professional English; keep it concise.
 - Optionally add a short line under **Additional context** like: `Branch: <branch-name>` so the issue is traceable to the branch.

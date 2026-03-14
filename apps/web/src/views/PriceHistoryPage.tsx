@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { SkuPriceHistoryListItem } from '@salesops/shared';
 import { ArrowDownOutlined, ArrowUpOutlined, EyeOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { Button, Form, Input, InputNumber, message, Modal, Select, Spin, Table, Tag } from 'antd';
 import type { TableColumnsType } from 'antd';
@@ -11,6 +10,10 @@ import {
   getPriceHistoryList,
   priceHistoryKeys,
 } from '@/api/priceHistory';
+import type {
+  PriceHistoryItem,
+  PriceHistoryListResponse,
+} from '@/api/types';
 import { getProductById, getProducts, productKeys } from '@/api/products';
 import { DEFAULT_TABLE_PAGE_SIZE, DEFAULT_TABLE_PAGE_SIZE_OPTIONS } from '@/constants/pagination';
 import { formatPrice, formatKeyValuePairs } from '@/utils/format';
@@ -33,7 +36,7 @@ export function PriceHistoryPage() {
   const [q, setQ] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [detailItem, setDetailItem] = useState<SkuPriceHistoryListItem | null>(null);
+  const [detailItem, setDetailItem] = useState<PriceHistoryItem | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [detailId, setDetailId] = useState<number | null>(null);
 
@@ -51,7 +54,7 @@ export function PriceHistoryPage() {
     isLoading: listLoading,
     isError: listError,
     error: listErrorDetail,
-  } = useQuery({
+  } = useQuery<PriceHistoryListResponse>({
     queryKey: priceHistoryKeys.list(listParams),
     queryFn: () => getPriceHistoryList(listParams),
   });
@@ -128,10 +131,10 @@ export function PriceHistoryPage() {
     onError: (e: Error) => message.error(e.message || 'Failed to create price change'),
   });
 
-  const items = listResponse?.items ?? [];
+  const items: PriceHistoryItem[] = listResponse?.items ?? [];
   const total = listResponse?.total ?? 0;
 
-  const openDetail = (record: SkuPriceHistoryListItem) => {
+  const openDetail = (record: PriceHistoryItem) => {
     setDetailItem(record);
     setDetailId(record.id);
     setDetailModalOpen(true);
@@ -159,7 +162,10 @@ export function PriceHistoryPage() {
 
   const productOptions = useMemo(() => {
     const list = productsResponse?.items ?? [];
-    const options = list.map((p) => ({ label: `${p.name} (P${p.id})`, value: p.id }));
+    const options = list.map((p) => ({
+      label: `${p.name} (P${p.id})`,
+      value: p.id,
+    }));
     if (selectedProduct && !list.some((p) => p.id === selectedProduct.id)) {
       options.unshift({
         label: `${selectedProduct.name} (P${selectedProduct.id})`,
@@ -171,10 +177,11 @@ export function PriceHistoryPage() {
 
   const skuOptions = useMemo(() => {
     const skus = selectedProduct?.skus ?? [];
-    return skus.map((s) => ({
+    const options = skus.map((s) => ({
       label: `SKU #${s.id} – ${formatPrice(s.price)}${Object.keys(s.attributes ?? {}).length > 0 ? ` (${formatKeyValuePairs(s.attributes ?? {})})` : ''}`,
       value: s.id,
     }));
+    return options;
   }, [selectedProduct?.skus]);
 
   const selectedSku = useMemo(
@@ -182,12 +189,12 @@ export function PriceHistoryPage() {
     [selectedProduct?.skus, addSkuId]
   );
 
-  const columns: TableColumnsType<SkuPriceHistoryListItem> = useMemo(
+  const columns: TableColumnsType<PriceHistoryItem> = useMemo(
     () => [
       {
         title: 'Product',
         key: 'product',
-        render: (_: unknown, record: SkuPriceHistoryListItem) => (
+        render: (_: unknown, record: PriceHistoryItem) => (
           <div>
             <span className="font-medium">{record.productName}</span>
             <span className="ml-2 text-xs text-gray-500 dark:text-gray-400 font-mono">
@@ -199,7 +206,7 @@ export function PriceHistoryPage() {
       {
         title: 'SKU',
         key: 'sku',
-        render: (_: unknown, record: SkuPriceHistoryListItem) => (
+        render: (_: unknown, record: PriceHistoryItem) => (
           <div className="text-sm">
             <span className="font-mono text-gray-600 dark:text-gray-300">#{record.skuId}</span>
             {Object.keys(record.skuAttributes ?? {}).length > 0 && (
@@ -227,7 +234,7 @@ export function PriceHistoryPage() {
       {
         title: 'Change',
         key: 'change',
-        render: (_: unknown, record: SkuPriceHistoryListItem) => {
+        render: (_: unknown, record: PriceHistoryItem) => {
           const diff = record.newPrice - record.oldPrice;
           const isIncrease = diff > 0;
           const isUnchanged = diff === 0;
@@ -266,7 +273,7 @@ export function PriceHistoryPage() {
         title: '',
         key: 'actions',
         width: 64,
-        render: (_: unknown, record: SkuPriceHistoryListItem) => (
+        render: (_: unknown, record: PriceHistoryItem) => (
           <Button
             type="text"
             icon={<EyeOutlined />}
@@ -279,7 +286,8 @@ export function PriceHistoryPage() {
     []
   );
 
-  const displayDetail = detailRecord ?? detailItem;
+  const displayDetail: PriceHistoryItem | null =
+    (detailRecord ?? detailItem) ?? null;
 
   return (
     <div className="space-y-6">

@@ -16,8 +16,16 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio"
   },
+  "exports": {
+    "./app": {
+      "types": "./dist/src/app.d.ts",
+      "import": "./dist/src/app.js",
+      "default": "./dist/src/app.js"
+    }
+  },
   "dependencies": {
     "@hono/node-server": "^1.13.0",
+    "@hono/zod-openapi": "^0.19.10",
     "@hono/zod-validator": "^0.4.2",
     "@prisma/adapter-better-sqlite3": "^7.0.0",
     "@prisma/client": "^7.0.0",

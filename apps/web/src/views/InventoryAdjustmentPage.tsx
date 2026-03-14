@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { InventoryAdjustmentListItem } from '@salesops/shared';
 import { ArrowDownOutlined, ArrowUpOutlined, EyeOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
 import { Button, Form, Input, InputNumber, message, Modal, Select, Spin, Table, Tag } from 'antd';
 import type { TableColumnsType } from 'antd';
@@ -12,6 +11,10 @@ import {
   getInventoryAdjustmentsList,
   inventoryAdjustmentKeys,
 } from '@/api/inventoryAdjustments';
+import type {
+  InventoryAdjustmentItem,
+  InventoryAdjustmentsListResponse,
+} from '@/api/types';
 import { getProductById, getProducts, productKeys } from '@/api/products';
 import { DEFAULT_TABLE_PAGE_SIZE, DEFAULT_TABLE_PAGE_SIZE_OPTIONS } from '@/constants/pagination';
 import { formatKeyValuePairs } from '@/utils/format';
@@ -37,7 +40,7 @@ export function InventoryAdjustmentPage() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [detailId, setDetailId] = useState<number | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
-  const [detailItem, setDetailItem] = useState<InventoryAdjustmentListItem | null>(null);
+  const [detailItem, setDetailItem] = useState<InventoryAdjustmentItem | null>(null);
 
   const [addSkuId, setAddSkuId] = useState<number | undefined>(undefined);
   const [addProductSearch, setAddProductSearch] = useState('');
@@ -65,7 +68,7 @@ export function InventoryAdjustmentPage() {
     isLoading: listLoading,
     isError: listError,
     error: listErrorDetail,
-  } = useQuery({
+  } = useQuery<InventoryAdjustmentsListResponse>({
     queryKey: inventoryAdjustmentKeys.list(listParams),
     queryFn: () => getInventoryAdjustmentsList(listParams),
   });
@@ -134,10 +137,10 @@ export function InventoryAdjustmentPage() {
       message.error(e.message || 'Failed to create inventory adjustment'),
   });
 
-  const items = listResponse?.items ?? [];
+  const items: InventoryAdjustmentItem[] = listResponse?.items ?? [];
   const total = listResponse?.total ?? 0;
 
-  const openDetail = (record: InventoryAdjustmentListItem) => {
+  const openDetail = (record: InventoryAdjustmentItem) => {
     setDetailItem(record);
     setDetailId(record.id);
     setDetailModalOpen(true);
@@ -170,11 +173,14 @@ export function InventoryAdjustmentPage() {
 
   const productOptions = useMemo(() => {
     const list = productsResponse?.items ?? [];
-    const options = list.map((p) => ({
-      label: `${p.name} (P${p.id})`,
-      value: p.id,
+    const options = list.map((product: { id: number; name: string }) => ({
+      label: `${product.name} (P${product.id})`,
+      value: product.id,
     }));
-    if (selectedProduct && !list.some((p) => p.id === selectedProduct.id)) {
+    if (
+      selectedProduct &&
+      !list.some((product: { id: number }) => product.id === selectedProduct.id)
+    ) {
       options.unshift({
         label: `${selectedProduct.name} (P${selectedProduct.id})`,
         value: selectedProduct.id,
@@ -185,18 +191,25 @@ export function InventoryAdjustmentPage() {
 
   const skuOptions = useMemo(() => {
     const skus = selectedProduct?.skus ?? [];
-    return skus.map((s) => ({
-      label: `SKU #${s.id}${Object.keys(s.attributes ?? {}).length > 0 ? ` (${formatKeyValuePairs(s.attributes ?? {})})` : ''} – Stock: ${s.stock}`,
-      value: s.id,
-    }));
+    const options = skus.map(
+      (sku: { id: number; stock: number; attributes?: Record<string, string> }) => ({
+        label: `SKU #${sku.id}${
+          Object.keys(sku.attributes ?? {}).length > 0
+            ? ` (${formatKeyValuePairs(sku.attributes ?? {})})`
+            : ''
+        } – Stock: ${sku.stock}`,
+        value: sku.id,
+      })
+    );
+    return options;
   }, [selectedProduct?.skus]);
 
-  const columns: TableColumnsType<InventoryAdjustmentListItem> = useMemo(
+  const columns: TableColumnsType<InventoryAdjustmentItem> = useMemo(
     () => [
       {
         title: 'Product',
         key: 'product',
-        render: (_: unknown, record: InventoryAdjustmentListItem) => (
+        render: (_: unknown, record: InventoryAdjustmentItem) => (
           <div>
             <span className="font-medium">{record.productName}</span>
             <span className="ml-2 text-xs text-gray-500 dark:text-gray-400 font-mono">
@@ -208,7 +221,7 @@ export function InventoryAdjustmentPage() {
       {
         title: 'SKU',
         key: 'sku',
-        render: (_: unknown, record: InventoryAdjustmentListItem) => (
+        render: (_: unknown, record: InventoryAdjustmentItem) => (
           <div className="text-sm">
             <span className="font-mono text-gray-600 dark:text-gray-300">
               #{record.skuId}
@@ -271,7 +284,7 @@ export function InventoryAdjustmentPage() {
         title: '',
         key: 'actions',
         width: 64,
-        render: (_: unknown, record: InventoryAdjustmentListItem) => (
+        render: (_: unknown, record: InventoryAdjustmentItem) => (
           <Button
             type="text"
             icon={<EyeOutlined />}
@@ -284,7 +297,8 @@ export function InventoryAdjustmentPage() {
     []
   );
 
-  const displayDetail = detailRecord ?? detailItem;
+  const displayDetail: InventoryAdjustmentItem | null =
+    (detailRecord ?? detailItem) ?? null;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-6">
@@ -372,7 +386,7 @@ export function InventoryAdjustmentPage() {
         open={detailModalOpen}
         onCancel={closeDetail}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
       >
         {detailLoading && !displayDetail ? (
           <Spin />
@@ -424,7 +438,7 @@ export function InventoryAdjustmentPage() {
           addForm.resetFields();
         }}
         footer={null}
-        destroyOnClose
+        destroyOnHidden
         maskClosable={false}
         closable
         centered

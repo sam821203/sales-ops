@@ -1,28 +1,11 @@
-import { getApiUrl } from '@/api/client';
+import { apiClient } from '@/api/client';
+import type { UploadResponse } from '@/api/types';
 
-export async function uploadProductImage(file: File): Promise<{ url: string }> {
-  const url = getApiUrl('/upload');
-  const formData = new FormData();
-  formData.append('file', file);
-
-  const res = await fetch(url, {
-    method: 'POST',
-    body: formData,
+export async function uploadProductImage(file: File): Promise<UploadResponse> {
+  const res = await apiClient.upload.$post({
+    form: {
+      file,
+    },
   });
-
-  if (!res.ok) {
-    const text = await res.text();
-    let message = text;
-    try {
-      const json = JSON.parse(text) as { message?: string };
-      message = json.message ?? text;
-    } catch {
-      // use text as-is
-    }
-    const err = new Error(message) as Error & { status?: number };
-    err.status = res.status;
-    throw err;
-  }
-
-  return res.json() as Promise<{ url: string }>;
+  return res.json();
 }

@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import type { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { Readable } from 'node:stream';
 import { fileTypeFromBuffer } from 'file-type';
@@ -41,11 +41,7 @@ function uploadBufferToCloudinary(buffer: Buffer): Promise<{ secure_url: string 
   });
 }
 
-const upload = new Hono();
-
-// TODO: Apply authentication middleware when auth is implemented — POST /upload is currently public and can consume Cloudinary quota.
-
-upload.post('/', async (c) => {
+export async function uploadHandler(c: Context) {
   const config = configureCloudinary();
   if (!config) {
     throw new HTTPException(503, {
@@ -84,6 +80,4 @@ upload.post('/', async (c) => {
     console.error('Cloudinary upload error:', err);
     throw new HTTPException(502, { message: 'Upload failed' });
   }
-});
-
-export { upload as uploadController };
+}
