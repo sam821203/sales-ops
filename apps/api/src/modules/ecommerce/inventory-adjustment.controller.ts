@@ -21,13 +21,13 @@ type ListQuery = z.infer<typeof listInventoryAdjustmentsQuerySchema>;
 type ParamId = z.infer<typeof inventoryAdjustmentIdParamSchema>;
 type CreateBody = z.infer<typeof createInventoryAdjustmentSchema>;
 
-export const listInventoryAdjustmentsHandler = async (c: Context<object, string, { out: { query: ListQuery } }>) => {
+export const listInventoryAdjustmentsHandler = async (c: Context<object, string, { out: { query: ListQuery } }>): Promise<Response> => {
   const { page, pageSize, q } = c.req.valid('query');
   const list = await inventoryAdjustmentService.getList(page, pageSize, { q });
   return c.json(list);
 };
 
-export const getInventoryAdjustmentByIdHandler = async (c: Context<object, string, { out: { param: ParamId } }>) => {
+export const getInventoryAdjustmentByIdHandler = async (c: Context<object, string, { out: { param: ParamId } }>): Promise<Response> => {
   const { id } = c.req.valid('param');
   const item = await inventoryAdjustmentService.getById(id);
   if (!item) {
@@ -39,7 +39,7 @@ export const getInventoryAdjustmentByIdHandler = async (c: Context<object, strin
   return c.json(item);
 };
 
-export const createInventoryAdjustmentHandler = async (c: Context<object, string, { out: { json: CreateBody } }>) => {
+export const createInventoryAdjustmentHandler = async (c: Context<object, string, { out: { json: CreateBody } }>): Promise<Response> => {
   try {
     const body = c.req.valid('json');
     const created = await inventoryAdjustmentService.create(body);

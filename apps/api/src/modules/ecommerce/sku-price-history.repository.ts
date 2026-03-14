@@ -1,5 +1,11 @@
 import type { CreateSkuPriceHistoryInput } from './dto/ecommerce.dto.js';
+import type { SkuPriceHistoryGetPayload } from '../../../generated/prisma/models/SkuPriceHistory.js';
 import { prisma } from '../../lib/prisma.js';
+
+/** Prisma payload for SkuPriceHistory with sku and product included (matches our queries). */
+type SkuPriceHistoryWithSkuAndProduct = SkuPriceHistoryGetPayload<{
+  include: { sku: { include: { product: true } } };
+}>;
 
 /** Product name search uses contains; on SQLite, LIKE is case-sensitive. */
 type OrCondition =
@@ -25,12 +31,11 @@ export const PRICE_UNCHANGED = 'PRICE_UNCHANGED' as const;
  * Data access only. No business logic; all SQL/ORM here.
  */
 export const skuPriceHistoryRepository = {
-  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma include */
   async findManyAndCount(
     page: number,
     pageSize: number,
     options: { q?: string }
-  ) {
+  ): Promise<{ items: SkuPriceHistoryWithSkuAndProduct[]; total: number }> {
     const where = buildWhere(options.q);
     const skip = (page - 1) * pageSize;
     return prisma.$transaction(async (tx) => {
@@ -48,16 +53,16 @@ export const skuPriceHistoryRepository = {
     });
   },
 
-  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma include */
-  async findById(id: number) {
+  async findById(id: number): Promise<SkuPriceHistoryWithSkuAndProduct | null> {
     return prisma.skuPriceHistory.findUnique({
       where: { id },
       include: { sku: { include: { product: true } } },
     });
   },
 
-  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma */
-  async create(data: CreateSkuPriceHistoryInput) {
+  async create(
+    data: CreateSkuPriceHistoryInput
+  ): Promise<SkuPriceHistoryWithSkuAndProduct | null | typeof PRICE_UNCHANGED> {
     const effectiveDate = data.effectiveDate ?? new Date();
     return prisma.$transaction(async (tx) => {
       const sku = await tx.sku.findUnique({

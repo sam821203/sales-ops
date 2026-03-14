@@ -3,7 +3,11 @@ import type {
   ProductSortBy,
   UpdateProductInput,
 } from './dto/ecommerce.dto.js';
+import type { ProductGetPayload } from '../../../generated/prisma/models/Product.js';
 import { prisma } from '../../lib/prisma.js';
+
+/** Prisma payload for Product with skus included (matches our queries). */
+type ProductWithSkus = ProductGetPayload<{ include: { skus: true } }>;
 
 type ProductStatus = 'Draft' | 'Active' | 'Inactive';
 
@@ -33,8 +37,7 @@ const buildOrderBy = (sortBy?: ProductSortBy, sortOrder: 'asc' | 'desc' = 'desc'
 const toPrismaAttributes = (attrs: Record<string, string>): object => ({ ...attrs });
 
 export const productRepository = {
-  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma include */
-  async create(data: CreateProductInput) {
+  async create(data: CreateProductInput): Promise<ProductWithSkus> {
     return prisma.$transaction(async (tx) => {
       const product = await tx.product.create({
         data: {
@@ -60,15 +63,13 @@ export const productRepository = {
     });
   },
 
-  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma include */
-  async findById(id: number) {
+  async findById(id: number): Promise<ProductWithSkus | null> {
     return prisma.product.findUnique({
       where: { id },
       include: { skus: true },
     });
   },
 
-  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma include */
   async findMany(
     page: number,
     pageSize: number,
@@ -78,7 +79,7 @@ export const productRepository = {
       sortOrder?: 'asc' | 'desc';
       q?: string;
     }
-  ) {
+  ): Promise<ProductWithSkus[]> {
     const where = buildWhere({ status: options.status, q: options.q });
     const orderBy = buildOrderBy(options.sortBy, options.sortOrder ?? 'desc');
     const skip = (page - 1) * pageSize;
@@ -96,7 +97,6 @@ export const productRepository = {
     return prisma.product.count({ where });
   },
 
-  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma include */
   async findManyAndCount(
     page: number,
     pageSize: number,
@@ -106,7 +106,7 @@ export const productRepository = {
       sortOrder?: 'asc' | 'desc';
       q?: string;
     }
-  ) {
+  ): Promise<{ items: ProductWithSkus[]; total: number }> {
     const where = buildWhere({ status: options.status, q: options.q });
     const orderBy = buildOrderBy(options.sortBy, options.sortOrder ?? 'desc');
     const skip = (page - 1) * pageSize;
@@ -125,8 +125,10 @@ export const productRepository = {
     });
   },
 
-  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma */
-  async update(id: number, data: UpdateProductInput) {
+  async update(
+    id: number,
+    data: UpdateProductInput
+  ): Promise<ProductWithSkus | null> {
     return prisma.$transaction(async (tx) => {
       const product = await tx.product.findUnique({ where: { id } });
       if (!product) return null;

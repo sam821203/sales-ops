@@ -7,14 +7,14 @@ export { createUserSchema, updateUserSchema };
 
 type CreateBody = z.infer<typeof createUserSchema>;
 
-export const listUsersHandler = async (c: Context) => {
+export const listUsersHandler = async (c: Context): Promise<Response> => {
   const limit = Number(c.req.query('limit')) || 50;
   const offset = Number(c.req.query('offset')) || 0;
   const list = await userService.getUsers(limit, offset);
   return c.json(list);
 };
 
-export const getUserByIdHandler = async (c: Context) => {
+export const getUserByIdHandler = async (c: Context): Promise<Response> => {
   const id = c.req.param('id');
   const userEntity = await userService.getUserById(id);
   if (!userEntity) {
@@ -23,7 +23,7 @@ export const getUserByIdHandler = async (c: Context) => {
   return c.json(userEntity);
 };
 
-export const createUserHandler = async (c: Context<object, string, { out: { json: CreateBody } }>) => {
+export const createUserHandler = async (c: Context<object, string, { out: { json: CreateBody } }>): Promise<Response> => {
   const body = c.req.valid('json');
   const created = await userService.createUser(body);
   return c.json(created, 201);
@@ -31,7 +31,7 @@ export const createUserHandler = async (c: Context<object, string, { out: { json
 
 type UpdateBody = z.infer<typeof updateUserSchema>;
 
-export const updateUserHandler = async (c: Context<object, string, { out: { param: { id: string }; json: UpdateBody } }>) => {
+export const updateUserHandler = async (c: Context<object, string, { out: { param: { id: string }; json: UpdateBody } }>): Promise<Response> => {
   const { id } = c.req.valid('param');
   const body = c.req.valid('json');
   const name = 'name' in body ? body.name : undefined;
@@ -42,7 +42,7 @@ export const updateUserHandler = async (c: Context<object, string, { out: { para
   return c.json(updated);
 };
 
-export const deleteUserHandler = async (c: Context) => {
+export const deleteUserHandler = async (c: Context): Promise<Response> => {
   const id = c.req.param('id');
   await userService.deleteUser(id);
   return c.body(null, 204);

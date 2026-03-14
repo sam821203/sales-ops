@@ -40,7 +40,7 @@ const uploadBufferToCloudinary = (buffer: Buffer): Promise<{ secure_url: string 
     Readable.from(buffer).pipe(uploadStream);
   });
 
-export const uploadHandler = async (c: Context) => {
+export const uploadHandler = async (c: Context): Promise<Response> => {
   const config = configureCloudinary();
   if (!config) {
     throw new HTTPException(503, {

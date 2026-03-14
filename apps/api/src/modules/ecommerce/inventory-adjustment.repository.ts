@@ -1,5 +1,11 @@
 import type { CreateInventoryAdjustmentInput } from './dto/ecommerce.dto.js';
+import type { InventoryAdjustmentGetPayload } from '../../../generated/prisma/models/InventoryAdjustment.js';
 import { prisma } from '../../lib/prisma.js';
+
+/** Prisma payload for InventoryAdjustment with sku and product included (matches our queries). */
+type InventoryAdjustmentWithSkuAndProduct = InventoryAdjustmentGetPayload<{
+  include: { sku: { include: { product: true } } };
+}>;
 
 type OrCondition =
   | { sku: { product: { name: { contains: string } } } }
@@ -24,12 +30,11 @@ export const INSUFFICIENT_STOCK = 'INSUFFICIENT_STOCK' as const;
  * Data access only. No business logic; all SQL/ORM here.
  */
 export const inventoryAdjustmentRepository = {
-  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma include */
   async findManyAndCount(
     page: number,
     pageSize: number,
     options: { q?: string }
-  ) {
+  ): Promise<{ items: InventoryAdjustmentWithSkuAndProduct[]; total: number }> {
     const where = buildWhere(options.q);
     const skip = (page - 1) * pageSize;
     return prisma.$transaction(async (tx) => {
@@ -47,16 +52,16 @@ export const inventoryAdjustmentRepository = {
     });
   },
 
-  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma include */
-  async findById(id: number) {
+  async findById(id: number): Promise<InventoryAdjustmentWithSkuAndProduct | null> {
     return prisma.inventoryAdjustment.findUnique({
       where: { id },
       include: { sku: { include: { product: true } } },
     });
   },
 
-  /* eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types -- return type inferred from Prisma */
-  async create(data: CreateInventoryAdjustmentInput) {
+  async create(
+    data: CreateInventoryAdjustmentInput
+  ): Promise<InventoryAdjustmentWithSkuAndProduct | null | typeof INSUFFICIENT_STOCK> {
     return prisma.$transaction(async (tx) => {
       const sku = await tx.sku.findUnique({
         where: { id: data.skuId },

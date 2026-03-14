@@ -21,13 +21,13 @@ type ListQuery = z.infer<typeof listPriceHistoryQuerySchema>;
 type ParamId = z.infer<typeof priceHistoryIdParamSchema>;
 type CreateBody = z.infer<typeof createSkuPriceHistorySchema>;
 
-export const listPriceHistoryHandler = async (c: Context<object, string, { out: { query: ListQuery } }>) => {
+export const listPriceHistoryHandler = async (c: Context<object, string, { out: { query: ListQuery } }>): Promise<Response> => {
   const { page, pageSize, q } = c.req.valid('query');
   const list = await skuPriceHistoryService.getList(page, pageSize, { q });
   return c.json(list);
 };
 
-export const getPriceHistoryByIdHandler = async (c: Context<object, string, { out: { param: ParamId } }>) => {
+export const getPriceHistoryByIdHandler = async (c: Context<object, string, { out: { param: ParamId } }>): Promise<Response> => {
   const { id } = c.req.valid('param');
   const item = await skuPriceHistoryService.getById(id);
   if (!item) {
@@ -36,7 +36,7 @@ export const getPriceHistoryByIdHandler = async (c: Context<object, string, { ou
   return c.json(item);
 };
 
-export const createPriceHistoryHandler = async (c: Context<object, string, { out: { json: CreateBody } }>) => {
+export const createPriceHistoryHandler = async (c: Context<object, string, { out: { json: CreateBody } }>): Promise<Response> => {
   try {
     const body = c.req.valid('json');
     const created = await skuPriceHistoryService.create(body);
