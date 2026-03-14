@@ -1,11 +1,9 @@
-import type {
-  CreateInventoryAdjustmentInput,
-  ListInventoryAdjustmentsQuery,
-} from '@salesops/shared';
 import { apiClient } from '@/api/client';
 import type {
+  CreateInventoryAdjustmentInput,
   InventoryAdjustmentDetailResponse,
   InventoryAdjustmentsListResponse,
+  ListInventoryAdjustmentsQuery,
 } from '@/api/types';
 
 export const inventoryAdjustmentKeys = {
@@ -21,8 +19,8 @@ export async function getInventoryAdjustmentsList(
 ): Promise<InventoryAdjustmentsListResponse> {
   const res = await apiClient.inventoryAdjustments.$get({
     query: {
-      page: String(params.page),
-      pageSize: String(params.pageSize),
+      page: params.page,
+      pageSize: params.pageSize,
       ...(params.q != null && params.q.trim() !== '' ? { q: params.q.trim() } : {}),
     },
   });
@@ -33,7 +31,7 @@ export async function getInventoryAdjustmentById(
   id: number
 ): Promise<InventoryAdjustmentDetailResponse | null> {
   const res = await apiClient.inventoryAdjustments[':id'].$get({
-    param: { id: String(id) },
+    param: { id },
   });
   if (res.status === 404) {
     return null;

@@ -1,9 +1,7 @@
+import { apiClient } from '@/api/client';
 import type {
   CreateSkuPriceHistoryInput,
   ListPriceHistoryQuery,
-} from '@salesops/shared';
-import { apiClient } from '@/api/client';
-import type {
   PriceHistoryDetailResponse,
   PriceHistoryListResponse,
 } from '@/api/types';
@@ -20,8 +18,8 @@ export async function getPriceHistoryList(
 ): Promise<PriceHistoryListResponse> {
   const res = await apiClient.priceHistory.$get({
     query: {
-      page: String(params.page),
-      pageSize: String(params.pageSize),
+      page: params.page,
+      pageSize: params.pageSize,
       ...(params.q != null && params.q.trim() !== '' ? { q: params.q.trim() } : {}),
     },
   });
@@ -32,7 +30,7 @@ export async function getPriceHistoryById(
   id: number
 ): Promise<PriceHistoryDetailResponse | null> {
   const res = await apiClient.priceHistory[':id'].$get({
-    param: { id: String(id) },
+    param: { id },
   });
   if (res.status === 404) {
     return null;
@@ -43,19 +41,18 @@ export async function getPriceHistoryById(
 export async function createPriceHistory(
   body: CreateSkuPriceHistoryInput
 ): Promise<PriceHistoryDetailResponse> {
-  const payload: Record<string, unknown> = {
-    skuId: body.skuId,
-    newPrice: body.newPrice,
-    changedBy: body.changedBy,
-  };
-  if (body.effectiveDate != null) {
-    payload.effectiveDate =
-      body.effectiveDate instanceof Date
-        ? body.effectiveDate.toISOString()
-        : body.effectiveDate;
-  }
   const res = await apiClient.priceHistory.$post({
-    json: payload,
+    json: {
+      skuId: body.skuId,
+      newPrice: body.newPrice,
+      changedBy: body.changedBy,
+      ...(body.effectiveDate != null && {
+        effectiveDate:
+          body.effectiveDate instanceof Date
+            ? body.effectiveDate
+            : body.effectiveDate,
+      }),
+    },
   });
   const data = await res.json();
   if (!res.ok) {
