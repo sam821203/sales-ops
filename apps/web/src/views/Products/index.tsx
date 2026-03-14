@@ -6,13 +6,15 @@ import type {
   SKU,
   ProductStatus,
   AttributeDefinition,
+} from '@salesops/shared';
+import type {
   CreateProductInput,
   ListProductsQuery,
   ProductSortBy,
+  ProductsListResponse,
   UpdateProductInput,
-} from '@salesops/shared';
+} from '@/api/types';
 import type { StatusFilter, ProductRow } from './types';
-import type { ProductsListResponse } from '@/api/types';
 import {
   DeleteOutlined,
   DownloadOutlined,
