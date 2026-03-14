@@ -26,6 +26,38 @@ export default defineConfig(
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  // Type-safety rules (aligned with .cursor/rules/typescript-type-safety.mdc)
+  // Explicit project paths so type-aware rules resolve correctly (root tsconfig has "files": []).
+  {
+    files: ['apps/web/**/*.{ts,tsx}', 'apps/api/src/**/*.ts'],
+    languageOptions: {
+      parserOptions: {
+        project: ['./apps/web/tsconfig.app.json', './apps/api/tsconfig.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': [
+        'error',
+        {
+          allowExpressions: true,
+          allowTypedFunctionExpressions: true,
+          allowHigherOrderFunctions: true,
+        },
+      ],
+      '@typescript-eslint/explicit-module-boundary-types': 'error',
+      '@typescript-eslint/consistent-type-assertions': [
+        'error',
+        { assertionStyle: 'never' },
+      ],
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+      // Type-aware: flag any in assignments, member access, calls, returns
+      '@typescript-eslint/no-unsafe-assignment': 'error',
+      '@typescript-eslint/no-unsafe-member-access': 'error',
+      '@typescript-eslint/no-unsafe-call': 'error',
+      '@typescript-eslint/no-unsafe-return': 'error',
+    },
+  },
   // apps/web (React)
   {
     files: ['apps/web/**/*.{ts,tsx}'],
@@ -47,10 +79,6 @@ export default defineConfig(
       ecmaVersion: 'latest',
       sourceType: 'module',
       globals: { ...globals.node },
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
     },
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
