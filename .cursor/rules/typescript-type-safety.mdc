@@ -1,0 +1,20 @@
+---
+description: Strict TypeScript and type safety standards; use when writing or reviewing TypeScript/TSX code
+globs: *.ts,*.tsx
+alwaysApply: false
+---
+
+# Strict TypeScript & Type Safety Standards
+
+Maintain the highest level of type safety by adhering to the following rules:
+
+- **No Implicit/Explicit `any`**: The use of `any` is strictly prohibited. Use `unknown` if the type is truly uncertain, and perform type narrowing via type guards or validation (e.g., Zod).
+- **Exhaustive Type Checking**: Use discriminated unions for state management and ensure all switches/conditionals are exhaustive.
+- **Prefer Interfaces over Types**: Use `interface` for public APIs and object definitions to allow for extensibility; use `type` for unions, intersections, and complex utility types.
+- **Strict Null Checks**: Always handle `null` and `undefined` explicitly. Avoid non-null assertions (`!`).
+- **Functional Immutability**: Prefer `readonly` arrays and properties where possible. Use `const` over `let`.
+- **Explicit Return Types**: All functions, especially exported ones, must have explicit return type definitions to prevent unintended type inference.
+- **Generics Over Casting**: Avoid type assertions (e.g., `as SelectedType`). Use generics or proper type guards to maintain the type chain.
+- **Utility Types**: Leverage TypeScript built-in utility types (e.g., `Pick`, `Omit`, `Partial`, `Record`) to keep code DRY and consistent with base interfaces.
+
+When generating code, if a type is complex, prioritize creating a clear, documented interface rather than a messy inline type.

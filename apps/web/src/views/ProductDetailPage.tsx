@@ -1,7 +1,8 @@
 import { Link, useParams, useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import type { SKU, AttributeDefinition } from '@salesops/shared';
+import type { SKU } from '@/api/types';
+import type { AttributeDefinition } from '@/constants/attributeDefinitions';
 import { ArrowLeftOutlined, EditOutlined } from '@ant-design/icons';
 import { Avatar, Button, Spin, Table, Tag } from 'antd';
 import type { TableColumnsType } from 'antd';

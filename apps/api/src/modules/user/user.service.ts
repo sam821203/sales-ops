@@ -1,5 +1,5 @@
 import type { CreateUserInput } from './dto/create-user.dto.js';
-import type { UserResponse } from '@salesops/shared';
+import type { UserResponse } from './dto/user-response.dto.js';
 import { toUserResponse } from './dto/user-response.dto.js';
 import { userRepository } from './user.repository.js';
 

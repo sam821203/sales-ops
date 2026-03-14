@@ -1,8 +1,8 @@
-import type { CreateInventoryAdjustmentInput } from './dto/ecommerce.dto.js';
 import type {
+  CreateInventoryAdjustmentInput,
   InventoryAdjustmentListItem,
   ListInventoryAdjustmentsResponse,
-} from '@salesops/shared';
+} from './dto/ecommerce.dto.js';
 import {
   INSUFFICIENT_STOCK,
   inventoryAdjustmentRepository,
@@ -41,7 +41,7 @@ function toListItem(row: PrismaRowNonNull): InventoryAdjustmentListItem {
     quantity: row.quantity,
     reason: row.reason,
     adjustedBy: row.adjustedBy,
-    createdAt: row.createdAt,
+    createdAt: row.createdAt.toISOString(),
     productName: row.sku.product.name,
     productId: row.sku.productId,
     skuAttributes,

@@ -9,7 +9,9 @@ import {
   productStatusValues,
   promotionStatusValues,
   refundStatusValues,
-} from '@salesops/shared';
+} from '../constants/enums.js';
+
+export type { ProductSortBy } from '../constants/enums.js';
 import { z } from 'zod';
 
 export const createSkuSchema = z.object({
@@ -137,15 +139,91 @@ export const inventoryAdjustmentIdParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
 
-export type {
-  CreateSkuInput,
-  CreateProductInput,
-  ListProductsQuery,
-  ListProductsResponse,
-  UpdateProductInput,
-  ProductSkuItemInput,
-} from '@salesops/shared';
+// --- Response schemas (JSON serialization: dates as string) ---
+
+const attributeDefinitionSchema = z.discriminatedUnion('type', [
+  z.object({ key: z.string(), label: z.string(), type: z.literal('text') }),
+  z.object({
+    key: z.string(),
+    label: z.string(),
+    type: z.literal('enum'),
+    options: z.array(z.string()),
+  }),
+]);
+
+export const skuSchema = z.object({
+  id: z.number(),
+  productId: z.number(),
+  price: z.number(),
+  stock: z.number(),
+  attributes: z.record(z.string(), z.string()),
+});
+
+export const productSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  status: z.enum(productStatusValues),
+  skus: z.array(skuSchema),
+  imageUrl: z.string().optional(),
+  categoryId: z.number().optional(),
+  brandId: z.number().optional(),
+  attributeDefinitions: z.array(attributeDefinitionSchema).optional(),
+});
+
+export const listProductsResponseSchema = z.object({
+  items: z.array(productSchema),
+  total: z.number(),
+});
+
+export const inventoryAdjustmentListItemSchema = z.object({
+  id: z.number(),
+  skuId: z.number(),
+  adjustmentType: z.enum(inventoryAdjustmentTypeValues),
+  quantity: z.number(),
+  reason: z.string(),
+  adjustedBy: z.number(),
+  createdAt: z.string().datetime({ offset: true }),
+  productName: z.string(),
+  productId: z.number(),
+  skuAttributes: z.record(z.string(), z.string()),
+});
+
+export const listInventoryAdjustmentsResponseSchema = z.object({
+  items: z.array(inventoryAdjustmentListItemSchema),
+  total: z.number(),
+});
+
+export const skuPriceHistoryListItemSchema = z.object({
+  id: z.number(),
+  skuId: z.number(),
+  oldPrice: z.number(),
+  newPrice: z.number(),
+  effectiveDate: z.string().datetime({ offset: true }),
+  changedBy: z.number(),
+  productName: z.string(),
+  productId: z.number(),
+  skuAttributes: z.record(z.string(), z.string()),
+});
+
+export const listPriceHistoryResponseSchema = z.object({
+  items: z.array(skuPriceHistoryListItemSchema),
+  total: z.number(),
+});
+
+// --- Inferred types ---
+
 export type ProductIdParam = z.infer<typeof productIdParamSchema>;
+export type CreateSkuInput = z.infer<typeof createSkuSchema>;
+export type CreateProductInput = z.infer<typeof createProductSchema>;
+export type UpdateProductInput = z.infer<typeof updateProductSchema>;
+export type ProductSkuItemInput = z.infer<typeof createProductSkuItemSchema>;
+export type ListProductsQuery = z.infer<typeof listProductsQuerySchema>;
+export type ListProductsResponse = z.infer<typeof listProductsResponseSchema>;
+export type Product = z.infer<typeof productSchema>;
+export type InventoryAdjustmentListItem = z.infer<typeof inventoryAdjustmentListItemSchema>;
+export type ListInventoryAdjustmentsResponse = z.infer<typeof listInventoryAdjustmentsResponseSchema>;
+export type SkuPriceHistoryListItem = z.infer<typeof skuPriceHistoryListItemSchema>;
+export type ListPriceHistoryResponse = z.infer<typeof listPriceHistoryResponseSchema>;
 export type CreatePromotionInput = z.infer<typeof createPromotionSchema>;
 export type CreateOrderItemInput = z.infer<typeof createOrderItemSchema>;
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;

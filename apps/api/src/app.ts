@@ -13,6 +13,14 @@ import {
   deleteProductHandler,
 } from './modules/ecommerce/product.controller.js';
 import {
+  listPriceHistoryResponseSchema,
+  listProductsResponseSchema,
+  productSchema,
+  listInventoryAdjustmentsResponseSchema,
+  inventoryAdjustmentListItemSchema,
+  skuPriceHistoryListItemSchema,
+} from './modules/ecommerce/dto/ecommerce.dto.js';
+import {
   createSkuPriceHistorySchema,
   listPriceHistoryQuerySchema,
   priceHistoryIdParamSchema,
@@ -29,6 +37,10 @@ import {
   createInventoryAdjustmentHandler,
 } from './modules/ecommerce/inventory-adjustment.controller.js';
 import { uploadHandler } from './modules/upload/upload.controller.js';
+import {
+  userResponseSchema,
+  listUsersResponseSchema,
+} from './modules/user/dto/user-response.dto.js';
 import {
   createUserSchema,
   listUsersHandler,
@@ -63,7 +75,7 @@ const api = new OpenAPIHono()
       method: 'get',
       path: '/priceHistory',
       request: { query: listPriceHistoryQuerySchema },
-      responses: { 200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } } },
+      responses: { 200: { description: 'OK', content: { 'application/json': { schema: listPriceHistoryResponseSchema } } } },
     }),
     listPriceHistoryHandler as any
   )
@@ -73,7 +85,7 @@ const api = new OpenAPIHono()
       path: '/priceHistory/{id}',
       request: { params: priceHistoryIdParamSchema },
       responses: {
-        200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } },
+        200: { description: 'OK', content: { 'application/json': { schema: skuPriceHistoryListItemSchema } } },
         404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
       },
     }),
@@ -84,7 +96,7 @@ const api = new OpenAPIHono()
       method: 'post',
       path: '/priceHistory',
       request: { body: { content: { 'application/json': { schema: createSkuPriceHistorySchema } } } },
-      responses: { 201: { description: 'Created', content: { 'application/json': { schema: jsonObjectSchema } } } },
+      responses: { 201: { description: 'Created', content: { 'application/json': { schema: skuPriceHistoryListItemSchema } } } },
     }),
     createPriceHistoryHandler as any
   )
@@ -94,7 +106,7 @@ const api = new OpenAPIHono()
       method: 'get',
       path: '/inventoryAdjustments',
       request: { query: listInventoryAdjustmentsQuerySchema },
-      responses: { 200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } } },
+      responses: { 200: { description: 'OK', content: { 'application/json': { schema: listInventoryAdjustmentsResponseSchema } } } },
     }),
     listInventoryAdjustmentsHandler as any
   )
@@ -104,7 +116,7 @@ const api = new OpenAPIHono()
       path: '/inventoryAdjustments/{id}',
       request: { params: inventoryAdjustmentIdParamSchema },
       responses: {
-        200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } },
+        200: { description: 'OK', content: { 'application/json': { schema: inventoryAdjustmentListItemSchema } } },
         404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
       },
     }),
@@ -116,7 +128,7 @@ const api = new OpenAPIHono()
       path: '/inventoryAdjustments',
       request: { body: { content: { 'application/json': { schema: createInventoryAdjustmentSchema } } } },
       responses: {
-        201: { description: 'Created', content: { 'application/json': { schema: jsonObjectSchema } } },
+        201: { description: 'Created', content: { 'application/json': { schema: inventoryAdjustmentListItemSchema } } },
         400: { description: 'Bad Request', content: { 'application/json': { schema: jsonObjectSchema } } },
       },
     }),
@@ -128,7 +140,7 @@ const api = new OpenAPIHono()
       method: 'get',
       path: '/products',
       request: { query: listProductsQuerySchema },
-      responses: { 200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } } },
+      responses: { 200: { description: 'OK', content: { 'application/json': { schema: listProductsResponseSchema } } } },
     }),
     listProductsHandler as any
   )
@@ -138,7 +150,7 @@ const api = new OpenAPIHono()
       path: '/products/{id}',
       request: { params: productIdParamSchema },
       responses: {
-        200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } },
+        200: { description: 'OK', content: { 'application/json': { schema: productSchema } } },
         404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
       },
     }),
@@ -149,7 +161,7 @@ const api = new OpenAPIHono()
       method: 'post',
       path: '/products',
       request: { body: { content: { 'application/json': { schema: createProductSchema } } } },
-      responses: { 201: { description: 'Created', content: { 'application/json': { schema: jsonObjectSchema } } } },
+      responses: { 201: { description: 'Created', content: { 'application/json': { schema: productSchema } } } },
     }),
     createProductHandler as any
   )
@@ -159,7 +171,7 @@ const api = new OpenAPIHono()
       path: '/products/{id}',
       request: { params: productIdParamSchema, body: { content: { 'application/json': { schema: updateProductSchema } } } },
       responses: {
-        200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } },
+        200: { description: 'OK', content: { 'application/json': { schema: productSchema } } },
         404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
       },
     }),
@@ -196,7 +208,7 @@ const api = new OpenAPIHono()
     createRoute({
       method: 'get',
       path: '/users',
-      responses: { 200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } } },
+      responses: { 200: { description: 'OK', content: { 'application/json': { schema: listUsersResponseSchema } } } },
     }),
     listUsersHandler as any
   )
@@ -206,7 +218,7 @@ const api = new OpenAPIHono()
       path: '/users/{id}',
       request: { params: userIdParamSchema },
       responses: {
-        200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } },
+        200: { description: 'OK', content: { 'application/json': { schema: userResponseSchema } } },
         404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
       },
     }),
@@ -217,7 +229,7 @@ const api = new OpenAPIHono()
       method: 'post',
       path: '/users',
       request: { body: { content: { 'application/json': { schema: createUserSchema } } } },
-      responses: { 201: { description: 'Created', content: { 'application/json': { schema: jsonObjectSchema } } } },
+      responses: { 201: { description: 'Created', content: { 'application/json': { schema: userResponseSchema } } } },
     }),
     createUserHandler as any
   )
@@ -227,7 +239,7 @@ const api = new OpenAPIHono()
       path: '/users/{id}',
       request: { params: userIdParamSchema },
       responses: {
-        200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } },
+        200: { description: 'OK', content: { 'application/json': { schema: userResponseSchema } } },
         404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
       },
     }),

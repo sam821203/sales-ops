@@ -3,17 +3,15 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearch, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type {
-  SKU,
-  ProductStatus,
-  AttributeDefinition,
-} from '@salesops/shared';
-import type {
   CreateProductInput,
   ListProductsQuery,
   ProductSortBy,
   ProductsListResponse,
+  ProductStatus,
+  SKU,
   UpdateProductInput,
 } from '@/api/types';
+import type { AttributeDefinition } from '@/constants/attributeDefinitions';
 import type { StatusFilter, ProductRow } from './types';
 import {
   DeleteOutlined,

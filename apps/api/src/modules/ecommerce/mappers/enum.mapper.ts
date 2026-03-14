@@ -1,4 +1,5 @@
 import type {
+  DiscountType,
   InventoryAdjustmentType,
   OrderStatus,
   PaymentMethod,
@@ -7,8 +8,7 @@ import type {
   ProductStatus,
   PromotionStatusValue,
   RefundStatus,
-  DiscountType,
-} from '@salesops/shared';
+} from '../constants/enums.js';
 
 type PrismaProductStatus = ProductStatus;
 type PrismaDiscountType = DiscountType;

@@ -1,8 +1,11 @@
-import type { Product, Category, Brand } from '@salesops/shared';
-import { STANDARD_ATTRIBUTE_DEFINITIONS } from '@salesops/shared';
+import type { ProductListItem, Category, Brand } from '@/api/types';
+import { STANDARD_ATTRIBUTE_DEFINITIONS } from '@/constants/attributeDefinitions';
+import type { AttributeDefinition } from '@/constants/attributeDefinitions';
 
-function pickAttributeDefinitions(keys: string[]): Product['attributeDefinitions'] {
-  return keys.map((key) => STANDARD_ATTRIBUTE_DEFINITIONS.find((d) => d.key === key)).filter(Boolean) as Product['attributeDefinitions'];
+function pickAttributeDefinitions(keys: string[]): AttributeDefinition[] {
+  return keys
+    .map((key) => STANDARD_ATTRIBUTE_DEFINITIONS.find((d) => d.key === key))
+    .filter(Boolean) as AttributeDefinition[];
 }
 
 export const categoryMocks: Category[] = [
@@ -23,7 +26,7 @@ export const brandMocks: Brand[] = [
   { id: 5, name: 'DeskEssentials' },
 ];
 
-export const productMocks: Product[] = [
+export const productMocks: ProductListItem[] = [
   {
     id: 1,
     name: 'Wireless Bluetooth Headphones',
