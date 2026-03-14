@@ -5,8 +5,8 @@ type Client = RpcClient;
 export type ApiClient = Client;
 
 // --- Helpers: request types inferred from RPC client ---
-type ReqQuery<T extends (...args: never) => unknown> = NonNullable<Parameters<T>[0]> extends { query?: infer Q } ? NonNullable<Q> : Record<string, string | string[] | undefined>;
-type ReqJson<T extends (...args: never) => unknown> = NonNullable<Parameters<T>[0]> extends { json?: infer J } ? NonNullable<J> : Record<string, unknown>;
+type ReqQuery<T extends (...args: never) => unknown> = NonNullable<Parameters<T>[0]> extends { query?: infer Q } ? NonNullable<Q> : never;
+type ReqJson<T extends (...args: never) => unknown> = NonNullable<Parameters<T>[0]> extends { json?: infer J } ? NonNullable<J> : never;
 
 // --- Products (all RPC-inferred) ---
 export type ProductsListResponse = InferResponseType<Client['products']['$get']>;
