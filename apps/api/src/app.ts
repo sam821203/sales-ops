@@ -1,5 +1,5 @@
-import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
+import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { healthHandler, healthLiveHandler } from './modules/health/health.controller.js';
 import {
   createProductSchema,
@@ -38,45 +38,221 @@ import {
   deleteUserHandler,
 } from './modules/user/user.controller.js';
 
-// Single Hono with one continuous chain (no .route()) so RPC schema is preserved for hc<AppType>.
-const api = new Hono()
-  .get('/health', healthHandler)
-  .get('/health/live', healthLiveHandler)
-  .get('/priceHistory', zValidator('query', listPriceHistoryQuerySchema), listPriceHistoryHandler)
-  .get('/priceHistory/:id', zValidator('param', priceHistoryIdParamSchema), getPriceHistoryByIdHandler)
-  .post('/priceHistory', zValidator('json', createSkuPriceHistorySchema), createPriceHistoryHandler)
-  .get('/inventoryAdjustments', zValidator('query', listInventoryAdjustmentsQuerySchema), listInventoryAdjustmentsHandler)
-  .get('/inventoryAdjustments/:id', zValidator('param', inventoryAdjustmentIdParamSchema), getInventoryAdjustmentByIdHandler)
-  .post('/inventoryAdjustments', zValidator('json', createInventoryAdjustmentSchema), createInventoryAdjustmentHandler)
-  .get('/products', zValidator('query', listProductsQuerySchema), listProductsHandler)
-  .get('/products/:id', zValidator('param', productIdParamSchema), getProductByIdHandler)
-  .post('/products', zValidator('json', createProductSchema), createProductHandler)
-  .patch('/products/:id', zValidator('param', productIdParamSchema), zValidator('json', updateProductSchema), updateProductHandler)
-  .delete('/products/:id', zValidator('param', productIdParamSchema), deleteProductHandler)
-  .post('/upload', uploadHandler)
-  .get('/users', listUsersHandler)
-  .get('/users/:id', getUserByIdHandler)
-  .post('/users', zValidator('json', createUserSchema), createUserHandler)
-  .patch('/users/:id', updateUserHandler)
-  .delete('/users/:id', deleteUserHandler)
-  .get('/openapi.json', (c) => {
+// Generic response schemas for routes that return arbitrary JSON
+const jsonObjectSchema = z.record(z.unknown());
+
+// Param schema for user routes (id is string)
+const userIdParamSchema = z.object({ id: z.string() });
+
+// Single OpenAPIHono with one continuous chain so RPC schema is preserved for hc<AppType>.
+// Handlers cast below: openapi() infers response as never for generic response schemas; cast is required.
+/* eslint-disable @typescript-eslint/no-explicit-any -- see comment above */
+const api = new OpenAPIHono()
+  // Health
+  .openapi(
+    createRoute({ method: 'get', path: '/health', responses: { 200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } } } }),
+    healthHandler as any
+  )
+  .openapi(
+    createRoute({ method: 'get', path: '/health/live', responses: { 200: { description: 'Liveness probe', content: { 'application/json': { schema: jsonObjectSchema } } } } }),
+    healthLiveHandler as any
+  )
+  // Price history
+  .openapi(
+    createRoute({
+      method: 'get',
+      path: '/priceHistory',
+      request: { query: listPriceHistoryQuerySchema },
+      responses: { 200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } } },
+    }),
+    listPriceHistoryHandler as any
+  )
+  .openapi(
+    createRoute({
+      method: 'get',
+      path: '/priceHistory/{id}',
+      request: { params: priceHistoryIdParamSchema },
+      responses: {
+        200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } },
+        404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
+      },
+    }),
+    getPriceHistoryByIdHandler as any
+  )
+  .openapi(
+    createRoute({
+      method: 'post',
+      path: '/priceHistory',
+      request: { body: { content: { 'application/json': { schema: createSkuPriceHistorySchema } } } },
+      responses: { 201: { description: 'Created', content: { 'application/json': { schema: jsonObjectSchema } } } },
+    }),
+    createPriceHistoryHandler as any
+  )
+  // Inventory adjustments
+  .openapi(
+    createRoute({
+      method: 'get',
+      path: '/inventoryAdjustments',
+      request: { query: listInventoryAdjustmentsQuerySchema },
+      responses: { 200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } } },
+    }),
+    listInventoryAdjustmentsHandler as any
+  )
+  .openapi(
+    createRoute({
+      method: 'get',
+      path: '/inventoryAdjustments/{id}',
+      request: { params: inventoryAdjustmentIdParamSchema },
+      responses: {
+        200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } },
+        404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
+      },
+    }),
+    getInventoryAdjustmentByIdHandler as any
+  )
+  .openapi(
+    createRoute({
+      method: 'post',
+      path: '/inventoryAdjustments',
+      request: { body: { content: { 'application/json': { schema: createInventoryAdjustmentSchema } } } },
+      responses: {
+        201: { description: 'Created', content: { 'application/json': { schema: jsonObjectSchema } } },
+        400: { description: 'Bad Request', content: { 'application/json': { schema: jsonObjectSchema } } },
+      },
+    }),
+    createInventoryAdjustmentHandler as any
+  )
+  // Products
+  .openapi(
+    createRoute({
+      method: 'get',
+      path: '/products',
+      request: { query: listProductsQuerySchema },
+      responses: { 200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } } },
+    }),
+    listProductsHandler as any
+  )
+  .openapi(
+    createRoute({
+      method: 'get',
+      path: '/products/{id}',
+      request: { params: productIdParamSchema },
+      responses: {
+        200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } },
+        404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
+      },
+    }),
+    getProductByIdHandler as any
+  )
+  .openapi(
+    createRoute({
+      method: 'post',
+      path: '/products',
+      request: { body: { content: { 'application/json': { schema: createProductSchema } } } },
+      responses: { 201: { description: 'Created', content: { 'application/json': { schema: jsonObjectSchema } } } },
+    }),
+    createProductHandler as any
+  )
+  .openapi(
+    createRoute({
+      method: 'patch',
+      path: '/products/{id}',
+      request: { params: productIdParamSchema, body: { content: { 'application/json': { schema: updateProductSchema } } } },
+      responses: {
+        200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } },
+        404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
+      },
+    }),
+    updateProductHandler as any
+  )
+  .openapi(
+    createRoute({
+      method: 'delete',
+      path: '/products/{id}',
+      request: { params: productIdParamSchema },
+      responses: {
+        204: { description: 'No Content' },
+        404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
+      },
+    }),
+    deleteProductHandler as any
+  )
+  // Upload
+  .openapi(
+    createRoute({
+      method: 'post',
+      path: '/upload',
+      responses: {
+        200: { description: 'OK', content: { 'application/json': { schema: z.object({ url: z.string() }) } } },
+        400: { description: 'Bad Request', content: { 'application/json': { schema: jsonObjectSchema } } },
+        502: { description: 'Bad Gateway', content: { 'application/json': { schema: jsonObjectSchema } } },
+        503: { description: 'Service Unavailable', content: { 'application/json': { schema: jsonObjectSchema } } },
+      },
+    }),
+    uploadHandler as any
+  )
+  // Users
+  .openapi(
+    createRoute({
+      method: 'get',
+      path: '/users',
+      responses: { 200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } } },
+    }),
+    listUsersHandler as any
+  )
+  .openapi(
+    createRoute({
+      method: 'get',
+      path: '/users/{id}',
+      request: { params: userIdParamSchema },
+      responses: {
+        200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } },
+        404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
+      },
+    }),
+    getUserByIdHandler as any
+  )
+  .openapi(
+    createRoute({
+      method: 'post',
+      path: '/users',
+      request: { body: { content: { 'application/json': { schema: createUserSchema } } } },
+      responses: { 201: { description: 'Created', content: { 'application/json': { schema: jsonObjectSchema } } } },
+    }),
+    createUserHandler as any
+  )
+  .openapi(
+    createRoute({
+      method: 'patch',
+      path: '/users/{id}',
+      request: { params: userIdParamSchema },
+      responses: {
+        200: { description: 'OK', content: { 'application/json': { schema: jsonObjectSchema } } },
+        404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
+      },
+    }),
+    updateUserHandler as any
+  )
+  .openapi(
+    createRoute({
+      method: 'delete',
+      path: '/users/{id}',
+      request: { params: userIdParamSchema },
+      responses: {
+        204: { description: 'No Content' },
+        404: { description: 'Not Found', content: { 'application/json': { schema: jsonObjectSchema } } },
+      },
+    }),
+    deleteUserHandler as any
+  )
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+  .doc('/openapi.json', (c) => {
     const baseUrl = c.req.url.replace(/\/openapi\.json.*$/, '');
-    return c.json({
+    return {
       openapi: '3.0.0',
       info: { title: 'SalesOps API', version: '0.0.0' },
       servers: [{ url: baseUrl }],
-      paths: {
-        '/health': { get: { summary: 'Health check', responses: { 200: { description: 'OK' } } } },
-        '/priceHistory': { get: { summary: 'List price history', responses: { 200: { description: 'OK' } } }, post: { summary: 'Create SKU price change', responses: { 201: { description: 'Created' } } } },
-        '/priceHistory/{id}': { get: { summary: 'Get by id', responses: { 200: { description: 'OK' }, 404: { description: 'Not Found' } } } },
-        '/inventoryAdjustments': { get: { summary: 'List inventory adjustments', responses: { 200: { description: 'OK' } } }, post: { summary: 'Create adjustment', responses: { 201: { description: 'Created' }, 400: { description: 'Bad Request' } } } },
-        '/inventoryAdjustments/{id}': { get: { summary: 'Get by id', responses: { 200: { description: 'OK' }, 404: { description: 'Not Found' } } } },
-        '/products': { get: { summary: 'List products', responses: { 200: { description: 'OK' } } }, post: { summary: 'Create product', responses: { 201: { description: 'Created' } } } },
-        '/products/{id}': { get: { summary: 'Get by id', responses: { 200: { description: 'OK' }, 404: { description: 'Not Found' } } }, patch: { summary: 'Update product', responses: { 200: { description: 'OK' }, 404: { description: 'Not Found' } } }, delete: { summary: 'Delete product', responses: { 204: { description: 'No Content' }, 404: { description: 'Not Found' } } } },
-        '/users': { get: { summary: 'List users', responses: { 200: { description: 'OK' } } }, post: { summary: 'Create user', responses: { 201: { description: 'Created' } } } },
-        '/users/{id}': { get: { summary: 'Get by id', responses: { 200: { description: 'OK' }, 404: { description: 'Not Found' } } }, patch: { summary: 'Update user', responses: { 200: { description: 'OK' }, 404: { description: 'Not Found' } } }, delete: { summary: 'Delete user', responses: { 204: { description: 'No Content' }, 404: { description: 'Not Found' } } } },
-      },
-    });
+    };
   });
 
 export { api };
