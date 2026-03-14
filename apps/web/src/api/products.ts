@@ -1,10 +1,9 @@
-import { apiClient } from '@/api/client';
+import { getApiUrl, request } from '@/api/client';
 import type {
   CreateProductInput,
   ListProductsQuery,
   ProductsDetailResponse,
   ProductsListResponse,
-  ProductsUpdateBody,
   UpdateProductInput,
 } from '@/api/types';
 
@@ -15,49 +14,52 @@ export const productKeys = {
   detail: (id: number) => [...productKeys.all, 'detail', id] as const,
 };
 
+function buildProductsQuery(params: ListProductsQuery): string {
+  const search = new URLSearchParams();
+  search.set('page', String(params.page));
+  search.set('pageSize', String(params.pageSize));
+  if (params.status != null) search.set('status', params.status);
+  if (params.sortBy != null) search.set('sortBy', params.sortBy);
+  if (params.sortOrder != null) search.set('sortOrder', params.sortOrder);
+  if (params.q != null && params.q.trim() !== '') search.set('q', params.q.trim());
+  const qs = search.toString();
+  return qs ? `?${qs}` : '';
+}
+
 export async function getProducts(
   params: ListProductsQuery
 ): Promise<ProductsListResponse> {
-  const res = await apiClient.products.$get({
-    query: {
-      page: params.page,
-      pageSize: params.pageSize,
-      ...(params.status != null ? { status: params.status } : {}),
-      ...(params.sortBy != null ? { sortBy: params.sortBy } : {}),
-      ...(params.sortOrder != null ? { sortOrder: params.sortOrder } : {}),
-      ...(params.q != null && params.q.trim() !== '' ? { q: params.q.trim() } : {}),
-    },
-  });
-  return res.json();
+  const url = getApiUrl('/products') + buildProductsQuery(params);
+  return request<ProductsListResponse>(url);
 }
 
 export async function getProductById(
   id: number
-): Promise<ProductsDetailResponse | null> {
-  const res = await apiClient.products[':id'].$get({
-    param: { id },
-  });
-  if (res.status === 404) {
-    return null;
-  }
-  return res.json();
+): Promise<ProductsDetailResponse> {
+  const url = getApiUrl(`/products/${id}`);
+  return request<ProductsDetailResponse>(url);
 }
 
 export async function createProduct(
   body: CreateProductInput
 ): Promise<ProductsDetailResponse> {
-  const res = await apiClient.products.$post({
-    json: {
+  const url = getApiUrl('/products');
+  return request<ProductsDetailResponse>(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
       name: body.name,
       status: body.status,
       skus: body.skus ?? [],
       ...(body.imageUrl != null && body.imageUrl !== '' && { imageUrl: body.imageUrl }),
-    },
+    }),
   });
-  return res.json();
 }
 
-export async function updateProduct(id: number, body: UpdateProductInput) {
+export async function updateProduct(
+  id: number,
+  body: UpdateProductInput
+): Promise<ProductsDetailResponse> {
   const payload: Record<string, unknown> = {};
   if (body.name !== undefined) payload.name = body.name;
   if (body.status !== undefined) payload.status = body.status;
@@ -69,17 +71,15 @@ export async function updateProduct(id: number, body: UpdateProductInput) {
       attributes: s.attributes ?? {},
     }));
   }
-  // RPC client does not infer json body for this PATCH route; request shape is typed explicitly.
-  type PatchRequest = { param: { id: number }; json: ProductsUpdateBody };
-  const res = await (apiClient.products[':id'].$patch as (opts: PatchRequest) => ReturnType<typeof apiClient.products[':id']['$patch']>)({
-    param: { id },
-    json: payload as ProductsUpdateBody,
+  const url = getApiUrl(`/products/${id}`);
+  return request<ProductsDetailResponse>(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
   });
-  return res.json();
 }
 
 export async function deleteProduct(id: number): Promise<void> {
-  await apiClient.products[':id'].$delete({
-    param: { id },
-  });
+  const url = getApiUrl(`/products/${id}`);
+  await request<void>(url, { method: 'DELETE' });
 }

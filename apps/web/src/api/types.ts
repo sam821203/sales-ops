@@ -1,7 +1,7 @@
 import type { InferResponseType } from 'hono/client';
-import { apiClient } from '@/api/client';
+import type { RpcClient } from '@/api/client';
 
-type Client = typeof apiClient;
+type Client = RpcClient;
 export type ApiClient = Client;
 
 // --- Helpers: request types inferred from RPC client ---

@@ -1,9 +1,12 @@
+import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowDownOutlined, ArrowUpOutlined, EyeOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons';
-import { Button, Form, Input, InputNumber, message, Modal, Select, Spin, Table, Tag } from 'antd';
+import { App, Button, Form, Input, InputNumber, Modal, Select, Spin, Table, Tag } from 'antd';
+import { useNotification } from '@/context/NotificationContext';
 import type { TableColumnsType } from 'antd';
 import { Card } from '@/components/common/Card';
+import { DataBoundary } from '@/components/DataBoundary';
 import { PageBreadcrumb } from '@/components/common/breadcrumb';
 import {
   createInventoryAdjustment,
@@ -31,7 +34,9 @@ function formatDateTime(date: Date | string): string {
   });
 }
 
-export function InventoryAdjustmentPage() {
+export function InventoryAdjustmentPage(): React.ReactElement {
+  const notification = useNotification();
+  const { message } = App.useApp();
   const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_TABLE_PAGE_SIZE);
@@ -73,9 +78,10 @@ export function InventoryAdjustmentPage() {
     queryFn: () => getInventoryAdjustmentsList(listParams),
   });
 
+  const detailIdNum = detailId ?? 0;
   const { data: detailRecord, isLoading: detailLoading } = useQuery({
-    queryKey: inventoryAdjustmentKeys.detail(detailId ?? 0),
-    queryFn: () => getInventoryAdjustmentById(detailId!),
+    queryKey: inventoryAdjustmentKeys.detail(detailIdNum),
+    queryFn: () => getInventoryAdjustmentById(detailIdNum),
     enabled: detailId != null && detailId > 0,
   });
 
@@ -117,9 +123,10 @@ export function InventoryAdjustmentPage() {
 
   const selectedProductId = Form.useWatch('productId', addForm);
 
+  const selectedId = selectedProductId ?? 0;
   const { data: selectedProduct } = useQuery({
-    queryKey: productKeys.detail(selectedProductId ?? 0),
-    queryFn: () => getProductById(selectedProductId!),
+    queryKey: productKeys.detail(selectedId),
+    queryFn: () => getProductById(selectedId),
     enabled: addModalOpen && selectedProductId != null && selectedProductId > 0,
   });
 
@@ -131,28 +138,26 @@ export function InventoryAdjustmentPage() {
       setAddModalOpen(false);
       setAddSkuId(undefined);
       addForm.resetFields();
-      message.success('Inventory adjustment created.');
+      notification.success({ message: 'Inventory adjustment created.' });
     },
-    onError: (e: Error) =>
-      message.error(e.message || 'Failed to create inventory adjustment'),
   });
 
   const items: InventoryAdjustmentItem[] = listResponse?.items ?? [];
   const total = listResponse?.total ?? 0;
 
-  const openDetail = (record: InventoryAdjustmentItem) => {
+  const openDetail = (record: InventoryAdjustmentItem): void => {
     setDetailItem(record);
     setDetailId(record.id);
     setDetailModalOpen(true);
   };
 
-  const closeDetail = () => {
+  const closeDetail = (): void => {
     setDetailModalOpen(false);
     setDetailId(null);
     setDetailItem(null);
   };
 
-  const handleAddSubmit = () => {
+  const handleAddSubmit = (): void => {
     if (addSkuId == null) {
       message.error('Please select a SKU');
       return;
@@ -171,7 +176,7 @@ export function InventoryAdjustmentPage() {
       .catch(() => {});
   };
 
-  const productOptions = useMemo(() => {
+  const productOptions = useMemo((): { label: string; value: number }[] => {
     const list = productsResponse?.items ?? [];
     const options = list.map((product: { id: number; name: string }) => ({
       label: `${product.name} (P${product.id})`,
@@ -350,34 +355,33 @@ export function InventoryAdjustmentPage() {
           </Button>
         </div>
         <div className="min-h-0 flex-1 overflow-auto">
-          {listError ? (
-            <div className="flex items-center justify-center p-8 text-red-600 dark:text-red-400">
-              {listErrorDetail instanceof Error
-                ? listErrorDetail.message
-                : 'Failed to load inventory adjustments'}
-            </div>
-          ) : (
-            <Spin spinning={listLoading}>
-              <Table
-                rowKey="id"
-                columns={columns}
-                dataSource={items}
-                pagination={{
-                  current: page,
-                  pageSize,
-                  total,
-                  showSizeChanger: true,
-                  pageSizeOptions: [...DEFAULT_TABLE_PAGE_SIZE_OPTIONS],
-                  showTotal: (t, range) =>
-                    `Showing ${range[0]}–${range[1]} of ${t}`,
-                  onChange: (p, ps) => {
-                    setPage(p);
-                    if (typeof ps === 'number') setPageSize(ps);
-                  },
-                }}
-              />
-            </Spin>
-          )}
+          <DataBoundary
+            isLoading={listLoading}
+            isError={listError}
+            error={listErrorDetail}
+            fallbackMessage="Failed to load inventory adjustments"
+            variant="inline"
+          >
+            <Table
+              rowKey="id"
+              columns={columns}
+              dataSource={items}
+              loading={listLoading}
+              pagination={{
+                current: page,
+                pageSize,
+                total,
+                showSizeChanger: true,
+                pageSizeOptions: [...DEFAULT_TABLE_PAGE_SIZE_OPTIONS],
+                showTotal: (t, range) =>
+                  `Showing ${range[0]}–${range[1]} of ${t}`,
+                onChange: (p, ps) => {
+                  setPage(p);
+                  if (typeof ps === 'number') setPageSize(ps);
+                },
+              }}
+            />
+          </DataBoundary>
         </div>
       </Card>
 

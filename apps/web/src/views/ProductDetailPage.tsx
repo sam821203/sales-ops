@@ -1,24 +1,26 @@
+import type React from 'react';
 import { Link, useParams, useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import type { SKU } from '@/api/types';
 import type { AttributeDefinition } from '@/constants/attributeDefinitions';
 import { ArrowLeftOutlined, EditOutlined } from '@ant-design/icons';
-import { Avatar, Button, Spin, Table, Tag } from 'antd';
+import { Avatar, Button, Table, Tag } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { Card } from '@/components/common/Card';
+import { DataBoundary } from '@/components/DataBoundary';
 import { ProductEditModal } from '@/components/ProductEditModal';
 import { getProductById, productKeys } from '@/api/products';
 import { formatPrice, formatKeyValuePairs } from '@/utils/format';
 import { getProductStatusClass, getStockStatusClass } from '@/utils/statusClasses';
 
-const formatSkuId = (id: number) => `SKU${String(id).padStart(3, '0')}`;
+const formatSkuId = (id: number): string => `SKU${String(id).padStart(3, '0')}`;
 
-const renderHeaderTitle = (label: string) => (
+const renderHeaderTitle = (label: string): React.ReactElement => (
   <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{label}</span>
 );
 
-export function ProductDetailPage() {
+export function ProductDetailPage(): React.ReactElement {
   const { productId } = useParams({ strict: false });
   const navigate = useNavigate();
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -60,62 +62,7 @@ export function ProductDetailPage() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex min-h-0 flex-1 flex-col gap-6">
-        <nav className="flex items-center gap-1.5 text-sm">
-          <Link
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            to="/"
-          >
-            Home
-          </Link>
-          <span className="text-gray-400 dark:text-gray-500">/</span>
-          <Link
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            to="/ecommerce/products"
-          >
-            Products
-          </Link>
-          <span className="text-gray-400 dark:text-gray-500">/</span>
-          <span className="text-gray-800 dark:text-white/90">…</span>
-        </nav>
-        <div className="flex flex-1 items-center justify-center py-12">
-          <Spin size="large" />
-        </div>
-      </div>
-    );
-  }
-
-  if (isError || !product) {
-    const message = isError && error instanceof Error ? error.message : 'Product not found.';
-    return (
-      <div className="flex min-h-0 flex-1 flex-col gap-6">
-        <nav className="flex items-center gap-1.5 text-sm">
-          <Link
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            to="/"
-          >
-            Home
-          </Link>
-          <span className="text-gray-400 dark:text-gray-500">/</span>
-          <Link
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-            to="/ecommerce/products"
-          >
-            Products
-          </Link>
-          <span className="text-gray-400 dark:text-gray-500">/</span>
-          <span className="text-gray-800 dark:text-white/90">Product</span>
-        </nav>
-        <Card title="Product not found" description={message}>
-          <Button type="primary" icon={<ArrowLeftOutlined />} onClick={() => navigate({ to: '/ecommerce/products' })}>
-            Back to Products
-          </Button>
-        </Card>
-      </div>
-    );
-  }
+  const navEnd = isLoading ? '…' : isError || !product ? 'Product' : product.name;
 
   const skuColumns: TableColumnsType<SKU & { key: number }> = [
     {
@@ -184,18 +131,32 @@ export function ProductDetailPage() {
             Products
           </Link>
           <span className="text-gray-400 dark:text-gray-500">/</span>
-          <span className="text-gray-800 dark:text-white/90">{product.name}</span>
+          <span className="text-gray-800 dark:text-white/90">{navEnd}</span>
         </nav>
-        <Button
-          type="default"
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate({ to: '/ecommerce/products' })}
-          className="!inline-flex !items-center !gap-2"
-        >
-          Back to Products
-        </Button>
+        {product != null && (
+          <Button
+            type="default"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate({ to: '/ecommerce/products' })}
+            className="!inline-flex !items-center !gap-2"
+          >
+            Back to Products
+          </Button>
+        )}
       </div>
 
+      <DataBoundary
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        variant="page"
+        fallbackMessage="Product not found."
+        errorTitle="Product not found"
+        errorActionLabel="Back to Products"
+        onRetry={() => navigate({ to: '/ecommerce/products' })}
+      >
+        {product != null ? (
+          <>
       <Card
         title="Basic information"
         description="Product identity and status."
@@ -293,6 +254,9 @@ export function ProductDetailPage() {
           locale={{ emptyText: 'No SKUs.' }}
         />
       </Card>
+          </>
+        ) : null}
+      </DataBoundary>
 
       <ProductEditModal
         open={editModalOpen}

@@ -1,3 +1,4 @@
+import type React from 'react';
 import type { SorterResult } from 'antd/es/table/interface';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearch, useNavigate } from '@tanstack/react-router';
@@ -27,9 +28,10 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { Avatar, Button, Dropdown, Form, Input, InputNumber, message, Modal, Select, Space, Table, Tag, Upload } from 'antd';
+import { App, Avatar, Button, Dropdown, Form, Input, InputNumber, Modal, Select, Space, Table, Tag, Upload } from 'antd';
 import type { TableColumnsType } from 'antd';
 import { Card } from '@/components/common/Card/index.ts';
+import { DataBoundary } from '@/components/DataBoundary';
 import { PageBreadcrumb } from '@/components/common/breadcrumb';
 import {
   DEFAULT_TABLE_PAGE_SIZE,
@@ -44,14 +46,15 @@ import {
 } from '@/api/products';
 import { ProductEditModal } from '@/components/ProductEditModal';
 import { uploadProductImage } from '@/api/upload';
+import { useNotification } from '@/context/NotificationContext';
 import { formatPrice, formatPriceRange, formatKeyValuePairs } from '@/utils/format';
 import { getProductStatusClass, getStockStatusClass } from '@/utils/statusClasses';
 
-const renderHeaderTitle = (label: string) => (
+const renderHeaderTitle = (label: string): React.ReactElement => (
   <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">{label}</span>
 );
 
-const formatSkuId = (id: number) => `SKU${String(id).padStart(3, '0')}`;
+const formatSkuId = (id: number): string => `SKU${String(id).padStart(3, '0')}`;
 
 function getAttributesFromForm(
   raw: Record<string, string>,
@@ -74,7 +77,8 @@ function ProductImageUploadField({
   form,
 }: {
   form: ReturnType<typeof Form.useForm<{ name: string; status: ProductStatus; imageUrl?: string }>>[0];
-}) {
+}): React.ReactElement {
+  const notification = useNotification();
   const imageUrl = Form.useWatch('imageUrl', form);
   const [loading, setLoading] = useState(false);
   return (
@@ -85,15 +89,18 @@ function ProductImageUploadField({
       <Upload
         showUploadList={false}
         accept="image/jpeg,image/png,image/gif,image/webp"
-        customRequest={async ({ file, onSuccess, onError }) => {
+        customRequest={async ({ file, onSuccess, onError }): Promise<void> => {
           setLoading(true);
           try {
-            const { url } = await uploadProductImage(file as File);
+            const fileObj = file instanceof File ? file : undefined;
+            if (!fileObj) return;
+            const { url } = await uploadProductImage(fileObj);
             form.setFieldValue('imageUrl', url);
             onSuccess?.(url);
           } catch (e) {
-            message.error((e as Error).message ?? 'Upload failed');
-            onError?.(e as Error);
+            const msg = e instanceof Error ? e.message : 'Upload failed';
+            notification.error({ message: 'Upload failed', description: msg });
+            onError?.(e instanceof Error ? e : new Error(String(e)));
           } finally {
             setLoading(false);
           }
@@ -107,7 +114,9 @@ function ProductImageUploadField({
   );
 }
 
-export function ProductsPage() {
+export function ProductsPage(): React.ReactElement {
+  const notification = useNotification();
+  const { message, modal } = App.useApp();
   const queryClient = useQueryClient();
   const searchParams = useSearch({ strict: false });
   const navigate = useNavigate();
@@ -162,8 +171,8 @@ export function ProductsPage() {
   const [addProductForm] = Form.useForm<{ name: string; status: ProductStatus; imageUrl?: string }>();
 
   const updateSearch = useCallback(
-    (updates: Partial<Record<string, string | number | undefined>>) => {
-      const next = {
+    (updates: Partial<Record<string, string | number | undefined>>): void => {
+      const next: Record<string, string | number | undefined> = {
         page: searchParams?.page ?? 1,
         pageSize: searchParams?.pageSize ?? DEFAULT_TABLE_PAGE_SIZE,
         status: searchParams?.status ?? 'all',
@@ -173,18 +182,22 @@ export function ProductsPage() {
         edit: searchParams?.edit,
         ...updates,
       };
-      navigate({ to: '.', search: next as Record<string, unknown> });
+      navigate({ to: '.', search: next });
     },
     [navigate, searchParams]
   );
 
   const listParams = useMemo((): ListProductsQuery => {
+    const sortBy: ProductSortBy | undefined =
+      sortField === 'name' || sortField === 'status' || sortField === 'createdAt' || sortField === 'skuCount'
+        ? sortField
+        : undefined;
     return {
       page,
       pageSize,
       status: statusFilter === 'all' ? undefined : statusFilter,
-      ...(sortField != null && sortOrder != null && {
-        sortBy: sortField as ProductSortBy,
+      ...(sortBy != null && sortOrder != null && {
+        sortBy,
         sortOrder: sortOrder === 'ascend' ? 'asc' : 'desc',
       }),
       ...(searchQuery.trim() !== '' && { q: searchQuery.trim() }),
@@ -210,18 +223,16 @@ export function ProductsPage() {
       queryClient.invalidateQueries({ queryKey: productKeys.all });
       setAddProductModalOpen(false);
       addProductForm.resetFields();
-      message.success('Product created.');
+      notification.success({ message: 'Product created.' });
     },
-    onError: (e: Error) => message.error(e.message || 'Failed to create product'),
   });
 
   const deleteProductMutation = useMutation({
     mutationFn: (id: number) => deleteProduct(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.all });
-      message.success('Product removed.');
+      notification.success({ message: 'Product removed.' });
     },
-    onError: (e: Error) => message.error(e.message || 'Failed to remove product'),
   });
 
   const updateProductMutation = useMutation({
@@ -230,7 +241,6 @@ export function ProductsPage() {
       queryClient.invalidateQueries({ queryKey: productKeys.all });
       queryClient.invalidateQueries({ queryKey: productKeys.detail(id) });
     },
-    onError: (e: Error) => message.error(e.message || 'Failed to update product'),
   });
 
   /** Client-side category/brand filter on current page items. Table dataSource uses this; if it ever removes rows, footer "Showing X–Y" is derived from displayedCount so it stays consistent with visible rows. */
@@ -260,20 +270,21 @@ export function ProductsPage() {
     setAddSkuModalOpen(true);
   }, [addSkuForm]);
 
-  const closeAddSkuModal = () => {
+  const closeAddSkuModal = (): void => {
     setAddSkuModalOpen(false);
     setAddSkuProduct(null);
     addSkuForm.resetFields();
   };
 
-  const submitAddSku = () => {
+  const submitAddSku = (): void => {
     if (addSkuProduct == null) return;
     const product = addSkuProduct;
     addSkuForm.validateFields().then((values) => {
       const attrsRaw = values.attributes;
       const attributes: Record<string, string> =
         product?.attributeDefinitions?.length && attrsRaw != null && !Array.isArray(attrsRaw)
-          ? getAttributesFromForm(attrsRaw as Record<string, string>, product.attributeDefinitions)
+          ? // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- form attrs
+            getAttributesFromForm(attrsRaw as Record<string, string>, product.attributeDefinitions)
           : (Array.isArray(attrsRaw) ? attrsRaw : []).reduce<Record<string, string>>(
               (acc, item: { key?: string; value?: string }) => {
                 if (item?.key?.trim()) acc[item.key.trim()] = item?.value?.trim() ?? '';
@@ -294,7 +305,7 @@ export function ProductsPage() {
         {
           onSuccess: () => {
             closeAddSkuModal();
-            message.success('SKU added.');
+            notification.success({ message: 'SKU added.' });
           },
         }
       );
@@ -320,10 +331,10 @@ export function ProductsPage() {
         }));
       updateProductMutation.mutate(
         { id: record.id, body: { skus: newSkus } },
-        { onSuccess: () => message.success('SKU removed.') }
+        { onSuccess: () => notification.success({ message: 'SKU removed.' }) }
       );
     },
-    [updateProductMutation]
+    [updateProductMutation, notification]
   );
 
   const tableRows = useMemo(() => {
@@ -360,15 +371,16 @@ export function ProductsPage() {
 
   const tableSortToSortBy = (columnKey: string | undefined): ProductSortBy | undefined => {
     if (columnKey === 'name' || columnKey === 'status' || columnKey === 'createdAt' || columnKey === 'skuCount')
-      return columnKey as ProductSortBy;
+      return columnKey;
     if (columnKey === 'category' || columnKey === 'brand' || columnKey === 'totalStock' || columnKey === 'minPrice')
       return 'createdAt';
     return undefined;
   };
 
-  const handleTableChange = (_pagination: unknown, _filters: unknown, sorter: SorterResult<ProductRow> | SorterResult<ProductRow>[]) => {
+  const handleTableChange = (_pagination: unknown, _filters: unknown, sorter: SorterResult<ProductRow> | SorterResult<ProductRow>[]): void => {
     const result = Array.isArray(sorter) ? sorter[0] : sorter;
-    const nextSortBy = result.columnKey ? tableSortToSortBy(result.columnKey as string) : undefined;
+    const key = result.columnKey != null ? String(result.columnKey) : undefined;
+    const nextSortBy = key ? tableSortToSortBy(key) : undefined;
     const nextSortOrder = result.order === 'ascend' ? 'asc' : result.order === 'descend' ? 'desc' : undefined;
     updateSearch({ sortBy: nextSortBy, sortOrder: nextSortOrder, page: 1 });
   };
@@ -504,7 +516,7 @@ export function ProductsPage() {
             label: 'Delete',
             danger: true,
             onClick: () => {
-              Modal.confirm({
+              modal.confirm({
                 title: 'Remove product?',
                 content: 'This product and its SKUs will be removed.',
                 okText: 'Remove',
@@ -531,7 +543,7 @@ export function ProductsPage() {
       },
     },
   ],
-  [sortFieldDisplay, sortOrder, openAddSkuModal, removeProduct, navigate]
+  [sortFieldDisplay, sortOrder, openAddSkuModal, removeProduct, navigate, modal]
   );
 
   return (
@@ -727,11 +739,13 @@ export function ProductsPage() {
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-auto">
-          {listError ? (
-            <div className="flex items-center justify-center p-8 text-red-600 dark:text-red-400">
-              {listErrorDetail instanceof Error ? listErrorDetail.message : 'Failed to load products'}
-            </div>
-          ) : (
+          <DataBoundary
+            isLoading={listLoading}
+            isError={listError}
+            error={listErrorDetail}
+            fallbackMessage="Failed to load products"
+            variant="inline"
+          >
           <Table<ProductRow>
           tableLayout="fixed"
           columns={columns}
@@ -747,7 +761,8 @@ export function ProductsPage() {
             showExpandColumn: true,
             columnWidth: 44,
             expandedRowKeys,
-            onExpandedRowsChange: (keys) => setExpandedRowKeys(keys as number[]),
+            onExpandedRowsChange: (keys: readonly React.Key[]) =>
+              setExpandedRowKeys(Array.isArray(keys) ? keys.filter((k): k is number => typeof k === 'number') : []),
             expandRowByClick: true,
             expandIcon: ({ expanded, onExpand, record }) =>
               expanded ? (
@@ -861,7 +876,7 @@ export function ProductsPage() {
                           label: 'Delete',
                           danger: true,
                           onClick: () => {
-                            Modal.confirm({
+                            modal.confirm({
                               title: `Remove ${formatSkuId(sku.id)}?`,
                               content: 'This SKU will be removed.',
                               okText: 'Remove',
@@ -890,7 +905,7 @@ export function ProductsPage() {
             ),
           }}
         />
-          )}
+          </DataBoundary>
         </div>
       </Card>
 
