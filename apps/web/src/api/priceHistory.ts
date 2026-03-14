@@ -45,10 +45,7 @@ export async function createPriceHistory(
     newPrice: body.newPrice,
     changedBy: body.changedBy,
     ...(body.effectiveDate != null && {
-      effectiveDate:
-        body.effectiveDate instanceof Date
-          ? body.effectiveDate
-          : body.effectiveDate,
+      effectiveDate: body.effectiveDate,
     }),
   };
   return request<PriceHistoryDetailResponse>(url, {
