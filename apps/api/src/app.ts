@@ -87,7 +87,10 @@ const createPriceHistoryRoute = createRoute({
   method: 'post',
   path: '/priceHistory',
   request: { body: { content: { 'application/json': { schema: createSkuPriceHistorySchema } } } },
-  responses: { 201: { description: 'Created', content: { 'application/json': { schema: skuPriceHistoryListItemSchema } } } },
+  responses: {
+    201: { description: 'Created', content: { 'application/json': { schema: skuPriceHistoryListItemSchema } } },
+    400: { description: 'Bad Request', content: { 'application/json': { schema: jsonObjectSchema } } },
+  },
 });
 const listInventoryAdjustmentsRoute = createRoute({
   method: 'get',
