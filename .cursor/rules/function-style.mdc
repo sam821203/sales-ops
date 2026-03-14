@@ -1,6 +1,6 @@
 ---
 description: Function style convention — arrow functions for non-components, function declarations for React components; use when writing or reviewing TS/TSX
-globs: "*.ts,*.tsx"
+globs: "**/*.{ts,tsx}"
 alwaysApply: false
 ---
 
