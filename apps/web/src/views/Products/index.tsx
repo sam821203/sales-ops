@@ -283,7 +283,7 @@ export function ProductsPage(): React.ReactElement {
       const attrsRaw = values.attributes;
       const attributes: Record<string, string> =
         product?.attributeDefinitions?.length && attrsRaw != null && !Array.isArray(attrsRaw)
-          ? // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- form attrs
+          ?
             getAttributesFromForm(attrsRaw as Record<string, string>, product.attributeDefinitions)
           : (Array.isArray(attrsRaw) ? attrsRaw : []).reduce<Record<string, string>>(
               (acc, item: { key?: string; value?: string }) => {

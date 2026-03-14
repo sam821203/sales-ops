@@ -31,7 +31,6 @@ function getBackendMessage(data: unknown): string | null {
   if (data === null || typeof data !== 'object') {
     return null;
   }
-  // eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- narrow for message
   const obj = data as Record<string, unknown>;
   if (typeof obj.message === 'string' && obj.message.trim() !== '') {
     return obj.message;
