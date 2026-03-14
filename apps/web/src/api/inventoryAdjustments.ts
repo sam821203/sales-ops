@@ -1,4 +1,4 @@
-import { apiClient } from '@/api/client';
+import { getApiUrl, request } from '@/api/client';
 import type {
   CreateInventoryAdjustmentInput,
   InventoryAdjustmentDetailResponse,
@@ -14,34 +14,36 @@ export const inventoryAdjustmentKeys = {
     [...inventoryAdjustmentKeys.all, 'detail', id] as const,
 };
 
+function buildInventoryAdjustmentsQuery(params: ListInventoryAdjustmentsQuery): string {
+  const search = new URLSearchParams();
+  search.set('page', String(params.page));
+  search.set('pageSize', String(params.pageSize));
+  if (params.q != null && params.q.trim() !== '') search.set('q', params.q.trim());
+  const qs = search.toString();
+  return qs ? `?${qs}` : '';
+}
+
 export async function getInventoryAdjustmentsList(
   params: ListInventoryAdjustmentsQuery
 ): Promise<InventoryAdjustmentsListResponse> {
-  const res = await apiClient.inventoryAdjustments.$get({
-    query: {
-      page: params.page,
-      pageSize: params.pageSize,
-      ...(params.q != null && params.q.trim() !== '' ? { q: params.q.trim() } : {}),
-    },
-  });
-  return res.json();
+  const url = getApiUrl('/inventoryAdjustments') + buildInventoryAdjustmentsQuery(params);
+  return request<InventoryAdjustmentsListResponse>(url);
 }
 
 export async function getInventoryAdjustmentById(
   id: number
-): Promise<InventoryAdjustmentDetailResponse | null> {
-  const res = await apiClient.inventoryAdjustments[':id'].$get({
-    param: { id },
-  });
-  if (res.status === 404) {
-    return null;
-  }
-  return res.json();
+): Promise<InventoryAdjustmentDetailResponse> {
+  const url = getApiUrl(`/inventoryAdjustments/${id}`);
+  return request<InventoryAdjustmentDetailResponse>(url);
 }
 
-export async function createInventoryAdjustment(body: CreateInventoryAdjustmentInput) {
-  const res = await apiClient.inventoryAdjustments.$post({
-    json: body,
+export async function createInventoryAdjustment(
+  body: CreateInventoryAdjustmentInput
+): Promise<InventoryAdjustmentDetailResponse> {
+  const url = getApiUrl('/inventoryAdjustments');
+  return request<InventoryAdjustmentDetailResponse>(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
   });
-  return res.json();
 }

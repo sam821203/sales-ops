@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ProductStatus } from '@/api/types';
 import type { UpdateProductInput } from '@/api/types';
-import { Avatar, Button, Form, Input, Modal, Select, Upload, message } from 'antd';
+import { Avatar, Button, Form, Input, Modal, Select, Upload } from 'antd';
+import { DataBoundary } from '@/components/DataBoundary';
 import { getProductById, productKeys, updateProduct } from '@/api/products';
 import { uploadProductImage } from '@/api/upload';
+import { useNotification } from '@/context/NotificationContext';
 
 function ProductImageUploadField({
   form,
 }: {
   form: ReturnType<typeof Form.useForm<{ name: string; status: ProductStatus; imageUrl?: string }>>[0];
-}) {
+}): ReactElement {
+  const notification = useNotification();
   const imageUrl = Form.useWatch('imageUrl', form);
   const [loading, setLoading] = useState(false);
   return (
@@ -21,15 +24,18 @@ function ProductImageUploadField({
       <Upload
         showUploadList={false}
         accept="image/jpeg,image/png,image/gif,image/webp"
-        customRequest={async ({ file, onSuccess, onError }) => {
+        customRequest={async ({ file, onSuccess, onError }): Promise<void> => {
           setLoading(true);
           try {
-            const { url } = await uploadProductImage(file as File);
+            const fileObj = file instanceof File ? file : undefined;
+            if (!fileObj) return;
+            const { url } = await uploadProductImage(fileObj);
             form.setFieldValue('imageUrl', url);
             onSuccess?.(url);
           } catch (e) {
-            message.error((e as Error).message ?? 'Upload failed');
-            onError?.(e as Error);
+            const msg = e instanceof Error ? e.message : 'Upload failed';
+            notification.error({ message: 'Upload failed', description: msg });
+            onError?.(e instanceof Error ? e : new Error(String(e)));
           } finally {
             setLoading(false);
           }
@@ -48,13 +54,15 @@ export interface ProductEditModalProps {
   onSuccess?: () => void;
 }
 
-export function ProductEditModal({ open, productId, onClose, onSuccess }: ProductEditModalProps) {
+export function ProductEditModal({ open, productId, onClose, onSuccess }: ProductEditModalProps): ReactElement {
+  const notification = useNotification();
   const queryClient = useQueryClient();
   const [form] = Form.useForm<{ name: string; status: ProductStatus; imageUrl?: string }>();
 
+  const productIdNum = productId ?? 0;
   const productQuery = useQuery({
-    queryKey: productKeys.detail(productId!),
-    queryFn: () => getProductById(productId!),
+    queryKey: productKeys.detail(productIdNum),
+    queryFn: () => getProductById(productIdNum),
     enabled: open && productId != null,
   });
 
@@ -76,12 +84,11 @@ export function ProductEditModal({ open, productId, onClose, onSuccess }: Produc
       form.resetFields();
       onClose();
       onSuccess?.();
-      message.success('Product updated.');
+      notification.success({ message: 'Product updated.' });
     },
-    onError: (e: Error) => message.error(e.message || 'Failed to update product'),
   });
 
-  const handleOk = () => {
+  const handleOk = (): void => {
     if (productId == null) return;
     form.validateFields()
       .then((values) => {
@@ -97,7 +104,7 @@ export function ProductEditModal({ open, productId, onClose, onSuccess }: Produc
       .catch(() => {});
   };
 
-  const handleCancel = () => {
+  const handleCancel = (): void => {
     form.resetFields();
     onClose();
   };
@@ -114,40 +121,45 @@ export function ProductEditModal({ open, productId, onClose, onSuccess }: Produc
       confirmLoading={updateMutation.isPending}
       destroyOnHidden
     >
-      {showForm && (
-        <Form
-          form={form}
-          layout="vertical"
-          className="mt-4"
-          initialValues={{
-            name: productQuery.data!.name,
-            status: productQuery.data!.status,
-            imageUrl: productQuery.data!.imageUrl,
-          }}
+      {open && productId != null ? (
+        <DataBoundary
+          isLoading={productQuery.isLoading}
+          isError={!productQuery.isLoading && productQuery.data == null}
+          error={productQuery.error}
+          fallbackMessage="Product not found."
+          variant="inline"
+          className="py-4"
         >
-          <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Required' }]}>
-            <Input placeholder="Product name" maxLength={255} showCount />
-          </Form.Item>
-          <Form.Item name="status" label="Status" rules={[{ required: true }]}>
-            <Select
-              options={[
-                { value: 'Draft', label: 'Draft' },
-                { value: 'Active', label: 'Active' },
-                { value: 'Inactive', label: 'Inactive' },
-              ]}
-            />
-          </Form.Item>
-          <Form.Item name="imageUrl" label="Product image">
-            <ProductImageUploadField form={form} />
-          </Form.Item>
-        </Form>
-      )}
-      {open && productId != null && productQuery.isLoading && (
-        <p className="text-body dark:text-bodydark2">Loading...</p>
-      )}
-      {open && productId != null && !productQuery.isLoading && !productQuery.data && (
-        <p className="text-body dark:text-bodydark2">Product not found.</p>
-      )}
+          {showForm && productQuery.data ? (
+            <Form
+              form={form}
+              layout="vertical"
+              className="mt-4"
+              initialValues={{
+                name: productQuery.data.name,
+                status: productQuery.data.status,
+                imageUrl: productQuery.data.imageUrl,
+              }}
+            >
+              <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Required' }]}>
+                <Input placeholder="Product name" maxLength={255} showCount />
+              </Form.Item>
+              <Form.Item name="status" label="Status" rules={[{ required: true }]}>
+                <Select
+                  options={[
+                    { value: 'Draft', label: 'Draft' },
+                    { value: 'Active', label: 'Active' },
+                    { value: 'Inactive', label: 'Inactive' },
+                  ]}
+                />
+              </Form.Item>
+              <Form.Item name="imageUrl" label="Product image">
+                <ProductImageUploadField form={form} />
+              </Form.Item>
+            </Form>
+          ) : null}
+        </DataBoundary>
+      ) : null}
     </Modal>
   );
 }
