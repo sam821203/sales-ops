@@ -1,8 +1,8 @@
-import type { CreateSkuPriceHistoryInput } from './dto/ecommerce.dto.js';
 import type {
+  CreateSkuPriceHistoryInput,
   ListPriceHistoryResponse,
   SkuPriceHistoryListItem,
-} from '@salesops/shared';
+} from './dto/ecommerce.dto.js';
 import {
   PRICE_UNCHANGED,
   skuPriceHistoryRepository,
@@ -38,7 +38,10 @@ function toListItem(row: PrismaRowNonNull): SkuPriceHistoryListItem {
     skuId: row.skuId,
     oldPrice: row.oldPrice,
     newPrice: row.newPrice,
-    effectiveDate: row.effectiveDate,
+    effectiveDate:
+      row.effectiveDate instanceof Date
+        ? row.effectiveDate.toISOString()
+        : new Date(row.effectiveDate).toISOString(),
     changedBy: row.changedBy,
     productName: row.sku.product.name,
     productId: row.sku.productId,

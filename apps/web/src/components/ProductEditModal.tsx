@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import type { ProductStatus } from '@salesops/shared';
+import type { ProductStatus } from '@/api/types';
 import type { UpdateProductInput } from '@/api/types';
 import { Avatar, Button, Form, Input, Modal, Select, Upload, message } from 'antd';
 import { getProductById, productKeys, updateProduct } from '@/api/products';

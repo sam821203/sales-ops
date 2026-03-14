@@ -1,4 +1,4 @@
-import type { ProductStatus } from '@salesops/shared';
+import type { ProductStatus } from '@/api/types';
 import type { ProductsListResponse } from '@/api/types';
 
 export type StatusFilter = ProductStatus | 'all';

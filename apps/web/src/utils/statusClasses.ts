@@ -1,4 +1,4 @@
-import type { ProductStatus } from '@salesops/shared';
+import type { ProductStatus } from '@/api/types';
 
 /** Tailwind classes for product status tags (Active / Draft / Inactive). */
 export const getProductStatusClass = (status: ProductStatus): string => {

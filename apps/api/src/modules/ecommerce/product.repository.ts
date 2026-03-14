@@ -1,5 +1,8 @@
-import type { CreateProductInput, UpdateProductInput } from './dto/ecommerce.dto.js';
-import type { ProductSortBy } from '@salesops/shared';
+import type {
+  CreateProductInput,
+  ProductSortBy,
+  UpdateProductInput,
+} from './dto/ecommerce.dto.js';
 import { prisma } from '../../lib/prisma.js';
 
 type ProductStatus = 'Draft' | 'Active' | 'Inactive';

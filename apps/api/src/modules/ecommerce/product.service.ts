@@ -1,5 +1,10 @@
-import type { CreateProductInput, UpdateProductInput } from './dto/ecommerce.dto.js';
-import type { ListProductsResponse, Product, ProductSortBy } from '@salesops/shared';
+import type {
+  CreateProductInput,
+  ListProductsResponse,
+  Product,
+  ProductSortBy,
+  UpdateProductInput,
+} from './dto/ecommerce.dto.js';
 import { toSharedProductStatus } from './mappers/enum.mapper.js';
 import { productRepository } from './product.repository.js';
 

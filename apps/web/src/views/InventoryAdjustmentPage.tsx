@@ -16,9 +16,9 @@ import type {
   InventoryAdjustmentsListResponse,
 } from '@/api/types';
 import { getProductById, getProducts, productKeys } from '@/api/products';
+import { inventoryAdjustmentTypeValues } from '@/constants/inventoryAdjustment';
 import { DEFAULT_TABLE_PAGE_SIZE, DEFAULT_TABLE_PAGE_SIZE_OPTIONS } from '@/constants/pagination';
 import { formatKeyValuePairs } from '@/utils/format';
-import { inventoryAdjustmentTypeValues } from '@salesops/shared';
 
 function formatDateTime(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
