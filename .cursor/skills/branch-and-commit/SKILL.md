@@ -1,3 +1,9 @@
+---
+name: branch-and-commit
+description: Branch from develop and commit all changes
+disable-model-invocation: true
+---
+
 # Branch from develop and commit all changes
 
 When I run this command, do the following in order.

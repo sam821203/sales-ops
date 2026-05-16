@@ -1,3 +1,9 @@
+---
+name: generate-cursor-rules
+description: Cursor Rules Instructions
+disable-model-invocation: true
+---
+
 # Cursor Rules Instructions
 
 To create or edit a rule:

@@ -1,3 +1,9 @@
+---
+name: generate-pr-markdown
+description: Generate PR markdown from current branch commits
+disable-model-invocation: true
+---
+
 # Generate PR markdown from current branch commits
 
 When I run this command, generate a **single, copyable PR description** in Markdown that follows the repo’s pull request template. The content must be **based on the current branch and all commits on that branch**.

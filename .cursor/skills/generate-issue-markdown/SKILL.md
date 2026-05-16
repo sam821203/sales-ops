@@ -1,3 +1,9 @@
+---
+name: generate-issue-markdown
+description: Generate English issue markdown
+disable-model-invocation: true
+---
+
 # Generate English issue markdown
 
 When I run this command, generate a **single, copyable English issue** in Markdown format that I can paste into GitHub, GitLab, Jira, or similar. Output it inside a **fenced code block** (language: `markdown`) so I can **click the copy button** on the block to copy in one go. The issue must be **based on the current branch and all commits on that branch**.

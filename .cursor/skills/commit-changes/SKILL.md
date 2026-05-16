@@ -1,3 +1,9 @@
+---
+name: commit-changes
+description: Commit changes (multiple commits by relevance)
+disable-model-invocation: true
+---
+
 # Commit changes (multiple commits by relevance)
 
 When I run this command, do the following in order.
