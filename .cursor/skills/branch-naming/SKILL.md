@@ -1,4 +1,5 @@
 ---
+name: branch-naming
 description: Branch naming conventions when creating new branches from develop; use when creating or suggesting branch names
 ---
 

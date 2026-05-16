@@ -1,4 +1,5 @@
 ---
+name: commit-message
 description: Commit message format and conventions enforced by commitlint; use when writing or suggesting git commit messages
 ---
 
