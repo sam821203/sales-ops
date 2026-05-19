@@ -95,6 +95,9 @@ export default defineConfig(
       '@typescript-eslint/consistent-type-assertions': 'off',
     },
   },
+  // Ecommerce: repository layer uses explicit Prisma GetPayload<{ include: ... }> return types
+  // (see inventory-adjustment.repository, product.repository, sku-price-history.repository)
+  // so services get fully typed rows and no file-level no-unsafe-* disables are needed.
   // Web: allow type assertions / unsafe assignment where necessary (env, API response, form attrs)
   {
     files: [

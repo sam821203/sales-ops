@@ -3,21 +3,25 @@ import type {
   ProductSortBy,
   UpdateProductInput,
 } from './dto/ecommerce.dto.js';
+import type { ProductGetPayload } from '../../../generated/prisma/models/Product.js';
 import { prisma } from '../../lib/prisma.js';
+
+/** Prisma payload for Product with skus included (matches our queries). */
+type ProductWithSkus = ProductGetPayload<{ include: { skus: true } }>;
 
 type ProductStatus = 'Draft' | 'Active' | 'Inactive';
 
 /** Product name search uses contains; on SQLite, LIKE is case-sensitive. */
-function buildWhere(options: { status?: ProductStatus; q?: string }) {
+const buildWhere = (options: { status?: ProductStatus; q?: string }): { status?: ProductStatus; name?: { contains: string } } | undefined => {
   const conditions: { status?: ProductStatus; name?: { contains: string } } = {};
   if (options.status !== undefined) conditions.status = options.status;
   if (options.q !== undefined && options.q.trim() !== '') {
     conditions.name = { contains: options.q.trim() };
   }
   return Object.keys(conditions).length > 0 ? conditions : undefined;
-}
+};
 
-function buildOrderBy(sortBy?: ProductSortBy, sortOrder: 'asc' | 'desc' = 'desc') {
+const buildOrderBy = (sortBy?: ProductSortBy, sortOrder: 'asc' | 'desc' = 'desc'): Record<string, unknown> => {
   if (sortBy === undefined || sortBy === 'createdAt') {
     return { createdAt: sortOrder };
   }
@@ -25,13 +29,15 @@ function buildOrderBy(sortBy?: ProductSortBy, sortOrder: 'asc' | 'desc' = 'desc'
     return { skus: { _count: sortOrder } };
   }
   return { [sortBy]: sortOrder };
-}
+};
 
 /**
  * Data access only. No business logic; all SQL/ORM here.
  */
+const toPrismaAttributes = (attrs: Record<string, string>): object => ({ ...attrs });
+
 export const productRepository = {
-  async create(data: CreateProductInput) {
+  async create(data: CreateProductInput): Promise<ProductWithSkus> {
     return prisma.$transaction(async (tx) => {
       const product = await tx.product.create({
         data: {
@@ -46,7 +52,7 @@ export const productRepository = {
             productId: product.id,
             price: sku.price,
             stock: sku.stock,
-            attributes: sku.attributes as object,
+            attributes: toPrismaAttributes(sku.attributes),
           })),
         });
       }
@@ -57,7 +63,7 @@ export const productRepository = {
     });
   },
 
-  async findById(id: number) {
+  async findById(id: number): Promise<ProductWithSkus | null> {
     return prisma.product.findUnique({
       where: { id },
       include: { skus: true },
@@ -73,7 +79,7 @@ export const productRepository = {
       sortOrder?: 'asc' | 'desc';
       q?: string;
     }
-  ) {
+  ): Promise<ProductWithSkus[]> {
     const where = buildWhere({ status: options.status, q: options.q });
     const orderBy = buildOrderBy(options.sortBy, options.sortOrder ?? 'desc');
     const skip = (page - 1) * pageSize;
@@ -86,7 +92,7 @@ export const productRepository = {
     });
   },
 
-  async count(options: { status?: ProductStatus; q?: string }) {
+  async count(options: { status?: ProductStatus; q?: string }): Promise<number> {
     const where = buildWhere(options);
     return prisma.product.count({ where });
   },
@@ -100,7 +106,7 @@ export const productRepository = {
       sortOrder?: 'asc' | 'desc';
       q?: string;
     }
-  ) {
+  ): Promise<{ items: ProductWithSkus[]; total: number }> {
     const where = buildWhere({ status: options.status, q: options.q });
     const orderBy = buildOrderBy(options.sortBy, options.sortOrder ?? 'desc');
     const skip = (page - 1) * pageSize;
@@ -119,7 +125,10 @@ export const productRepository = {
     });
   },
 
-  async update(id: number, data: UpdateProductInput) {
+  async update(
+    id: number,
+    data: UpdateProductInput
+  ): Promise<ProductWithSkus | null> {
     return prisma.$transaction(async (tx) => {
       const product = await tx.product.findUnique({ where: { id } });
       if (!product) return null;
@@ -132,7 +141,7 @@ export const productRepository = {
               productId: id,
               price: sku.price,
               stock: sku.stock,
-              attributes: sku.attributes as object,
+              attributes: toPrismaAttributes(sku.attributes),
             })),
           });
         }
@@ -150,7 +159,7 @@ export const productRepository = {
     });
   },
 
-  async delete(id: number) {
+  async delete(id: number): Promise<void> {
     await prisma.product.delete({
       where: { id },
     });

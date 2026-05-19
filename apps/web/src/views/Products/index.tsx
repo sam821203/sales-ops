@@ -56,10 +56,10 @@ const renderHeaderTitle = (label: string): React.ReactElement => (
 
 const formatSkuId = (id: number): string => `SKU${String(id).padStart(3, '0')}`;
 
-function getAttributesFromForm(
+const getAttributesFromForm = (
   raw: Record<string, string>,
   definitions: AttributeDefinition[]
-): Record<string, string> {
+): Record<string, string> => {
   const result: Record<string, string> = {};
   for (const def of definitions) {
     const value = raw[def.key]?.trim() ?? '';
@@ -71,7 +71,7 @@ function getAttributesFromForm(
     }
   }
   return result;
-}
+};
 
 function ProductImageUploadField({
   form,

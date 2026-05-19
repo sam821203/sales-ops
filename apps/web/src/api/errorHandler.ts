@@ -2,7 +2,7 @@
  * Maps HTTP status codes to user-facing error messages.
  * If the backend response contains { message: string }, that is used instead.
  */
-export function mapHttpError(status: number, data?: unknown): Error {
+export const mapHttpError = (status: number, data?: unknown): Error => {
   const backendMessage = getBackendMessage(data);
   if (backendMessage !== null) {
     return new Error(backendMessage);
@@ -25,9 +25,9 @@ export function mapHttpError(status: number, data?: unknown): Error {
       }
       return new Error(`Request failed with status ${status}.`);
   }
-}
+};
 
-function getBackendMessage(data: unknown): string | null {
+const getBackendMessage = (data: unknown): string | null => {
   if (data === null || typeof data !== 'object') {
     return null;
   }
@@ -36,4 +36,4 @@ function getBackendMessage(data: unknown): string | null {
     return obj.message;
   }
   return null;
-}
+};

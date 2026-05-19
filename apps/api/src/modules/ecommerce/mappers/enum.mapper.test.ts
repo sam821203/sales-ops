@@ -22,9 +22,7 @@ import {
   refundStatusMap,
 } from './enum.mapper.js';
 
-function sorted(values: readonly string[]): string[] {
-  return [...values].sort();
-}
+const sorted = (values: readonly string[]): string[] => [...values].sort();
 
 describe('ecommerce enum mappings', () => {
   it('stays consistent with API ecommerce product statuses', () => {

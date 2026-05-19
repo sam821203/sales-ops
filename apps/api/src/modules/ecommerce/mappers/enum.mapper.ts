@@ -80,42 +80,31 @@ export const refundStatusMap = {
   Failed: 'Failed',
 } as const satisfies Record<PrismaRefundStatus, RefundStatus>;
 
-export function toSharedProductStatus(status: PrismaProductStatus): ProductStatus {
-  return productStatusMap[status];
-}
+export const toSharedProductStatus = (status: PrismaProductStatus): ProductStatus =>
+  productStatusMap[status];
 
-export function toSharedDiscountType(type: PrismaDiscountType): DiscountType {
-  return discountTypeMap[type];
-}
+export const toSharedDiscountType = (type: PrismaDiscountType): DiscountType =>
+  discountTypeMap[type];
 
-export function toSharedOrderStatus(status: PrismaOrderStatus): OrderStatus {
-  return orderStatusMap[status];
-}
+export const toSharedOrderStatus = (status: PrismaOrderStatus): OrderStatus =>
+  orderStatusMap[status];
 
-export function toSharedPaymentStatus(status: PrismaPaymentStatus): PaymentStatus {
-  return paymentStatusMap[status];
-}
+export const toSharedPaymentStatus = (status: PrismaPaymentStatus): PaymentStatus =>
+  paymentStatusMap[status];
 
-export function toSharedInventoryAdjustmentType(
+export const toSharedInventoryAdjustmentType = (
   type: PrismaInventoryAdjustmentType,
-): InventoryAdjustmentType {
-  return inventoryAdjustmentTypeMap[type];
-}
+): InventoryAdjustmentType => inventoryAdjustmentTypeMap[type];
 
-export function toSharedPaymentMethod(method: PrismaPaymentMethod): PaymentMethod {
-  return paymentMethodMap[method];
-}
+export const toSharedPaymentMethod = (method: PrismaPaymentMethod): PaymentMethod =>
+  paymentMethodMap[method];
 
-export function toSharedPaymentTransactionStatus(
+export const toSharedPaymentTransactionStatus = (
   status: PrismaPaymentTransactionStatus,
-): PaymentTransactionStatus {
-  return paymentTransactionStatusMap[status];
-}
+): PaymentTransactionStatus => paymentTransactionStatusMap[status];
 
-export function toSharedPromotionStatus(status: PrismaPromotionStatus): PromotionStatusValue {
-  return promotionStatusMap[status];
-}
+export const toSharedPromotionStatus = (status: PrismaPromotionStatus): PromotionStatusValue =>
+  promotionStatusMap[status];
 
-export function toSharedRefundStatus(status: PrismaRefundStatus): RefundStatus {
-  return refundStatusMap[status];
-}
+export const toSharedRefundStatus = (status: PrismaRefundStatus): RefundStatus =>
+  refundStatusMap[status];

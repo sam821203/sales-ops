@@ -15,7 +15,7 @@ type ParamId = z.infer<typeof productIdParamSchema>;
 type CreateBody = z.infer<typeof createProductSchema>;
 type UpdateBody = z.infer<typeof updateProductSchema>;
 
-export async function listProductsHandler(c: Context<object, string, { out: { query: ListQuery } }>) {
+export const listProductsHandler = async (c: Context<object, string, { out: { query: ListQuery } }>): Promise<Response> => {
   const { page, pageSize, status, sortBy, sortOrder, q } = c.req.valid('query');
   const list = await productService.getProducts(page, pageSize, {
     status,
@@ -24,24 +24,24 @@ export async function listProductsHandler(c: Context<object, string, { out: { qu
     q,
   });
   return c.json(list);
-}
+};
 
-export async function getProductByIdHandler(c: Context<object, string, { out: { param: ParamId } }>) {
+export const getProductByIdHandler = async (c: Context<object, string, { out: { param: ParamId } }>): Promise<Response> => {
   const { id } = c.req.valid('param');
   const product = await productService.getProductById(id);
   if (!product) {
     return c.json({ error: 'Not Found', message: 'Product not found' }, 404);
   }
   return c.json(product);
-}
+};
 
-export async function createProductHandler(c: Context<object, string, { out: { json: CreateBody } }>) {
+export const createProductHandler = async (c: Context<object, string, { out: { json: CreateBody } }>): Promise<Response> => {
   const body = c.req.valid('json');
   const created = await productService.createProduct(body);
   return c.json(created, 201);
-}
+};
 
-export async function updateProductHandler(c: Context<object, string, { out: { param: ParamId; json: UpdateBody } }>) {
+export const updateProductHandler = async (c: Context<object, string, { out: { param: ParamId; json: UpdateBody } }>): Promise<Response> => {
   const { id } = c.req.valid('param');
   const body = c.req.valid('json');
   const updated = await productService.updateProduct(id, body);
@@ -49,10 +49,10 @@ export async function updateProductHandler(c: Context<object, string, { out: { p
     return c.json({ error: 'Not Found', message: 'Product not found' }, 404);
   }
   return c.json(updated);
-}
+};
 
-export async function deleteProductHandler(c: Context<object, string, { out: { param: ParamId } }>) {
+export const deleteProductHandler = async (c: Context<object, string, { out: { param: ParamId } }>): Promise<Response> => {
   const { id } = c.req.valid('param');
   await productService.deleteProduct(id);
   return c.body(null, 204);
-}
+};

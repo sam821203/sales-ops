@@ -8,7 +8,7 @@ import { env } from '../../config/index.js';
 const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
 const ALLOWED_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 
-function configureCloudinary() {
+const configureCloudinary = (): typeof cloudinary | null => {
   const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } = env;
   if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
     return null;
@@ -19,10 +19,10 @@ function configureCloudinary() {
     api_secret: CLOUDINARY_API_SECRET,
   });
   return cloudinary;
-}
+};
 
-function uploadBufferToCloudinary(buffer: Buffer): Promise<{ secure_url: string }> {
-  return new Promise((resolve, reject) => {
+const uploadBufferToCloudinary = (buffer: Buffer): Promise<{ secure_url: string }> =>
+  new Promise((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       { folder: 'products' },
       (err, result) => {
@@ -39,9 +39,8 @@ function uploadBufferToCloudinary(buffer: Buffer): Promise<{ secure_url: string 
     );
     Readable.from(buffer).pipe(uploadStream);
   });
-}
 
-export async function uploadHandler(c: Context) {
+export const uploadHandler = async (c: Context): Promise<Response> => {
   const config = configureCloudinary();
   if (!config) {
     throw new HTTPException(503, {
@@ -55,7 +54,10 @@ export async function uploadHandler(c: Context) {
     throw new HTTPException(400, { message: 'Missing or invalid file. Use form field "file" or "image".' });
   }
 
-  const blob = file as Blob;
+  if (!(file instanceof Blob)) {
+    throw new HTTPException(400, { message: 'Invalid file. Expected a file blob.' });
+  }
+  const blob = file;
   if (blob.size > MAX_SIZE_BYTES) {
     throw new HTTPException(400, { message: `File too large. Max size: ${MAX_SIZE_BYTES / 1024 / 1024}MB` });
   }
@@ -80,4 +82,4 @@ export async function uploadHandler(c: Context) {
     console.error('Cloudinary upload error:', err);
     throw new HTTPException(502, { message: 'Upload failed' });
   }
-}
+};

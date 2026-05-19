@@ -28,12 +28,12 @@ type PrismaRow = Awaited<
 >;
 type PrismaRowNonNull = NonNullable<PrismaRow>;
 
-function toListItem(row: PrismaRowNonNull): InventoryAdjustmentListItem {
+const isStringRecord = (v: unknown): v is Record<string, string> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v) && Object.values(v).every((x) => typeof x === 'string');
+
+const toListItem = (row: PrismaRowNonNull): InventoryAdjustmentListItem => {
   const attrs = row.sku.attributes;
-  const skuAttributes =
-    typeof attrs === 'object' && attrs !== null && !Array.isArray(attrs)
-      ? (attrs as Record<string, string>)
-      : {};
+  const skuAttributes = isStringRecord(attrs) ? attrs : {};
   return {
     id: row.id,
     skuId: row.skuId,
@@ -46,7 +46,7 @@ function toListItem(row: PrismaRowNonNull): InventoryAdjustmentListItem {
     productId: row.sku.productId,
     skuAttributes,
   };
-}
+};
 
 /**
  * Business logic only. No HTTP/framework types.

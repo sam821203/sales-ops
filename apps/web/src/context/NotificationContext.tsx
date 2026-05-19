@@ -7,17 +7,16 @@ const NotificationContext = createContext<NotificationApi | undefined>(undefined
 
 let antdAppApi: ReturnType<typeof App.useApp> | null = null;
 
-export function getAntdAppApi(): ReturnType<typeof App.useApp> | null {
-  return antdAppApi;
-}
+export const getAntdAppApi = (): ReturnType<typeof App.useApp> | null =>
+  antdAppApi;
 
-export function useNotification(): NotificationApi {
+export const useNotification = (): NotificationApi => {
   const notification = useContext(NotificationContext);
   if (notification === undefined) {
     throw new Error('useNotification must be used within NotificationProvider');
   }
   return notification;
-}
+};
 
 interface NotificationProviderProps {
   children: ReactNode;

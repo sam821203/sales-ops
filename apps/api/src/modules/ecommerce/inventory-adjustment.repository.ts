@@ -1,7 +1,18 @@
 import type { CreateInventoryAdjustmentInput } from './dto/ecommerce.dto.js';
+import type { InventoryAdjustmentGetPayload } from '../../../generated/prisma/models/InventoryAdjustment.js';
 import { prisma } from '../../lib/prisma.js';
 
-function buildWhere(q?: string) {
+/** Prisma payload for InventoryAdjustment with sku and product included (matches our queries). */
+type InventoryAdjustmentWithSkuAndProduct = InventoryAdjustmentGetPayload<{
+  include: { sku: { include: { product: true } } };
+}>;
+
+type OrCondition =
+  | { sku: { product: { name: { contains: string } } } }
+  | { skuId: number };
+type WhereClause = { OR: OrCondition[] };
+
+const buildWhere = (q?: string): WhereClause | undefined => {
   const qTrim = q?.trim();
   if (!qTrim) return undefined;
   const or: Array<
@@ -10,7 +21,7 @@ function buildWhere(q?: string) {
   const id = /^\d+$/.test(qTrim) ? parseInt(qTrim, 10) : NaN;
   if (!Number.isNaN(id)) or.push({ skuId: id });
   return { OR: or };
-}
+};
 
 /** Sentinel returned by create() when Decrease would make stock negative. */
 export const INSUFFICIENT_STOCK = 'INSUFFICIENT_STOCK' as const;
@@ -23,7 +34,7 @@ export const inventoryAdjustmentRepository = {
     page: number,
     pageSize: number,
     options: { q?: string }
-  ) {
+  ): Promise<{ items: InventoryAdjustmentWithSkuAndProduct[]; total: number }> {
     const where = buildWhere(options.q);
     const skip = (page - 1) * pageSize;
     return prisma.$transaction(async (tx) => {
@@ -41,14 +52,16 @@ export const inventoryAdjustmentRepository = {
     });
   },
 
-  async findById(id: number) {
+  async findById(id: number): Promise<InventoryAdjustmentWithSkuAndProduct | null> {
     return prisma.inventoryAdjustment.findUnique({
       where: { id },
       include: { sku: { include: { product: true } } },
     });
   },
 
-  async create(data: CreateInventoryAdjustmentInput) {
+  async create(
+    data: CreateInventoryAdjustmentInput
+  ): Promise<InventoryAdjustmentWithSkuAndProduct | null | typeof INSUFFICIENT_STOCK> {
     return prisma.$transaction(async (tx) => {
       const sku = await tx.sku.findUnique({
         where: { id: data.skuId },
